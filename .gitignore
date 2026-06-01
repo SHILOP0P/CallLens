@@ -1,0 +1,50 @@
+# Local environment
+.env
+.env.*
+!.env.example
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Go build/test artifacts
+bin/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+
+# Runtime data
+storage/
+uploads/
+tmp/
+logs/
+*.log
+
+# Audio/user uploads
+*.mp3
+*.wav
+*.m4a
+*.ogg
+*.flac
+
+# Local product notes and sketches
+Sketches and ideas/
+
+# Docker/local database data
+postgres-data/
+pgdata/
+data/
+
+# Obsidian local workspace settings
+**/.obsidian/

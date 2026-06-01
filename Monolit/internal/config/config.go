@@ -1,0 +1,54 @@
+package config
+
+import (
+	"os"
+
+	"calllens/monolit/internal/config/env"
+
+	"github.com/joho/godotenv"
+)
+
+var appConfig *config
+
+type config struct {
+	HTTPConfig HTTPConfig
+	Postgres   PostgresConfig
+	Upload     UploadConfig
+}
+
+func NewConfig() *config {
+	return &config{}
+}
+
+func Load(path ...string) error {
+	err := godotenv.Load(path...)
+	if err != nil && os.IsNotExist(err) {
+		return err
+	}
+
+	httpCfg, err := env.NewHTTPConfig()
+	if err != nil {
+		return err
+	}
+
+	postgresCfg, err := env.NewPostgresConfig()
+	if err != nil {
+		return err
+	}
+
+	uploadCfg, err := env.NewUploadConfig()
+	if err != nil {
+		return err
+	}
+
+	appConfig = &config{
+		HTTPConfig: httpCfg,
+		Postgres:   postgresCfg,
+		Upload:     uploadCfg,
+	}
+	return nil
+}
+
+func AppConfig() *config {
+	return appConfig
+}

@@ -1,0 +1,30 @@
+package scaner
+
+import (
+	repoModel "calllens/monolit/internal/repository/models"
+)
+
+type rowScanner interface {
+	Scan(dest ...any) error
+}
+
+func ScanCall(row rowScanner) (repoModel.Call, error) {
+	var call repoModel.Call
+
+	err := row.Scan(
+		&call.ID,
+		&call.Title,
+		&call.Status,
+		&call.AudioPath,
+		&call.OriginalFilename,
+		&call.MimeType,
+		&call.SizeBytes,
+		&call.DurationSeconds,
+		&call.CreatedAt,
+	)
+	if err != nil {
+		return repoModel.Call{}, err
+	}
+
+	return call, nil
+}

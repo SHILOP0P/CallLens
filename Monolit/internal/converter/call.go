@@ -1,0 +1,38 @@
+package converter
+
+import (
+	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/models"
+	"time"
+
+	"github.com/google/uuid"
+)
+
+func CreateAPIToModel(callUUID uuid.UUID, title string, status models.CallStatus,
+	audioPath string, originalFilename string, mimeType string,
+	sizeBytes int64, now time.Time) (models.Call, error) {
+	return models.Call{
+		ID:               callUUID,
+		Title:            title,
+		Status:           status,
+		AudioPath:        audioPath,
+		OriginalFilename: originalFilename,
+		MimeType:         mimeType,
+		DurationSeconds:  0,
+		SizeBytes:        sizeBytes,
+		CreatedAt:        now,
+	}, nil
+}
+
+func CallModelToAPI(call models.Call) (dto.CallResponse, error) {
+	return dto.CallResponse{
+		ID:               call.ID.String(),
+		Title:            call.Title,
+		Status:           string(call.Status),
+		OriginalFilename: call.OriginalFilename,
+		MimeType:         call.MimeType,
+		SizeBytes:        call.SizeBytes,
+		DurationSeconds:  call.DurationSeconds,
+		CreatedAt:        call.CreatedAt.Format(time.RFC3339),
+	}, nil
+}
