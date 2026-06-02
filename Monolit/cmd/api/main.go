@@ -7,6 +7,7 @@ import (
 	"calllens/monolit/internal/migrator"
 	callRepo "calllens/monolit/internal/repository/call"
 	callService "calllens/monolit/internal/service/call"
+	"calllens/monolit/internal/storage/audio"
 	"context"
 	"log"
 	"net/http"
@@ -67,9 +68,10 @@ func main() {
 
 	uploadPath := config.AppConfig().Upload.Path()
 
+	audioStorage := audio.NewLocalStorage(uploadPath)
 	repository := callRepo.NewRepository(sqlDB)
-	service := callService.NewService(repository)
-	callHandler := call.NewCallHandler(service, uploadPath)
+	service := callService.NewService(repository, audioStorage)
+	callHandler := call.NewCallHandler(service)
 
 	r := httpserver.NewRouter(callHandler)
 

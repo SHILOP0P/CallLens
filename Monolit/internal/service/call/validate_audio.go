@@ -1,0 +1,44 @@
+package call
+
+import (
+	"calllens/monolit/internal/models"
+	"path/filepath"
+	"strings"
+)
+
+var allowedAudioExtensions = map[string]struct{}{
+	".mp3": {},
+	".wav": {},
+	".m4a": {},
+}
+
+var allowedAudioMimeTypes = map[string]struct{}{
+	"audio/mpeg":     {},
+	"audio/wav":      {},
+	"audio/x-wav":    {},
+	"audio/wave":     {},
+	"audio/vnd.wave": {},
+	"audio/mp4":      {},
+	"audio/x-m4a":    {},
+}
+
+func validateAudioInput(input models.CreateCallInput) error {
+	ext := strings.ToLower(filepath.Ext(input.OriginalFilename))
+	if _, ok := allowedAudioExtensions[ext]; !ok {
+		return models.ErrUnsupportedAudioType
+	}
+
+	if _, ok := allowedAudioMimeTypes[input.MimeType]; !ok {
+		return models.ErrUnsupportedAudioType
+	}
+
+	if input.SizeBytes <= 0 {
+		return models.ErrCallConvert
+	}
+
+	if input.Content == nil {
+		return models.ErrUnsupportedAudioType
+	}
+
+	return nil
+}

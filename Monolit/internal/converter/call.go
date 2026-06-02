@@ -36,3 +36,17 @@ func CallModelToAPI(call models.Call) (dto.CallResponse, error) {
 		CreatedAt:        call.CreatedAt.Format(time.RFC3339),
 	}, nil
 }
+
+func SavedFileToModel(savedFile models.SavedFile, callUUID uuid.UUID, input models.CreateCallInput, now time.Time) (models.Call, error) {
+	return models.Call{
+		ID:               callUUID,
+		Title:            input.Title,
+		Status:           models.CallStatusNew,
+		AudioPath:        savedFile.Path,
+		OriginalFilename: input.OriginalFilename,
+		MimeType:         input.MimeType,
+		SizeBytes:        savedFile.SizeBytes,
+		DurationSeconds:  0,
+		CreatedAt:        now,
+	}, nil
+}

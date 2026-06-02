@@ -3,11 +3,11 @@ package env
 import "github.com/caarlos0/env/v11"
 
 type uploadEnvConfig struct {
-	path string `env:"UPLOAD_PATH,required"`
+	Path string `env:"UPLOAD_PATH,required"`
 }
 
 type uploadConfig struct {
-	Raw uploadEnvConfig
+	raw uploadEnvConfig
 }
 
 func NewUploadConfig() (*uploadConfig, error) {
@@ -15,9 +15,9 @@ func NewUploadConfig() (*uploadConfig, error) {
 	if err := env.Parse(&raw); err != nil {
 		return nil, err
 	}
-	return &uploadConfig{Raw: raw}, nil
+	return &uploadConfig{raw: raw}, nil
 }
 
 func (config *uploadConfig) Path() string {
-	return config.Raw.path
+	return config.raw.Path
 }

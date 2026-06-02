@@ -20,6 +20,7 @@ func (h *CallHandler) List(w http.ResponseWriter, r *http.Request) {
 		callResponse, err := converter.CallModelToAPI(call)
 		if err != nil {
 			http.Error(w, "failed to convert call", http.StatusInternalServerError)
+			return
 		}
 		response[i] = callResponse
 	}

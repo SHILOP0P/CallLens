@@ -1,13 +1,18 @@
 package call
 
-import repo "calllens/monolit/internal/repository"
+import (
+	repo "calllens/monolit/internal/repository"
+	"calllens/monolit/internal/storage"
+)
 
 type Service struct {
-	repository repo.Repository
+	repository   repo.Repository
+	audioStorage storage.Storage
 }
 
-func NewService(repository repo.Repository) *Service {
+func NewService(repository repo.Repository, audioStorage storage.Storage) *Service {
 	return &Service{
-		repository: repository,
+		repository:   repository,
+		audioStorage: audioStorage,
 	}
 }

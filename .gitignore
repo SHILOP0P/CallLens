@@ -25,10 +25,14 @@ dist/
 coverage.out
 
 # Runtime data
-storage/
-uploads/
-tmp/
-logs/
+/storage/
+/uploads/
+/tmp/
+/logs/
+Monolit/storage/
+Monolit/uploads/
+Monolit/tmp/
+Monolit/logs/
 *.log
 
 # Audio/user uploads

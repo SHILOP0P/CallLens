@@ -1,19 +1,15 @@
 package call
 
 import (
+	"bytes"
 	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/converter"
 	model "calllens/monolit/internal/models"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"path/filepath"
-	"time"
-
-	"github.com/google/uuid"
 )
 
 func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -37,12 +33,20 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	buffer := make([]byte, 512)
+	n, err := file.Read(buffer)
+	if err != nil {
+		http.Error(w, "failed to read file", http.StatusBadRequest)
+		return
+	}
+
+	detectedMimeType := http.DetectContentType(buffer[:n])
+	fileContent := io.MultiReader(bytes.NewReader(buffer[:n]), file)
+
 	req := dto.CreateCallRequest{
 		Title: title,
 		Audio: fileHeader,
 	}
-
-	callUUID := uuid.New()
 
 	ext := filepath.Ext(fileHeader.Filename)
 	if ext == "" {
@@ -50,44 +54,28 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := os.MkdirAll(h.uploadDir, 0755); err != nil {
-		http.Error(w, "failed to create upload dir", http.StatusInternalServerError)
-		return
-	}
-
-	audioPath := filepath.Join(h.uploadDir, fmt.Sprintf("%s%s", callUUID, ext))
-
-	dst, err := os.Create(audioPath)
-	if err != nil {
-		http.Error(w, "failed to create audio file", http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, file); err != nil {
-		http.Error(w, "failed to save audio file", http.StatusInternalServerError)
-		return
-	}
-
 	originalFilename := req.Audio.Filename
-	mimeType := req.Audio.Header.Get("Content-Type")
+	//mimeType := req.Audio.Header.Get("Content-Type")
 	sizeBytes := req.Audio.Size
-	now := time.Now().UTC()
 
-	call, err := converter.CreateAPIToModel(callUUID, title, model.CallStatusNew, audioPath,
-		originalFilename, mimeType, sizeBytes, now)
-	if err != nil {
-		http.Error(w, "failed to create call", http.StatusInternalServerError)
-		return
+	input := model.CreateCallInput{
+		Title:            title,
+		OriginalFilename: originalFilename,
+		MimeType:         detectedMimeType,
+		SizeBytes:        sizeBytes,
+		Content:          fileContent,
 	}
 
-	createdCall, err := h.service.CreateCall(r.Context(), call)
+	createdCall, err := h.service.CreateCall(r.Context(), input)
 	if err != nil {
 		if errors.Is(err, model.ErrCallConvert) {
 			http.Error(w, "failed to process call", http.StatusInternalServerError)
 			return
 		} else if errors.Is(err, model.ErrCallNotFound) {
 			http.Error(w, "call not found", http.StatusInternalServerError)
+			return
+		} else if errors.Is(err, model.ErrUnsupportedAudioType) {
+			http.Error(w, "unsupported audio type", http.StatusBadRequest)
 			return
 		} else {
 			http.Error(w, "failed to create call", http.StatusInternalServerError)
@@ -98,6 +86,7 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	response, err := converter.CallModelToAPI(createdCall)
 	if err != nil {
 		http.Error(w, "failed to create call", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

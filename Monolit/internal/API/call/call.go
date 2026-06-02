@@ -3,10 +3,9 @@ package call
 import "calllens/monolit/internal/service"
 
 type CallHandler struct {
-	service   service.Service
-	uploadDir string
+	service service.Service
 }
 
-func NewCallHandler(service service.Service, uploadDir string) *CallHandler {
-	return &CallHandler{service: service, uploadDir: uploadDir}
+func NewCallHandler(service service.Service) *CallHandler {
+	return &CallHandler{service: service}
 }

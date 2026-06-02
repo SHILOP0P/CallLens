@@ -8,7 +8,15 @@ import (
 )
 
 type Service interface {
-	CreateCall(ctx context.Context, call models.Call) (models.Call, error)
+	//POST
+	CreateCall(ctx context.Context, input models.CreateCallInput) (models.Call, error)
+
+	//GET
 	List(ctx context.Context) ([]models.Call, error)
 	GetByUUID(ctx context.Context, id uuid.UUID) (models.Call, error)
+	GetAudioByUUID(ctx context.Context, uuid uuid.UUID) (models.File, error)
+
+	//UPDATE
+
+	//DELETE
 }

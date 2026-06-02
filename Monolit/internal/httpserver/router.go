@@ -20,9 +20,10 @@ func NewRouter(callAPI API.API) http.Handler {
 
 	r.Get("/health", health.Health)
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Post("/call", callAPI.Create)
+		r.Post("/calls", callAPI.Create)
 		r.Get("/calls", callAPI.List)
-		r.Get("/call/{uuid}", callAPI.GetByUUID)
+		r.Get("/calls/{uuid}", callAPI.GetByUUID)
+		r.Get("/calls/{uuid}/audio", callAPI.GetAudioByUUID)
 	})
 
 	return r

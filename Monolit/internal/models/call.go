@@ -1,6 +1,7 @@
 package models
 
 import (
+	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,3 +27,11 @@ const (
 	CallStatusDone       CallStatus = "done"
 	CallStatusFailed     CallStatus = "failed"
 )
+
+type CreateCallInput struct {
+	Title            string
+	OriginalFilename string
+	MimeType         string
+	SizeBytes        int64
+	Content          io.Reader
+}
