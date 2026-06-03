@@ -12,7 +12,7 @@ type API interface {
 	GetAudioByUUID(w http.ResponseWriter, r *http.Request)
 
 	//UPDATE
-
+	UpdateCallTitle(w http.ResponseWriter, r *http.Request)
 	//DELETE
 	DeleteCall(w http.ResponseWriter, r *http.Request)
 }

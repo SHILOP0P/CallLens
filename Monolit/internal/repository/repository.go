@@ -14,8 +14,7 @@ type Repository interface {
 	List(ctx context.Context) ([]models.Call, error)
 	GetByUUID(ctx context.Context, id uuid.UUID) (models.Call, error)
 	//UPDATE
-
+	UpdateCallTitle(ctx context.Context, id uuid.UUID, title string) (models.Call, error)
 	//DELETE
 	DeleteCall(ctx context.Context, id uuid.UUID) error
-
 }

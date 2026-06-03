@@ -7,3 +7,4 @@ import (
 var ErrCallNotFound = errors.New("call not found")
 var ErrCallConvert = errors.New("call convert error")
 var ErrUnsupportedAudioType = errors.New("unsupported audio type")
+var ErrInvalidCallTitle = errors.New("invalid call title")

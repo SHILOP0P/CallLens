@@ -17,7 +17,7 @@ type Service interface {
 	GetAudioByUUID(ctx context.Context, uuid uuid.UUID) (models.File, error)
 
 	//UPDATE
-
+	UpdateCallTitle(ctx context.Context, id uuid.UUID, title string) (models.Call, error)
 	//DELETE
 	DeleteCall(ctx context.Context, id uuid.UUID) error
 }

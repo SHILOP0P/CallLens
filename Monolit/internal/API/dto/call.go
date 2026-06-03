@@ -17,3 +17,7 @@ type CallResponse struct {
 	DurationSeconds  int    `json:"duration_seconds"`
 	CreatedAt        string `json:"created_at"`
 }
+
+type UpdateCallTitleRequest struct {
+	Title string `json:"title"`
+}
