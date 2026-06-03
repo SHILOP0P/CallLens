@@ -84,7 +84,7 @@ func (l *LocalStorage) Delete(ctx context.Context, path string) error {
 		return err
 	}
 
-	if err := os.Remove(fullPath); err != nil {
+	if err := os.Remove(fullPath); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("delete audio file failed: %w", err)
 	}
 	return nil

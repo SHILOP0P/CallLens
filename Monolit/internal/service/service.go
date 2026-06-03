@@ -19,4 +19,5 @@ type Service interface {
 	//UPDATE
 
 	//DELETE
+	DeleteCall(ctx context.Context, id uuid.UUID) error
 }

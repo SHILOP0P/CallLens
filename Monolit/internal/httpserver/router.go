@@ -24,6 +24,7 @@ func NewRouter(callAPI API.API) http.Handler {
 		r.Get("/calls", callAPI.List)
 		r.Get("/calls/{uuid}", callAPI.GetByUUID)
 		r.Get("/calls/{uuid}/audio", callAPI.GetAudioByUUID)
+		r.Delete("/calls/{uuid}", callAPI.DeleteCall)
 	})
 
 	return r

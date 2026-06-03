@@ -14,5 +14,5 @@ type API interface {
 	//UPDATE
 
 	//DELETE
-
+	DeleteCall(w http.ResponseWriter, r *http.Request)
 }
