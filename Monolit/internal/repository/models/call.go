@@ -1,7 +1,6 @@
 package models
 
 import (
-	"io"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,7 +9,7 @@ import (
 type Call struct {
 	ID                 uuid.UUID
 	Title              string
-	Status             CallStatus
+	Status             string
 	AudioPath          string
 	OriginalFilename   string
 	MimeType           string
@@ -22,19 +21,9 @@ type Call struct {
 	CreatedAt          time.Time
 }
 
-type CallStatus string
-
 const (
-	CallStatusNew        CallStatus = "new"
-	CallStatusProcessing CallStatus = "processing"
-	CallStatusDone       CallStatus = "done"
-	CallStatusFailed     CallStatus = "failed"
+	CallStatusNew        string = "new"
+	CallStatusProcessing string = "processing"
+	CallStatusDone       string = "done"
+	CallStatusFailed     string = "failed"
 )
-
-type CreateCallInput struct {
-	Title            string
-	OriginalFilename string
-	MimeType         string
-	SizeBytes        int64
-	Content          io.Reader
-}

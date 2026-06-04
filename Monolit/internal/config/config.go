@@ -14,6 +14,7 @@ type config struct {
 	HTTPConfig HTTPConfig
 	Postgres   PostgresConfig
 	Upload     UploadConfig
+	Auth       AuthConfig
 }
 
 func NewConfig() *config {
@@ -41,10 +42,15 @@ func Load(path ...string) error {
 		return err
 	}
 
+	authCfg, err := env.NewAuthConfig()
+	if err != nil {
+		return err
+	}
 	appConfig = &config{
 		HTTPConfig: httpCfg,
 		Postgres:   postgresCfg,
 		Upload:     uploadCfg,
+		Auth:       authCfg,
 	}
 	return nil
 }

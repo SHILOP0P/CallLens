@@ -2,7 +2,7 @@ package API
 
 import "net/http"
 
-type API interface {
+type CallAPI interface {
 	//POST
 	Create(w http.ResponseWriter, r *http.Request)
 
@@ -15,4 +15,12 @@ type API interface {
 	UpdateCallTitle(w http.ResponseWriter, r *http.Request)
 	//DELETE
 	DeleteCall(w http.ResponseWriter, r *http.Request)
+}
+
+type AuthAPI interface {
+	Register(w http.ResponseWriter, r *http.Request)
+	//Login(w http.ResponseWriter, r *http.Request)
+	// Logout(w http.ResponseWriter, r *http.Request)
+	//Me(w http.ResponseWriter, r *http.Request)
+
 }

@@ -19,7 +19,7 @@ func (r *Repository) CreateCall(ctx context.Context, call model.Call) (model.Cal
 	var repoCallNew repoModel.Call
 
 	create := `
-	INSERT INTO calllens (
+	INSERT INTO calls (
 	                    call_uuid, 
 						title,
 					   	status,
@@ -28,9 +28,24 @@ func (r *Repository) CreateCall(ctx context.Context, call model.Call) (model.Cal
 					   	mime_type,
 					   	size_bytes,
 					   	duration_seconds,
+					   	uploaded_by_user_uuid,
+					   	company_uuid,
+					   	department_uuid,
 					   	created_at
 						)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning call_uuid, title, status, audio_path, original_filename, mime_type, size_bytes, duration_seconds, created_at
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	RETURNING call_uuid,
+	          title,
+	          status,
+	          audio_path,
+	          original_filename,
+	          mime_type,
+	          size_bytes,
+	          duration_seconds,
+	          uploaded_by_user_uuid,
+	          company_uuid,
+	          department_uuid,
+	          created_at
 	`
 
 	row := r.db.QueryRowContext(ctx, create,
@@ -42,6 +57,9 @@ func (r *Repository) CreateCall(ctx context.Context, call model.Call) (model.Cal
 		repoCall.MimeType,
 		repoCall.SizeBytes,
 		repoCall.DurationSeconds,
+		repoCall.UploadedByUserUUID,
+		repoCall.CompanyUUID,
+		repoCall.DepartmentUUID,
 		repoCall.CreatedAt,
 	)
 

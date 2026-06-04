@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Service interface {
+type CallService interface {
 	//POST
 	CreateCall(ctx context.Context, input models.CreateCallInput) (models.Call, error)
 
@@ -20,4 +20,10 @@ type Service interface {
 	UpdateCallTitle(ctx context.Context, id uuid.UUID, title string) (models.Call, error)
 	//DELETE
 	DeleteCall(ctx context.Context, id uuid.UUID) error
+}
+
+type AuthService interface {
+	Register(ctx context.Context, input models.CreateUserInput) (models.User, error)
+	//Login(ctx context.Context, input models.LoginInput) (models.User, string, error)
+	//Me(ctx context.Context, userID uuid.UUID) (models.User, error)
 }

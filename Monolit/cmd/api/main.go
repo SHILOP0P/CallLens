@@ -1,11 +1,14 @@
 package main
 
 import (
+	authAPI "calllens/monolit/internal/API/auth"
 	"calllens/monolit/internal/API/call"
 	"calllens/monolit/internal/config"
 	"calllens/monolit/internal/httpserver"
 	"calllens/monolit/internal/migrator"
 	callRepo "calllens/monolit/internal/repository/call"
+	userRepo "calllens/monolit/internal/repository/user"
+	authService "calllens/monolit/internal/service/auth"
 	callService "calllens/monolit/internal/service/call"
 	"calllens/monolit/internal/storage/audio"
 	"context"
@@ -67,13 +70,24 @@ func main() {
 	}
 
 	uploadPath := config.AppConfig().Upload.Path()
-
+	
 	audioStorage := audio.NewLocalStorage(uploadPath)
-	repository := callRepo.NewRepository(sqlDB)
-	service := callService.NewService(repository, audioStorage)
-	callHandler := call.NewCallHandler(service)
 
-	r := httpserver.NewRouter(callHandler)
+	callRepository := callRepo.NewRepository(sqlDB)
+	userRepository := userRepo.NewUserRepository(sqlDB)
+
+	callSvc := callService.NewService(callRepository, audioStorage)
+	authSvc := authService.NewService(
+		userRepository,
+		config.AppConfig().Auth.PasswordPepper(),
+		config.AppConfig().Auth.JWTSecret(),
+		config.AppConfig().Auth.AccessTokenTTL(),
+	)
+
+	callHandler := call.NewCallHandler(callSvc)
+	authHandler := authAPI.NewAuthHandler(authSvc)
+
+	r := httpserver.NewRouter(callHandler, authHandler)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

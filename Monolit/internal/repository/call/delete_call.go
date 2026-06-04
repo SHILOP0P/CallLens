@@ -10,7 +10,7 @@ import (
 
 func (r *Repository) DeleteCall(ctx context.Context, id uuid.UUID) error {
 	queryDel := `
-	DELETE FROM calllens
+	DELETE FROM calls
 	where call_uuid = $1
 	`
 

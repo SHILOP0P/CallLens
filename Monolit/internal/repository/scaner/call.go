@@ -20,6 +20,9 @@ func ScanCall(row rowScanner) (repoModel.Call, error) {
 		&call.MimeType,
 		&call.SizeBytes,
 		&call.DurationSeconds,
+		&call.UploadedByUserUUID,
+		&call.CompanyUUID,
+		&call.DepartmentUUID,
 		&call.CreatedAt,
 	)
 	if err != nil {

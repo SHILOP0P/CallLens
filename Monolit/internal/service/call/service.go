@@ -6,11 +6,11 @@ import (
 )
 
 type Service struct {
-	repository   repo.Repository
+	repository   repo.CallRepository
 	audioStorage storage.Storage
 }
 
-func NewService(repository repo.Repository, audioStorage storage.Storage) *Service {
+func NewService(repository repo.CallRepository, audioStorage storage.Storage) *Service {
 	return &Service{
 		repository:   repository,
 		audioStorage: audioStorage,

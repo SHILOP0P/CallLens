@@ -26,15 +26,27 @@ func CreateAPIToModel(callUUID uuid.UUID, title string, status models.CallStatus
 
 func CallModelToAPI(call models.Call) (dto.CallResponse, error) {
 	return dto.CallResponse{
-		ID:               call.ID.String(),
-		Title:            call.Title,
-		Status:           string(call.Status),
-		OriginalFilename: call.OriginalFilename,
-		MimeType:         call.MimeType,
-		SizeBytes:        call.SizeBytes,
-		DurationSeconds:  call.DurationSeconds,
-		CreatedAt:        call.CreatedAt.Format(time.RFC3339),
+		ID:                 call.ID.String(),
+		Title:              call.Title,
+		Status:             string(call.Status),
+		OriginalFilename:   call.OriginalFilename,
+		MimeType:           call.MimeType,
+		SizeBytes:          call.SizeBytes,
+		DurationSeconds:    call.DurationSeconds,
+		UploadedByUserUUID: nullUUIDToStringPtr(call.UploadedByUserUUID),
+		CompanyUUID:        nullUUIDToStringPtr(call.CompanyUUID),
+		DepartmentUUID:     nullUUIDToStringPtr(call.DepartmentUUID),
+		CreatedAt:          call.CreatedAt.Format(time.RFC3339),
 	}, nil
+}
+
+func nullUUIDToStringPtr(id uuid.NullUUID) *string {
+	if !id.Valid {
+		return nil
+	}
+
+	value := id.UUID.String()
+	return &value
 }
 
 func SavedFileToModel(savedFile models.SavedFile, callUUID uuid.UUID, input models.CreateCallInput, now time.Time) (models.Call, error) {

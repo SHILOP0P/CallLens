@@ -7,15 +7,18 @@ import (
 
 func RepoCallToModel(repoCall repoModel.Call) (model.Call, error) {
 	return model.Call{
-		ID:               repoCall.ID,
-		Title:            repoCall.Title,
-		Status:           model.CallStatus(repoCall.Status),
-		AudioPath:        repoCall.AudioPath,
-		OriginalFilename: repoCall.OriginalFilename,
-		MimeType:         repoCall.MimeType,
-		SizeBytes:        repoCall.SizeBytes,
-		DurationSeconds:  repoCall.DurationSeconds,
-		CreatedAt:        repoCall.CreatedAt,
+		ID:                 repoCall.ID,
+		Title:              repoCall.Title,
+		Status:             model.CallStatus(repoCall.Status),
+		AudioPath:          repoCall.AudioPath,
+		OriginalFilename:   repoCall.OriginalFilename,
+		MimeType:           repoCall.MimeType,
+		SizeBytes:          repoCall.SizeBytes,
+		DurationSeconds:    repoCall.DurationSeconds,
+		UploadedByUserUUID: repoCall.UploadedByUserUUID,
+		CompanyUUID:        repoCall.CompanyUUID,
+		DepartmentUUID:     repoCall.DepartmentUUID,
+		CreatedAt:          repoCall.CreatedAt,
 	}, nil
 }
 
@@ -29,14 +32,17 @@ func RepoCallsToModels(repoCalls []repoModel.Call) ([]model.Call, error) {
 
 func ModelCallToRepoCall(modelCall model.Call) (repoCall repoModel.Call, err error) {
 	return repoModel.Call{
-		ID:               modelCall.ID,
-		Title:            modelCall.Title,
-		Status:           string(modelCall.Status),
-		AudioPath:        modelCall.AudioPath,
-		OriginalFilename: modelCall.OriginalFilename,
-		MimeType:         modelCall.MimeType,
-		SizeBytes:        modelCall.SizeBytes,
-		DurationSeconds:  modelCall.DurationSeconds,
-		CreatedAt:        modelCall.CreatedAt,
+		ID:                 modelCall.ID,
+		Title:              modelCall.Title,
+		Status:             string(modelCall.Status),
+		AudioPath:          modelCall.AudioPath,
+		OriginalFilename:   modelCall.OriginalFilename,
+		MimeType:           modelCall.MimeType,
+		SizeBytes:          modelCall.SizeBytes,
+		DurationSeconds:    modelCall.DurationSeconds,
+		UploadedByUserUUID: modelCall.UploadedByUserUUID,
+		CompanyUUID:        modelCall.CompanyUUID,
+		DepartmentUUID:     modelCall.DepartmentUUID,
+		CreatedAt:          modelCall.CreatedAt,
 	}, nil
 }

@@ -21,8 +21,11 @@ func (r *Repository) List(ctx context.Context) ([]model.Call, error) {
 	       mime_type,
 	       size_bytes,
 	       duration_seconds,
+	       uploaded_by_user_uuid,
+	       company_uuid,
+	       department_uuid,
 	       created_at
-	FROM calllens
+	FROM calls
 	ORDER BY created_at DESC
 	`
 	rows, err := r.db.QueryContext(ctx, qList)

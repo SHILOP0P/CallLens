@@ -16,3 +16,9 @@ type PostgresConfig interface {
 type UploadConfig interface {
 	Path() string
 }
+
+type AuthConfig interface {
+	PasswordPepper() string
+	JWTSecret() string
+	AccessTokenTTL() time.Duration
+}

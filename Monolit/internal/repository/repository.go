@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Repository interface {
+type CallRepository interface {
 	//POST
 	CreateCall(ctx context.Context, call models.Call) (models.Call, error)
 	//GET
@@ -17,4 +17,12 @@ type Repository interface {
 	UpdateCallTitle(ctx context.Context, id uuid.UUID, title string) (models.Call, error)
 	//DELETE
 	DeleteCall(ctx context.Context, id uuid.UUID) error
+}
+
+type UserRepository interface {
+	//GET
+	GetUserByUUID(ctx context.Context, id uuid.UUID) (models.User, error)
+	GetUserByEmail(ctx context.Context, email string) (models.User, error)
+	//POST
+	CreateUser(ctx context.Context, user models.User) (models.User, error)
 }

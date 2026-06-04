@@ -17,10 +17,21 @@ func (r *Repository) UpdateCallTitle(ctx context.Context, id uuid.UUID, title st
 	var repoCall repoModel.Call
 
 	queryUpdate := `
-	UPDATE calllens
+	UPDATE calls
 	SET title = $2
 	WHERE call_uuid = $1
-	RETURNING call_uuid, title, status, audio_path, original_filename, mime_type, size_bytes, duration_seconds, created_at
+	RETURNING call_uuid,
+	          title,
+	          status,
+	          audio_path,
+	          original_filename,
+	          mime_type,
+	          size_bytes,
+	          duration_seconds,
+	          uploaded_by_user_uuid,
+	          company_uuid,
+	          department_uuid,
+	          created_at
 	`
 
 	row := r.db.QueryRowContext(ctx, queryUpdate, id, title)

@@ -24,8 +24,11 @@ func (r *Repository) GetByUUID(ctx context.Context, callUUID uuid.UUID) (model.C
 	       mime_type,
 	       size_bytes,
 	       duration_seconds,
+	       uploaded_by_user_uuid,
+	       company_uuid,
+	       department_uuid,
 	       created_at
-	       FROM calllens
+	       FROM calls
 	WHERE call_uuid = $1
 	`
 	row := r.db.QueryRowContext(ctx, getQuery, callUUID)

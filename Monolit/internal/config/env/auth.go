@@ -1,0 +1,37 @@
+package env
+
+import (
+	"time"
+
+	"github.com/caarlos0/env/v11"
+)
+
+type authEnvConfig struct {
+	PasswordPepper string        `env:"PASSWORD_PEPPER,required"`
+	JWTSecret      string        `env:"JWT_SECRET,required"`
+	AccessTokenTTL time.Duration `env:"JWT_ACCESS_TOKEN_TTL,required"`
+}
+
+type authConfig struct {
+	raw authEnvConfig
+}
+
+func NewAuthConfig() (*authConfig, error) {
+	var raw authEnvConfig
+	if err := env.Parse(&raw); err != nil {
+		return nil, err
+	}
+	return &authConfig{raw: raw}, nil
+}
+
+func (cfg *authConfig) PasswordPepper() string {
+	return cfg.raw.PasswordPepper
+}
+
+func (cfg *authConfig) JWTSecret() string {
+	return cfg.raw.JWTSecret
+}
+
+func (cfg *authConfig) AccessTokenTTL() time.Duration {
+	return cfg.raw.AccessTokenTTL
+}
