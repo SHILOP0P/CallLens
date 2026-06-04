@@ -3,6 +3,7 @@ package httpserver
 import (
 	"calllens/monolit/internal/API"
 	"calllens/monolit/internal/API/health"
+	authMiddleware "calllens/monolit/internal/httpserver/middleware"
 	"net/http"
 	"time"
 
@@ -10,8 +11,11 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI) http.Handler {
+func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, jwtSecret string) http.Handler {
 	r := chi.NewRouter()
+
+	authGuard := authMiddleware.Auth(jwtSecret)
+
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(10 * time.Second))
@@ -32,8 +36,10 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI) http.Handler {
 		//DELETE
 		r.Delete("/calls/{uuid}", callAPI.DeleteCall)
 
-		//USER
+		//AUTH
 		r.Post("/auth/register", authAPI.Register)
+		r.Post("/auth/login", authAPI.Login)
+		r.With(authGuard).Get("/auth/me", authAPI.Me)
 	})
 
 	return r

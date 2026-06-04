@@ -70,7 +70,7 @@ func main() {
 	}
 
 	uploadPath := config.AppConfig().Upload.Path()
-	
+
 	audioStorage := audio.NewLocalStorage(uploadPath)
 
 	callRepository := callRepo.NewRepository(sqlDB)
@@ -87,7 +87,7 @@ func main() {
 	callHandler := call.NewCallHandler(callSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler)
+	r := httpserver.NewRouter(callHandler, authHandler, config.AppConfig().Auth.JWTSecret())
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),
