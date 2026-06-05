@@ -20,7 +20,7 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, jwtSecret string, refre
 
 	r.Use(middleware.RequestID)
 	r.Use(authMiddleware.RequestLogger(log))
-	r.Use(middleware.Recoverer)
+	r.Use(authMiddleware.Recoverer(log))
 	r.Use(middleware.Timeout(10 * time.Second))
 	r.Use(middleware.URLFormat)
 

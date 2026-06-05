@@ -1,6 +1,7 @@
 package call
 
 import (
+	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/models"
 	"errors"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 func (h *CallHandler) DeleteCall(w http.ResponseWriter, r *http.Request) {
 	userID, ok := userIDFromRequest(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
 		return
 	}
 
@@ -20,17 +21,17 @@ func (h *CallHandler) DeleteCall(w http.ResponseWriter, r *http.Request) {
 
 	callUUID, err := uuid.Parse(rawUUID)
 	if err != nil {
-		http.Error(w, "invalid call uuid", http.StatusBadRequest)
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCallUUID, "invalid call uuid")
 		return
 	}
 
 	if err := h.service.DeleteCall(r.Context(), callUUID, userID); err != nil {
 		if errors.Is(err, models.ErrCallNotFound) {
-			http.Error(w, "call not found", http.StatusNotFound)
+			response.WriteError(w, http.StatusNotFound, response.CodeCallNotFound, "call not found")
 			return
 		}
-		http.Error(w, "delete call failed", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToDeleteCall, "delete call failed")
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	response.WriteNoContent(w)
 }

@@ -3,9 +3,9 @@ package call
 import (
 	"bytes"
 	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
 	model "calllens/monolit/internal/models"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -17,24 +17,24 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	userID, ok := userIDFromRequest(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
 		return
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
-		http.Error(w, "failed to parse multipart form", http.StatusBadRequest)
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidMultipartForm, "failed to parse multipart form")
 		return
 	}
 
 	title := r.FormValue("title")
 	if title == "" {
-		http.Error(w, "title is required", http.StatusBadRequest)
+		response.WriteError(w, http.StatusBadRequest, response.CodeCallTitleRequired, "title is required")
 		return
 	}
 	file, fileHeader, err := r.FormFile("audio")
 	if err != nil {
-		http.Error(w, "audio file is required", http.StatusBadRequest)
+		response.WriteError(w, http.StatusBadRequest, response.CodeAudioFileRequired, "audio file is required")
 		return
 	}
 	defer file.Close()
@@ -42,7 +42,7 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	buffer := make([]byte, 512)
 	n, err := file.Read(buffer)
 	if err != nil {
-		http.Error(w, "failed to read file", http.StatusBadRequest)
+		response.WriteError(w, http.StatusBadRequest, response.CodeAudioFileReadFailed, "failed to read file")
 		return
 	}
 
@@ -56,7 +56,7 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	ext := filepath.Ext(fileHeader.Filename)
 	if ext == "" {
-		http.Error(w, "audio file extension is required", http.StatusBadRequest)
+		response.WriteError(w, http.StatusBadRequest, response.CodeAudioFileExtensionRequired, "audio file extension is required")
 		return
 	}
 
@@ -76,33 +76,30 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	createdCall, err := h.service.CreateCall(r.Context(), input)
 	if err != nil {
 		if errors.Is(err, model.ErrCallConvert) {
-			http.Error(w, "failed to process call", http.StatusInternalServerError)
+			response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToProcessCall, "failed to process call")
 			return
 		} else if errors.Is(err, model.ErrCallNotFound) {
-			http.Error(w, "call not found", http.StatusInternalServerError)
+			response.WriteError(w, http.StatusInternalServerError, response.CodeCallNotFound, "call not found")
 			return
 		} else if errors.Is(err, model.ErrUnsupportedAudioType) {
-			http.Error(w, "unsupported audio type", http.StatusBadRequest)
+			response.WriteError(w, http.StatusBadRequest, response.CodeUnsupportedAudioType, "unsupported audio type")
 			return
 		} else if errors.Is(err, model.ErrInvalidCallOwner) {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
 			return
 		} else {
-			http.Error(w, "failed to create call", http.StatusInternalServerError)
+			response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToCreateCall, "failed to create call")
 			return
 		}
 	}
 
-	response, err := converter.CallModelToAPI(createdCall)
+	resp, err := converter.CallModelToAPI(createdCall)
 	if err != nil {
-		http.Error(w, "failed to create call", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToCreateCall, "failed to create call")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := response.WriteJSON(w, http.StatusCreated, resp); err != nil {
 		return
 	}
 }

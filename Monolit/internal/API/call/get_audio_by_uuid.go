@@ -1,6 +1,7 @@
 package call
 
 import (
+	"calllens/monolit/internal/API/response"
 	"errors"
 	"io"
 	"mime"
@@ -15,7 +16,7 @@ import (
 func (h *CallHandler) GetAudioByUUID(w http.ResponseWriter, r *http.Request) {
 	userID, ok := userIDFromRequest(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
 		return
 	}
 
@@ -23,17 +24,17 @@ func (h *CallHandler) GetAudioByUUID(w http.ResponseWriter, r *http.Request) {
 
 	callUUID, err := uuid.Parse(rawUUID)
 	if err != nil {
-		http.Error(w, "invalid call UUID", http.StatusBadRequest)
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCallUUID, "invalid call UUID")
 		return
 	}
 
 	audioFile, err := h.service.GetAudioByUUID(r.Context(), callUUID, userID)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			http.Error(w, "audio not found", http.StatusNotFound)
+			response.WriteError(w, http.StatusNotFound, response.CodeAudioNotFound, "audio not found")
 			return
 		}
-		http.Error(w, "error getting audio file", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToGetAudio, "error getting audio file")
 		return
 	}
 

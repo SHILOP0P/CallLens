@@ -1,9 +1,9 @@
 package call
 
 import (
+	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
 	"calllens/monolit/internal/models"
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -14,7 +14,7 @@ import (
 func (h *CallHandler) GetByUUID(w http.ResponseWriter, r *http.Request) {
 	userID, ok := userIDFromRequest(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
 		return
 	}
 
@@ -22,29 +22,27 @@ func (h *CallHandler) GetByUUID(w http.ResponseWriter, r *http.Request) {
 
 	callUUID, err := uuid.Parse(rawUUID)
 	if err != nil {
-		http.Error(w, "invalid call uuid", http.StatusBadRequest)
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCallUUID, "invalid call uuid")
 		return
 	}
 
 	call, err := h.service.GetByUUID(r.Context(), callUUID, userID)
 	if err != nil {
 		if errors.Is(err, models.ErrCallNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			response.WriteError(w, http.StatusNotFound, response.CodeCallNotFound, "call not found")
 			return
 		}
-		http.Error(w, "failed to find call", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToFindCall, "failed to find call")
 		return
 	}
 
-	response, err := converter.CallModelToAPI(call)
+	resp, err := converter.CallModelToAPI(call)
 	if err != nil {
-		http.Error(w, "failed to convert call", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertCall, "failed to convert call")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
 		return
 	}
 }

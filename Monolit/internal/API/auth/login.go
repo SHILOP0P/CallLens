@@ -2,6 +2,7 @@ package auth
 
 import (
 	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
 	model "calllens/monolit/internal/models"
 	"encoding/json"
@@ -15,7 +16,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidRequestBody, "invalid request body")
 		return
 	}
 
@@ -27,27 +28,25 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, model.ErrInvalidCredentials) {
-			http.Error(w, "invalid credentials", http.StatusUnauthorized)
+			response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidCredentials, "invalid credentials")
 			return
 		}
-		http.Error(w, "failed to login", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToLogin, "failed to login")
 		return
 	}
 	userResponse, err := converter.UserModelToAPI(user)
 	if err != nil {
-		http.Error(w, "failed to convert user", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertUser, "failed to convert user")
 		return
 	}
 
-	response := dto.AuthResponse{
+	resp := dto.AuthResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		User:         userResponse,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
 		return
 	}
 }

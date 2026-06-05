@@ -1,7 +1,7 @@
 package health
 
 import (
-	"encoding/json"
+	"calllens/monolit/internal/API/response"
 	"net/http"
 )
 
@@ -10,13 +10,11 @@ type healthResponse struct {
 }
 
 func Health(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	response := healthResponse{
+	resp := healthResponse{
 		Status: "ok",
 	}
 
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToEncodeResponse, "failed to encode response")
 	}
 }

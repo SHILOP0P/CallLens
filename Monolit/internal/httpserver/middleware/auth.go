@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/auth/token"
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/repository"
@@ -16,41 +17,41 @@ func Auth(secret string, refreshSessionRepository repository.RefreshSessionRepos
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				http.Error(w, "invalid authorization header", http.StatusUnauthorized)
+				response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidAuthorizationHeader, "invalid authorization header")
 				return
 			}
 
 			const bearerPrefix = "Bearer "
 			if !strings.HasPrefix(authHeader, bearerPrefix) {
-				http.Error(w, "invalid authorization header", http.StatusUnauthorized)
+				response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidAuthorizationHeader, "invalid authorization header")
 				return
 			}
 
 			rawToken := strings.TrimSpace(strings.TrimPrefix(authHeader, bearerPrefix))
 			if rawToken == "" {
-				http.Error(w, "empty access token", http.StatusUnauthorized)
+				response.WriteError(w, http.StatusUnauthorized, response.CodeEmptyAccessToken, "empty access token")
 				return
 			}
 
 			claims, err := token.ParseAccessToken(rawToken, secret)
 			if err != nil {
-				http.Error(w, "invalid access token", http.StatusUnauthorized)
+				response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidAccessToken, "invalid access token")
 				return
 			}
 
 			if claims.SessionID == uuid.Nil {
-				http.Error(w, "invalid access token", http.StatusUnauthorized)
+				response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidAccessToken, "invalid access token")
 				return
 			}
 
 			session, err := refreshSessionRepository.GetRefreshSessionByUUID(r.Context(), claims.SessionID)
 			if err != nil {
-				http.Error(w, "invalid access token", http.StatusUnauthorized)
+				response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidAccessToken, "invalid access token")
 				return
 			}
 
 			if session.UserID != claims.UserID || session.RevokedAt != nil || !session.ExpiresAt.After(time.Now().UTC()) {
-				http.Error(w, "invalid access token", http.StatusUnauthorized)
+				response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidAccessToken, "invalid access token")
 				return
 			}
 

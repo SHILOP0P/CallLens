@@ -2,10 +2,10 @@ package auth
 
 import (
 	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
 	"calllens/monolit/internal/httpserver/middleware"
 	model "calllens/monolit/internal/models"
-	"encoding/json"
 
 	"errors"
 	"net/http"
@@ -14,28 +14,28 @@ import (
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
 		return
 	}
 
 	user, err := h.service.Me(r.Context(), userID)
 	if err != nil {
 		if errors.Is(err, model.ErrUserNotFound) {
-			http.Error(w, "user not found", http.StatusNotFound)
+			response.WriteError(w, http.StatusNotFound, response.CodeUserNotFound, "user not found")
 			return
 		}
 
-		http.Error(w, "failed to get user", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToGetUser, "failed to get user")
 		return
 	}
 
 	userResponse, err := converter.UserModelToAPI(user)
 	if err != nil {
-		http.Error(w, "failed to convert user", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertUser, "failed to convert user")
 		return
 	}
 
-	response := dto.UserResponse{
+	resp := dto.UserResponse{
 		ID:          userResponse.ID,
 		Email:       userResponse.Email,
 		FullName:    userResponse.FullName,
@@ -46,9 +46,7 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:   userResponse.CreatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
 		return
 	}
 }

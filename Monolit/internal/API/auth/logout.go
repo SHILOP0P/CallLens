@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/httpserver/middleware"
 	model "calllens/monolit/internal/models"
 	"errors"
@@ -10,19 +11,19 @@ import (
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	sessionID, ok := middleware.SessionIDFromContext(r.Context())
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
 		return
 	}
 
 	if err := h.service.Logout(r.Context(), sessionID); err != nil {
 		if errors.Is(err, model.ErrRefreshSessionNotFound) {
-			http.Error(w, "session not found", http.StatusUnauthorized)
+			response.WriteError(w, http.StatusUnauthorized, response.CodeRefreshSessionNotFound, "session not found")
 			return
 		}
 
-		http.Error(w, "failed to logout", http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToLogout, "failed to logout")
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	response.WriteNoContent(w)
 }

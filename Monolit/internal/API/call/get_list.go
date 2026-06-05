@@ -2,37 +2,36 @@ package call
 
 import (
 	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
-	"encoding/json"
 	"net/http"
 )
 
 func (h *CallHandler) List(w http.ResponseWriter, r *http.Request) {
 	userID, ok := userIDFromRequest(r)
 	if !ok {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
 		return
 	}
 
 	calls, err := h.service.List(r.Context(), userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToListCalls, "failed to list calls")
 		return
 	}
 
-	response := make([]dto.CallResponse, len(calls))
+	resp := make([]dto.CallResponse, len(calls))
 
 	for i, call := range calls {
 		callResponse, err := converter.CallModelToAPI(call)
 		if err != nil {
-			http.Error(w, "failed to convert call", http.StatusInternalServerError)
+			response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertCall, "failed to convert call")
 			return
 		}
-		response[i] = callResponse
+		resp[i] = callResponse
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
+	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
 		return
 	}
 }
