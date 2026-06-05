@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"calllens/monolit/internal/auth/token"
+	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/repository"
 	"net/http"
 	"strings"
@@ -56,6 +57,7 @@ func Auth(secret string, refreshSessionRepository repository.RefreshSessionRepos
 			ctx := ContextWithUserID(r.Context(), claims.UserID)
 			ctx = ContextWithSessionID(ctx, claims.SessionID)
 			ctx = ContextWithUserRole(ctx, claims.Role)
+			ctx = logger.ContextWithUserID(ctx, claims.UserID.String())
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

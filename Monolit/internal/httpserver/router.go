@@ -4,6 +4,7 @@ import (
 	"calllens/monolit/internal/API"
 	"calllens/monolit/internal/API/health"
 	authMiddleware "calllens/monolit/internal/httpserver/middleware"
+	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/repository"
 	"net/http"
 	"time"
@@ -12,15 +13,15 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository) http.Handler {
+func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	authGuard := authMiddleware.Auth(jwtSecret, refreshSessionRepository)
 
-	r.Use(middleware.Logger)
+	r.Use(middleware.RequestID)
+	r.Use(authMiddleware.RequestLogger(log))
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(10 * time.Second))
-	r.Use(middleware.RequestID)
 	r.Use(middleware.URLFormat)
 
 	r.Get("/health", health.Health)

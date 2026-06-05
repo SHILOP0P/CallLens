@@ -17,6 +17,11 @@ type UploadConfig interface {
 	Path() string
 }
 
+type LoggerConfig interface {
+	Level() string
+	AsJSON() bool
+}
+
 type AuthConfig interface {
 	PasswordPepper() string
 	JWTSecret() string

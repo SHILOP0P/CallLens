@@ -5,6 +5,7 @@ import (
 	"calllens/monolit/internal/API/call"
 	"calllens/monolit/internal/config"
 	"calllens/monolit/internal/httpserver"
+	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/migrator"
 	callRepo "calllens/monolit/internal/repository/call"
 	refreshSessionRepo "calllens/monolit/internal/repository/refresh_session"
@@ -13,11 +14,11 @@ import (
 	callService "calllens/monolit/internal/service/call"
 	"calllens/monolit/internal/storage/audio"
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
 )
 
 const (
@@ -25,49 +26,51 @@ const (
 )
 
 func main() {
+	ctx := context.Background()
+	startupLogger := logger.New("info", false)
 
 	err := config.Load(configPath)
 	if err != nil {
-		log.Printf("failed to load .env: %v", err)
+		startupLogger.Error(ctx, "failed to load config", zap.Error(err))
 		return
 	}
 
-	ctx := context.Background()
+	appLogger := logger.New(config.AppConfig().Logger.Level(), config.AppConfig().Logger.AsJSON())
 	//var cancel context.CancelFunc
 
 	dbURI := config.AppConfig().Postgres.URI()
 	if dbURI == "" {
-		log.Printf("failed to load .env: postgres URI is empty")
+		appLogger.Error(ctx, "postgres uri is empty")
 		return
 	}
 
 	con, err := pgx.Connect(ctx, dbURI)
 	if err != nil {
-		log.Printf("failed to connect to postgres: %v", err)
+		appLogger.Error(ctx, "failed to connect to postgres", zap.Error(err))
 		return
 	}
 	defer func() {
 		if cerr := con.Close(ctx); cerr != nil {
-			log.Printf("failed to close postgres connection: %v", cerr)
+			appLogger.Error(ctx, "failed to close postgres connection", zap.Error(cerr))
 		}
 	}()
 
 	err = con.Ping(ctx)
 	if err != nil {
-		log.Printf("failed to ping postgres: %v", err)
+		appLogger.Error(ctx, "failed to ping postgres", zap.Error(err))
 	}
 
 	sqlDB := stdlib.OpenDB(*con.Config().Copy())
 	migrationsDIR := config.AppConfig().Postgres.MigrationDir()
 	if migrationsDIR == "" {
-		log.Printf("failed to load .env: migrations directory is empty")
+		appLogger.Error(ctx, "migrations directory is empty")
 		return
 	}
 	migratorRunner := migrator.NewMigrator(sqlDB, migrationsDIR)
 
 	err = migratorRunner.Up()
 	if err != nil {
-		log.Printf("failed to run migrator: %v", err)
+		appLogger.Error(ctx, "failed to run migrator", zap.Error(err))
 	}
 
 	uploadPath := config.AppConfig().Upload.Path()
@@ -78,7 +81,7 @@ func main() {
 	userRepository := userRepo.NewUserRepository(sqlDB)
 	refreshRepository := refreshSessionRepo.NewRepository(sqlDB)
 
-	callSvc := callService.NewService(callRepository, audioStorage)
+	callSvc := callService.NewService(callRepository, audioStorage, appLogger)
 	authSvc := authService.NewService(
 		userRepository,
 		refreshRepository,
@@ -87,12 +90,13 @@ func main() {
 		config.AppConfig().Auth.AccessTokenTTL(),
 		config.AppConfig().Auth.RefreshTokenSecret(),
 		config.AppConfig().Auth.RefreshTokenTTL(),
+		appLogger,
 	)
 
 	callHandler := call.NewCallHandler(callSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository)
+	r := httpserver.NewRouter(callHandler, authHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),
@@ -100,9 +104,9 @@ func main() {
 		ReadHeaderTimeout: config.AppConfig().HTTPConfig.ReadTimeout(),
 	}
 
-	log.Printf("api server started on %s", server.Addr)
+	appLogger.Info(ctx, "api server started", zap.String("address", server.Addr))
 
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("api server stopped with error: %v", err)
+		appLogger.Error(ctx, "api server stopped with error", zap.Error(err))
 	}
 }
