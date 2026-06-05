@@ -32,9 +32,10 @@ const (
 )
 
 type CreateCallInput struct {
-	Title            string
-	OriginalFilename string
-	MimeType         string
-	SizeBytes        int64
-	Content          io.Reader
+	Title              string
+	OriginalFilename   string
+	MimeType           string
+	SizeBytes          int64
+	Content            io.Reader
+	UploadedByUserUUID uuid.UUID
 }

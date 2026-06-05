@@ -8,7 +8,13 @@ import (
 )
 
 func (h *CallHandler) List(w http.ResponseWriter, r *http.Request) {
-	calls, err := h.service.List(r.Context())
+	userID, ok := userIDFromRequest(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	calls, err := h.service.List(r.Context(), userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

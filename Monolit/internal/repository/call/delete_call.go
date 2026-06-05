@@ -8,13 +8,14 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *Repository) DeleteCall(ctx context.Context, id uuid.UUID) error {
+func (r *Repository) DeleteCall(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
 	queryDel := `
 	DELETE FROM calls
-	where call_uuid = $1
+	WHERE call_uuid = $1
+	  AND uploaded_by_user_uuid = $2
 	`
 
-	result, err := r.db.ExecContext(ctx, queryDel, id)
+	result, err := r.db.ExecContext(ctx, queryDel, id, userID)
 	if err != nil {
 		return fmt.Errorf("delete call: %w", err)
 	}

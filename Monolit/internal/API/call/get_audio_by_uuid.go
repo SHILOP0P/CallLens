@@ -13,6 +13,12 @@ import (
 )
 
 func (h *CallHandler) GetAudioByUUID(w http.ResponseWriter, r *http.Request) {
+	userID, ok := userIDFromRequest(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	rawUUID := chi.URLParam(r, "uuid")
 
 	callUUID, err := uuid.Parse(rawUUID)
@@ -21,7 +27,7 @@ func (h *CallHandler) GetAudioByUUID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	audioFile, err := h.service.GetAudioByUUID(r.Context(), callUUID)
+	audioFile, err := h.service.GetAudioByUUID(r.Context(), callUUID, userID)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			http.Error(w, "audio not found", http.StatusNotFound)

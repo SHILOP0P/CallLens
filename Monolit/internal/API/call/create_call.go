@@ -15,6 +15,12 @@ import (
 func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	const maxUploadSize = 100 << 20
 
+	userID, ok := userIDFromRequest(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		http.Error(w, "failed to parse multipart form", http.StatusBadRequest)
@@ -59,11 +65,12 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	sizeBytes := req.Audio.Size
 
 	input := model.CreateCallInput{
-		Title:            title,
-		OriginalFilename: originalFilename,
-		MimeType:         detectedMimeType,
-		SizeBytes:        sizeBytes,
-		Content:          fileContent,
+		Title:              title,
+		OriginalFilename:   originalFilename,
+		MimeType:           detectedMimeType,
+		SizeBytes:          sizeBytes,
+		Content:            fileContent,
+		UploadedByUserUUID: userID,
 	}
 
 	createdCall, err := h.service.CreateCall(r.Context(), input)
@@ -76,6 +83,9 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		} else if errors.Is(err, model.ErrUnsupportedAudioType) {
 			http.Error(w, "unsupported audio type", http.StatusBadRequest)
+			return
+		} else if errors.Is(err, model.ErrInvalidCallOwner) {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		} else {
 			http.Error(w, "failed to create call", http.StatusInternalServerError)

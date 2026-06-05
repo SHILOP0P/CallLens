@@ -12,6 +12,12 @@ import (
 )
 
 func (h *CallHandler) GetByUUID(w http.ResponseWriter, r *http.Request) {
+	userID, ok := userIDFromRequest(r)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	rawUUID := chi.URLParam(r, "uuid")
 
 	callUUID, err := uuid.Parse(rawUUID)
@@ -20,7 +26,7 @@ func (h *CallHandler) GetByUUID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	call, err := h.service.GetByUUID(r.Context(), callUUID)
+	call, err := h.service.GetByUUID(r.Context(), callUUID, userID)
 	if err != nil {
 		if errors.Is(err, models.ErrCallNotFound) {
 			http.Error(w, err.Error(), http.StatusNotFound)

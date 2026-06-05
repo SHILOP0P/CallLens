@@ -59,6 +59,10 @@ func SavedFileToModel(savedFile models.SavedFile, callUUID uuid.UUID, input mode
 		MimeType:         input.MimeType,
 		SizeBytes:        savedFile.SizeBytes,
 		DurationSeconds:  0,
-		CreatedAt:        now,
+		UploadedByUserUUID: uuid.NullUUID{
+			UUID:  input.UploadedByUserUUID,
+			Valid: true,
+		},
+		CreatedAt: now,
 	}, nil
 }

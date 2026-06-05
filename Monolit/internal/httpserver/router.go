@@ -4,6 +4,7 @@ import (
 	"calllens/monolit/internal/API"
 	"calllens/monolit/internal/API/health"
 	authMiddleware "calllens/monolit/internal/httpserver/middleware"
+	"calllens/monolit/internal/repository"
 	"net/http"
 	"time"
 
@@ -11,10 +12,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, jwtSecret string) http.Handler {
+func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository) http.Handler {
 	r := chi.NewRouter()
 
-	authGuard := authMiddleware.Auth(jwtSecret)
+	authGuard := authMiddleware.Auth(jwtSecret, refreshSessionRepository)
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -26,20 +27,23 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, jwtSecret string) http.
 	r.Route("/api/v1", func(r chi.Router) {
 		//CALL
 		//POST
-		r.Post("/calls", callAPI.Create)
+		r.With(authGuard).Post("/calls", callAPI.Create)
 		//GET
-		r.Get("/calls", callAPI.List)
-		r.Get("/calls/{uuid}", callAPI.GetByUUID)
-		r.Get("/calls/{uuid}/audio", callAPI.GetAudioByUUID)
+		r.With(authGuard).Get("/calls", callAPI.List)
+		r.With(authGuard).Get("/calls/{uuid}", callAPI.GetByUUID)
+		r.With(authGuard).Get("/calls/{uuid}/audio", callAPI.GetAudioByUUID)
 		//UPDATE
-		r.Patch("/calls/{uuid}", callAPI.UpdateCallTitle)
+		r.With(authGuard).Patch("/calls/{uuid}", callAPI.UpdateCallTitle)
 		//DELETE
-		r.Delete("/calls/{uuid}", callAPI.DeleteCall)
+		r.With(authGuard).Delete("/calls/{uuid}", callAPI.DeleteCall)
 
 		//AUTH
 		r.Post("/auth/register", authAPI.Register)
 		r.Post("/auth/login", authAPI.Login)
+		r.Post("/auth/refresh", authAPI.Refresh)
 		r.With(authGuard).Get("/auth/me", authAPI.Me)
+		r.With(authGuard).Post("/auth/logout", authAPI.Logout)
+		r.With(authGuard).Post("/auth/logout-all", authAPI.LogoutAll)
 	})
 
 	return r

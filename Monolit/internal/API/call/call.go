@@ -1,6 +1,12 @@
 package call
 
-import "calllens/monolit/internal/service"
+import (
+	"calllens/monolit/internal/httpserver/middleware"
+	"calllens/monolit/internal/service"
+	"net/http"
+
+	"github.com/google/uuid"
+)
 
 type CallHandler struct {
 	service service.CallService
@@ -8,4 +14,8 @@ type CallHandler struct {
 
 func NewCallHandler(service service.CallService) *CallHandler {
 	return &CallHandler{service: service}
+}
+
+func userIDFromRequest(r *http.Request) (uuid.UUID, bool) {
+	return middleware.UserIDFromContext(r.Context())
 }

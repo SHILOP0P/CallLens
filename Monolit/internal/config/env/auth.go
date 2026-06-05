@@ -7,9 +7,11 @@ import (
 )
 
 type authEnvConfig struct {
-	PasswordPepper string        `env:"PASSWORD_PEPPER,required"`
-	JWTSecret      string        `env:"JWT_SECRET,required"`
-	AccessTokenTTL time.Duration `env:"JWT_ACCESS_TOKEN_TTL,required"`
+	PasswordPepper     string        `env:"PASSWORD_PEPPER,required"`
+	JWTSecret          string        `env:"JWT_SECRET,required"`
+	AccessTokenTTL     time.Duration `env:"JWT_ACCESS_TOKEN_TTL,required"`
+	RefreshTokenSecret string        `env:"REFRESH_TOKEN_SECRET,required"`
+	RefreshTokenTTL    time.Duration `env:"REFRESH_TOKEN_TTL,required"`
 }
 
 type authConfig struct {
@@ -34,4 +36,12 @@ func (cfg *authConfig) JWTSecret() string {
 
 func (cfg *authConfig) AccessTokenTTL() time.Duration {
 	return cfg.raw.AccessTokenTTL
+}
+
+func (cfg *authConfig) RefreshTokenSecret() string {
+	return cfg.raw.RefreshTokenSecret
+}
+
+func (cfg *authConfig) RefreshTokenTTL() time.Duration {
+	return cfg.raw.RefreshTokenTTL
 }

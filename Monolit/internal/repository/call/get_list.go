@@ -7,9 +7,11 @@ import (
 	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
-func (r *Repository) List(ctx context.Context) ([]model.Call, error) {
+func (r *Repository) List(ctx context.Context, userID uuid.UUID) ([]model.Call, error) {
 	var calls []repoModel.Call
 
 	qList := `
@@ -26,9 +28,10 @@ func (r *Repository) List(ctx context.Context) ([]model.Call, error) {
 	       department_uuid,
 	       created_at
 	FROM calls
+	WHERE uploaded_by_user_uuid = $1
 	ORDER BY created_at DESC
 	`
-	rows, err := r.db.QueryContext(ctx, qList)
+	rows, err := r.db.QueryContext(ctx, qList, userID)
 	if err != nil {
 		return nil, fmt.Errorf("list calls: %w", err)
 	}

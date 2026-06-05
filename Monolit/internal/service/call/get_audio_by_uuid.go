@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Service) GetAudioByUUID(ctx context.Context, uuid uuid.UUID) (models.File, error) {
-	call, err := s.repository.GetByUUID(ctx, uuid)
+func (s *Service) GetAudioByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.File, error) {
+	call, err := s.repository.GetByUUID(ctx, id, userID)
 	if err != nil {
 		return models.File{}, err
 	}

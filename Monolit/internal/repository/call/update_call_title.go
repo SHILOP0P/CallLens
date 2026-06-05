@@ -13,13 +13,14 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *Repository) UpdateCallTitle(ctx context.Context, id uuid.UUID, title string) (models.Call, error) {
+func (r *Repository) UpdateCallTitle(ctx context.Context, id uuid.UUID, userID uuid.UUID, title string) (models.Call, error) {
 	var repoCall repoModel.Call
 
 	queryUpdate := `
 	UPDATE calls
-	SET title = $2
+	SET title = $3
 	WHERE call_uuid = $1
+	  AND uploaded_by_user_uuid = $2
 	RETURNING call_uuid,
 	          title,
 	          status,
@@ -34,7 +35,7 @@ func (r *Repository) UpdateCallTitle(ctx context.Context, id uuid.UUID, title st
 	          created_at
 	`
 
-	row := r.db.QueryRowContext(ctx, queryUpdate, id, title)
+	row := r.db.QueryRowContext(ctx, queryUpdate, id, userID, title)
 
 	repoCall, err := scaner.ScanCall(row)
 	if err != nil {

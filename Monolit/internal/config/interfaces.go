@@ -21,4 +21,6 @@ type AuthConfig interface {
 	PasswordPepper() string
 	JWTSecret() string
 	AccessTokenTTL() time.Duration
+	RefreshTokenSecret() string
+	RefreshTokenTTL() time.Duration
 }

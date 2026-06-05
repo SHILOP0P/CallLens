@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *Repository) GetByUUID(ctx context.Context, callUUID uuid.UUID) (model.Call, error) {
+func (r *Repository) GetByUUID(ctx context.Context, callUUID uuid.UUID, userID uuid.UUID) (model.Call, error) {
 	var repoCall repoModel.Call
 	getQuery := `
 	SELECT call_uuid, 
@@ -30,8 +30,9 @@ func (r *Repository) GetByUUID(ctx context.Context, callUUID uuid.UUID) (model.C
 	       created_at
 	       FROM calls
 	WHERE call_uuid = $1
+	  AND uploaded_by_user_uuid = $2
 	`
-	row := r.db.QueryRowContext(ctx, getQuery, callUUID)
+	row := r.db.QueryRowContext(ctx, getQuery, callUUID, userID)
 
 	repoCall, err := scaner.ScanCall(row)
 

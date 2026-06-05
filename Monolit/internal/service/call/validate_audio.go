@@ -4,6 +4,8 @@ import (
 	"calllens/monolit/internal/models"
 	"path/filepath"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 var allowedAudioExtensions = map[string]struct{}{
@@ -23,6 +25,10 @@ var allowedAudioMimeTypes = map[string]struct{}{
 }
 
 func validateAudioInput(input models.CreateCallInput) error {
+	if input.UploadedByUserUUID == uuid.Nil {
+		return models.ErrInvalidCallOwner
+	}
+
 	ext := strings.ToLower(filepath.Ext(input.OriginalFilename))
 	if _, ok := allowedAudioExtensions[ext]; !ok {
 		return models.ErrUnsupportedAudioType

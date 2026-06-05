@@ -7,6 +7,7 @@ import (
 	"calllens/monolit/internal/httpserver"
 	"calllens/monolit/internal/migrator"
 	callRepo "calllens/monolit/internal/repository/call"
+	refreshSessionRepo "calllens/monolit/internal/repository/refresh_session"
 	userRepo "calllens/monolit/internal/repository/user"
 	authService "calllens/monolit/internal/service/auth"
 	callService "calllens/monolit/internal/service/call"
@@ -75,19 +76,23 @@ func main() {
 
 	callRepository := callRepo.NewRepository(sqlDB)
 	userRepository := userRepo.NewUserRepository(sqlDB)
+	refreshRepository := refreshSessionRepo.NewRepository(sqlDB)
 
 	callSvc := callService.NewService(callRepository, audioStorage)
 	authSvc := authService.NewService(
 		userRepository,
+		refreshRepository,
 		config.AppConfig().Auth.PasswordPepper(),
 		config.AppConfig().Auth.JWTSecret(),
 		config.AppConfig().Auth.AccessTokenTTL(),
+		config.AppConfig().Auth.RefreshTokenSecret(),
+		config.AppConfig().Auth.RefreshTokenTTL(),
 	)
 
 	callHandler := call.NewCallHandler(callSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, config.AppConfig().Auth.JWTSecret())
+	r := httpserver.NewRouter(callHandler, authHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

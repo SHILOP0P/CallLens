@@ -7,6 +7,6 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Service) GetByUUID(ctx context.Context, id uuid.UUID) (models.Call, error) {
-	return s.repository.GetByUUID(ctx, id)
+func (s *Service) GetByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Call, error) {
+	return s.repository.GetByUUID(ctx, id, userID)
 }
