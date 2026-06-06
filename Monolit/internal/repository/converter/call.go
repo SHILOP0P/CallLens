@@ -18,6 +18,7 @@ func RepoCallToModel(repoCall repoModel.Call) (model.Call, error) {
 		UploadedByUserUUID: repoCall.UploadedByUserUUID,
 		CompanyUUID:        repoCall.CompanyUUID,
 		DepartmentUUID:     repoCall.DepartmentUUID,
+		VisibilityScope:    model.CallVisibilityScope(repoCall.VisibilityScope),
 		CreatedAt:          repoCall.CreatedAt,
 	}, nil
 }
@@ -43,6 +44,7 @@ func ModelCallToRepoCall(modelCall model.Call) (repoCall repoModel.Call, err err
 		UploadedByUserUUID: modelCall.UploadedByUserUUID,
 		CompanyUUID:        modelCall.CompanyUUID,
 		DepartmentUUID:     modelCall.DepartmentUUID,
+		VisibilityScope:    string(modelCall.VisibilityScope),
 		CreatedAt:          modelCall.CreatedAt,
 	}, nil
 }

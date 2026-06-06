@@ -16,12 +16,12 @@ import (
 func (r *Repository) UpdateCallTitle(ctx context.Context, id uuid.UUID, userID uuid.UUID, title string) (models.Call, error) {
 	var repoCall repoModel.Call
 
-	queryUpdate := `
-	UPDATE calls
+	queryUpdate := fmt.Sprintf(`
+	UPDATE calls c
 	SET title = $3
-	WHERE call_uuid = $1
-	  AND uploaded_by_user_uuid = $2
-	RETURNING call_uuid,
+	WHERE c.call_uuid = $1
+	  AND %s
+	RETURNING c.call_uuid,
 	          title,
 	          status,
 	          audio_path,
@@ -32,8 +32,9 @@ func (r *Repository) UpdateCallTitle(ctx context.Context, id uuid.UUID, userID u
 	          uploaded_by_user_uuid,
 	          company_uuid,
 	          department_uuid,
+	          visibility_scope,
 	          created_at
-	`
+	`, visibleToUserCondition("c", "$2"))
 
 	row := r.db.QueryRowContext(ctx, queryUpdate, id, userID, title)
 

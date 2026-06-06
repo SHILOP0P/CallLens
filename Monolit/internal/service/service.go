@@ -30,3 +30,13 @@ type AuthService interface {
 	LogoutAll(ctx context.Context, userID uuid.UUID) error
 	Me(ctx context.Context, userID uuid.UUID) (models.User, error)
 }
+
+type CompanyService interface {
+	CreateCompany(ctx context.Context, input models.CreateCompanyInput) (models.Company, error)
+	AddCompanyMember(ctx context.Context, input models.AddCompanyMemberInput) (models.CompanyMember, error)
+	ListUserCompanies(ctx context.Context, userID uuid.UUID) ([]models.Company, error)
+	GetCompanyByUUID(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.Company, error)
+	CreateDepartment(ctx context.Context, input models.CreateDepartmentInput) (models.Department, error)
+	AddDepartmentMember(ctx context.Context, input models.AddDepartmentMemberInput) (models.DepartmentMember, error)
+	ListCompanyDepartments(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) ([]models.Department, error)
+}

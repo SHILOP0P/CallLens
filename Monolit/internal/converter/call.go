@@ -20,6 +20,7 @@ func CreateAPIToModel(callUUID uuid.UUID, title string, status models.CallStatus
 		MimeType:         mimeType,
 		DurationSeconds:  0,
 		SizeBytes:        sizeBytes,
+		VisibilityScope:  models.CallVisibilityScopePersonal,
 		CreatedAt:        now,
 	}, nil
 }
@@ -36,6 +37,7 @@ func CallModelToAPI(call models.Call) (dto.CallResponse, error) {
 		UploadedByUserUUID: nullUUIDToStringPtr(call.UploadedByUserUUID),
 		CompanyUUID:        nullUUIDToStringPtr(call.CompanyUUID),
 		DepartmentUUID:     nullUUIDToStringPtr(call.DepartmentUUID),
+		VisibilityScope:    string(call.VisibilityScope),
 		CreatedAt:          call.CreatedAt.Format(time.RFC3339),
 	}, nil
 }
@@ -63,6 +65,9 @@ func SavedFileToModel(savedFile models.SavedFile, callUUID uuid.UUID, input mode
 			UUID:  input.UploadedByUserUUID,
 			Valid: true,
 		},
-		CreatedAt: now,
+		CompanyUUID:     input.CompanyUUID,
+		DepartmentUUID:  input.DepartmentUUID,
+		VisibilityScope: input.VisibilityScope,
+		CreatedAt:       now,
 	}, nil
 }

@@ -10,6 +10,9 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strings"
+
+	"github.com/google/uuid"
 )
 
 func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -50,8 +53,16 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	fileContent := io.MultiReader(bytes.NewReader(buffer[:n]), file)
 
 	req := dto.CreateCallRequest{
-		Title: title,
-		Audio: fileHeader,
+		Title:          title,
+		Audio:          fileHeader,
+		CompanyUUID:    r.FormValue("company_uuid"),
+		DepartmentUUID: r.FormValue("department_uuid"),
+	}
+
+	companyUUID, departmentUUID, visibilityScope, err := parseCallPlacement(req.CompanyUUID, req.DepartmentUUID)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCallPlacement, "invalid call placement")
+		return
 	}
 
 	ext := filepath.Ext(fileHeader.Filename)
@@ -71,6 +82,9 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		SizeBytes:          sizeBytes,
 		Content:            fileContent,
 		UploadedByUserUUID: userID,
+		CompanyUUID:        companyUUID,
+		DepartmentUUID:     departmentUUID,
+		VisibilityScope:    visibilityScope,
 	}
 
 	createdCall, err := h.service.CreateCall(r.Context(), input)
@@ -87,6 +101,12 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		} else if errors.Is(err, model.ErrInvalidCallOwner) {
 			response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
 			return
+		} else if errors.Is(err, model.ErrInvalidCallPlacement) {
+			response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCallPlacement, "invalid call placement")
+			return
+		} else if errors.Is(err, model.ErrForbidden) {
+			response.WriteError(w, http.StatusForbidden, response.CodeForbidden, "forbidden")
+			return
 		} else {
 			response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToCreateCall, "failed to create call")
 			return
@@ -102,4 +122,43 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := response.WriteJSON(w, http.StatusCreated, resp); err != nil {
 		return
 	}
+}
+
+func parseCallPlacement(companyUUIDValue string, departmentUUIDValue string) (uuid.NullUUID, uuid.NullUUID, model.CallVisibilityScope, error) {
+	companyUUIDValue = strings.TrimSpace(companyUUIDValue)
+	departmentUUIDValue = strings.TrimSpace(departmentUUIDValue)
+
+	if companyUUIDValue == "" && departmentUUIDValue == "" {
+		return uuid.NullUUID{}, uuid.NullUUID{}, model.CallVisibilityScopePersonal, nil
+	}
+
+	if companyUUIDValue == "" {
+		return uuid.NullUUID{}, uuid.NullUUID{}, "", model.ErrInvalidCallPlacement
+	}
+
+	companyUUID, err := uuid.Parse(companyUUIDValue)
+	if err != nil {
+		return uuid.NullUUID{}, uuid.NullUUID{}, "", model.ErrInvalidCallPlacement
+	}
+
+	companyNullUUID := uuid.NullUUID{
+		UUID:  companyUUID,
+		Valid: true,
+	}
+
+	if departmentUUIDValue == "" {
+		return companyNullUUID, uuid.NullUUID{}, model.CallVisibilityScopeCompany, nil
+	}
+
+	departmentUUID, err := uuid.Parse(departmentUUIDValue)
+	if err != nil {
+		return uuid.NullUUID{}, uuid.NullUUID{}, "", model.ErrInvalidCallPlacement
+	}
+
+	departmentNullUUID := uuid.NullUUID{
+		UUID:  departmentUUID,
+		Valid: true,
+	}
+
+	return companyNullUUID, departmentNullUUID, model.CallVisibilityScopeDepartment, nil
 }

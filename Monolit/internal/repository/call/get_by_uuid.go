@@ -15,8 +15,8 @@ import (
 
 func (r *Repository) GetByUUID(ctx context.Context, callUUID uuid.UUID, userID uuid.UUID) (model.Call, error) {
 	var repoCall repoModel.Call
-	getQuery := `
-	SELECT call_uuid, 
+	getQuery := fmt.Sprintf(`
+	SELECT c.call_uuid,
 	       title,
 	       status,
 	       audio_path,
@@ -27,11 +27,13 @@ func (r *Repository) GetByUUID(ctx context.Context, callUUID uuid.UUID, userID u
 	       uploaded_by_user_uuid,
 	       company_uuid,
 	       department_uuid,
+	       visibility_scope,
 	       created_at
-	       FROM calls
-	WHERE call_uuid = $1
-	  AND uploaded_by_user_uuid = $2
-	`
+	FROM calls c
+	WHERE c.call_uuid = $1
+	  AND %s
+	`, visibleToUserCondition("c", "$2"))
+
 	row := r.db.QueryRowContext(ctx, getQuery, callUUID, userID)
 
 	repoCall, err := scaner.ScanCall(row)

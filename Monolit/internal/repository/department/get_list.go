@@ -1,0 +1,63 @@
+package department
+
+import (
+	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	repoModel "calllens/monolit/internal/repository/models"
+	"calllens/monolit/internal/repository/scaner"
+	"context"
+	"fmt"
+
+	"github.com/google/uuid"
+)
+
+func (r *Repository) ListVisibleCompanyDepartments(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) ([]model.Department, error) {
+	query := `
+	SELECT d.department_uuid,
+	       d.company_uuid,
+	       d.name,
+	       d.created_at
+	FROM departments d
+	WHERE d.company_uuid = $1
+	  AND (
+	      EXISTS (
+	          SELECT 1
+	          FROM company_members cm
+	          WHERE cm.company_uuid = d.company_uuid
+	            AND cm.user_uuid = $2
+	            AND cm.role = 'company_manager'
+	            AND cm.status = 'active'
+	      )
+	      OR EXISTS (
+	          SELECT 1
+	          FROM department_members dm
+	          WHERE dm.department_uuid = d.department_uuid
+	            AND dm.user_uuid = $2
+	            AND dm.status = 'active'
+	      )
+	  )
+	ORDER BY d.created_at DESC
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, companyID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list visible company departments: %w", err)
+	}
+	defer rows.Close()
+
+	var departments []repoModel.Department
+	for rows.Next() {
+		department, err := scaner.ScanDepartment(rows)
+		if err != nil {
+			return nil, fmt.Errorf("list visible company departments: %w", err)
+		}
+
+		departments = append(departments, department)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("list visible company departments: %w", err)
+	}
+
+	return converter.RepoDepartmentsToModels(departments)
+}

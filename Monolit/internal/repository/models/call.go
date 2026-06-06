@@ -18,6 +18,7 @@ type Call struct {
 	UploadedByUserUUID uuid.NullUUID
 	CompanyUUID        uuid.NullUUID
 	DepartmentUUID     uuid.NullUUID
+	VisibilityScope    string
 	CreatedAt          time.Time
 }
 

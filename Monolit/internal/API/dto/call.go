@@ -3,8 +3,10 @@ package dto
 import "mime/multipart"
 
 type CreateCallRequest struct {
-	Title string
-	Audio *multipart.FileHeader
+	Title          string
+	Audio          *multipart.FileHeader
+	CompanyUUID    string
+	DepartmentUUID string
 }
 
 type CallResponse struct {
@@ -18,6 +20,7 @@ type CallResponse struct {
 	UploadedByUserUUID *string `json:"uploaded_by_user_uuid"`
 	CompanyUUID        *string `json:"company_uuid"`
 	DepartmentUUID     *string `json:"department_uuid"`
+	VisibilityScope    string  `json:"visibility_scope"`
 	CreatedAt          string  `json:"created_at"`
 }
 

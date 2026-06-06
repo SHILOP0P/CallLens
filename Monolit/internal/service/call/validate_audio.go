@@ -46,5 +46,30 @@ func validateAudioInput(input models.CreateCallInput) error {
 		return models.ErrUnsupportedAudioType
 	}
 
+	if err := validateCallPlacement(input); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateCallPlacement(input models.CreateCallInput) error {
+	switch input.VisibilityScope {
+	case models.CallVisibilityScopePersonal:
+		if input.CompanyUUID.Valid || input.DepartmentUUID.Valid {
+			return models.ErrInvalidCallPlacement
+		}
+	case models.CallVisibilityScopeCompany:
+		if !input.CompanyUUID.Valid || input.DepartmentUUID.Valid {
+			return models.ErrInvalidCallPlacement
+		}
+	case models.CallVisibilityScopeDepartment:
+		if !input.CompanyUUID.Valid || !input.DepartmentUUID.Valid {
+			return models.ErrInvalidCallPlacement
+		}
+	default:
+		return models.ErrInvalidCallPlacement
+	}
+
 	return nil
 }

@@ -19,16 +19,24 @@ type Call struct {
 	UploadedByUserUUID uuid.NullUUID
 	CompanyUUID        uuid.NullUUID
 	DepartmentUUID     uuid.NullUUID
+	VisibilityScope    CallVisibilityScope
 	CreatedAt          time.Time
 }
 
 type CallStatus string
+type CallVisibilityScope string
 
 const (
 	CallStatusNew        CallStatus = "new"
 	CallStatusProcessing CallStatus = "processing"
 	CallStatusDone       CallStatus = "done"
 	CallStatusFailed     CallStatus = "failed"
+)
+
+const (
+	CallVisibilityScopePersonal   CallVisibilityScope = "personal"
+	CallVisibilityScopeCompany    CallVisibilityScope = "company"
+	CallVisibilityScopeDepartment CallVisibilityScope = "department"
 )
 
 type CreateCallInput struct {
@@ -38,4 +46,7 @@ type CreateCallInput struct {
 	SizeBytes          int64
 	Content            io.Reader
 	UploadedByUserUUID uuid.UUID
+	CompanyUUID        uuid.NullUUID
+	DepartmentUUID     uuid.NullUUID
+	VisibilityScope    CallVisibilityScope
 }

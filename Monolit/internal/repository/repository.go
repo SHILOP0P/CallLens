@@ -28,6 +28,22 @@ type UserRepository interface {
 	CreateUser(ctx context.Context, user models.User) (models.User, error)
 }
 
+type CompanyRepository interface {
+	CreateCompany(ctx context.Context, company models.Company, member models.CompanyMember) (models.Company, error)
+	AddCompanyMember(ctx context.Context, member models.CompanyMember) (models.CompanyMember, error)
+	ListUserCompanies(ctx context.Context, userID uuid.UUID) ([]models.Company, error)
+	GetCompanyByUUID(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.Company, error)
+	GetManagedCompanyByUserUUID(ctx context.Context, userID uuid.UUID) (models.Company, error)
+	GetCompanyMember(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.CompanyMember, error)
+}
+
+type DepartmentRepository interface {
+	CreateDepartment(ctx context.Context, department models.Department) (models.Department, error)
+	AddDepartmentMember(ctx context.Context, companyID uuid.UUID, member models.DepartmentMember) (models.DepartmentMember, error)
+	ListVisibleCompanyDepartments(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) ([]models.Department, error)
+	GetDepartmentMember(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID, userID uuid.UUID) (models.DepartmentMember, error)
+}
+
 type RefreshSessionRepository interface {
 	CreateRefreshSession(ctx context.Context, session models.RefreshSession) (models.RefreshSession, error)
 	GetRefreshSessionByHash(ctx context.Context, refreshTokenHash string) (models.RefreshSession, error)

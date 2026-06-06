@@ -16,6 +16,11 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 		return models.Call{}, err
 	}
 
+	if err := s.authorizeUpload(ctx, input); err != nil {
+		s.log.Warn(ctx, "create call failed", zap.String("reason", "upload_forbidden"), zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("visibility_scope", string(input.VisibilityScope)), zap.Error(err))
+		return models.Call{}, err
+	}
+
 	callUUID, err := uuid.NewV7()
 	if err != nil {
 		s.log.Error(ctx, "failed to generate call uuid", zap.String("user_id", input.UploadedByUserUUID.String()), zap.Error(err))

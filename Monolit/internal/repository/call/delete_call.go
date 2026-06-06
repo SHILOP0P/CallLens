@@ -9,11 +9,11 @@ import (
 )
 
 func (r *Repository) DeleteCall(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
-	queryDel := `
-	DELETE FROM calls
-	WHERE call_uuid = $1
-	  AND uploaded_by_user_uuid = $2
-	`
+	queryDel := fmt.Sprintf(`
+	DELETE FROM calls c
+	WHERE c.call_uuid = $1
+	  AND %s
+	`, visibleToUserCondition("c", "$2"))
 
 	result, err := r.db.ExecContext(ctx, queryDel, id, userID)
 	if err != nil {
