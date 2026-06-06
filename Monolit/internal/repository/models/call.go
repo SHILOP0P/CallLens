@@ -23,8 +23,9 @@ type Call struct {
 }
 
 const (
-	CallStatusNew        string = "new"
-	CallStatusProcessing string = "processing"
-	CallStatusDone       string = "done"
-	CallStatusFailed     string = "failed"
+	CallStatusNew         string = "new"
+	CallStatusProcessing  string = "processing"
+	CallStatusTranscribed string = "transcribed"
+	CallStatusAnalyzed    string = "analyzed"
+	CallStatusFailed      string = "failed"
 )

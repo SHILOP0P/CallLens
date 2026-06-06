@@ -27,10 +27,11 @@ type CallStatus string
 type CallVisibilityScope string
 
 const (
-	CallStatusNew        CallStatus = "new"
-	CallStatusProcessing CallStatus = "processing"
-	CallStatusDone       CallStatus = "done"
-	CallStatusFailed     CallStatus = "failed"
+	CallStatusNew         CallStatus = "new"
+	CallStatusProcessing  CallStatus = "processing"
+	CallStatusTranscribed CallStatus = "transcribed"
+	CallStatusAnalyzed    CallStatus = "analyzed"
+	CallStatusFailed      CallStatus = "failed"
 )
 
 const (
@@ -49,4 +50,9 @@ type CreateCallInput struct {
 	CompanyUUID        uuid.NullUUID
 	DepartmentUUID     uuid.NullUUID
 	VisibilityScope    CallVisibilityScope
+}
+
+type UpdateCallStatusInput struct {
+	CallUUID uuid.UUID
+	Status   CallStatus
 }

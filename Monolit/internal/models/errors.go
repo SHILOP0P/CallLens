@@ -11,6 +11,8 @@ var ErrUnsupportedAudioType = errors.New("unsupported audio type")
 var ErrInvalidCallTitle = errors.New("invalid call title")
 var ErrInvalidCallOwner = errors.New("invalid call owner")
 var ErrInvalidCallPlacement = errors.New("invalid call placement")
+var ErrInvalidCallStatus = errors.New("invalid call status")
+var ErrInvalidCallStatusTransition = errors.New("invalid call status transition")
 
 // USER
 var ErrUserNotFound = errors.New("user not found")

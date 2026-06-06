@@ -1,4 +1,4 @@
-package company
+package department
 
 import (
 	"calllens/monolit/internal/models"

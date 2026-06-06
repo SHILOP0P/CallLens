@@ -14,8 +14,10 @@ type CallRepository interface {
 	//GET
 	List(ctx context.Context, userID uuid.UUID) ([]models.Call, error)
 	GetByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Call, error)
+	GetByUUIDForProcessing(ctx context.Context, id uuid.UUID) (models.Call, error)
 	//UPDATE
 	UpdateCallTitle(ctx context.Context, id uuid.UUID, userID uuid.UUID, title string) (models.Call, error)
+	UpdateCallStatus(ctx context.Context, id uuid.UUID, status models.CallStatus) (models.Call, error)
 	//DELETE
 	DeleteCall(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }

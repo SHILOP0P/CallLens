@@ -4,6 +4,7 @@ import (
 	authAPI "calllens/monolit/internal/API/auth"
 	"calllens/monolit/internal/API/call"
 	companyAPI "calllens/monolit/internal/API/company"
+	departmentAPI "calllens/monolit/internal/API/department"
 	"calllens/monolit/internal/config"
 	"calllens/monolit/internal/httpserver"
 	"calllens/monolit/internal/logger"
@@ -16,6 +17,7 @@ import (
 	authService "calllens/monolit/internal/service/auth"
 	callService "calllens/monolit/internal/service/call"
 	companyService "calllens/monolit/internal/service/company"
+	departmentService "calllens/monolit/internal/service/department"
 	"calllens/monolit/internal/storage/audio"
 	"context"
 	"net/http"
@@ -98,13 +100,15 @@ func main() {
 		config.AppConfig().Auth.RefreshTokenTTL(),
 		appLogger,
 	)
-	companySvc := companyService.NewService(companyRepository, departmentRepository, appLogger)
+	companySvc := companyService.NewService(companyRepository, appLogger)
+	departmentSvc := departmentService.NewService(companyRepository, departmentRepository, appLogger)
 
 	callHandler := call.NewCallHandler(callSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc)
 	companyHandler := companyAPI.NewCompanyHandler(companySvc)
+	departmentHandler := departmentAPI.NewDepartmentHandler(departmentSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

@@ -34,6 +34,9 @@ type CompanyAPI interface {
 	List(w http.ResponseWriter, r *http.Request)
 	GetByUUID(w http.ResponseWriter, r *http.Request)
 	GetCompanyMembersOverview(w http.ResponseWriter, r *http.Request)
+}
+
+type DepartmentAPI interface {
 	CreateDepartment(w http.ResponseWriter, r *http.Request)
 	AddDepartmentMember(w http.ResponseWriter, r *http.Request)
 	ListDepartmentMembers(w http.ResponseWriter, r *http.Request)

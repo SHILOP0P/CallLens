@@ -18,6 +18,7 @@ type CallService interface {
 
 	//UPDATE
 	UpdateCallTitle(ctx context.Context, id uuid.UUID, userID uuid.UUID, title string) (models.Call, error)
+	UpdateCallStatus(ctx context.Context, input models.UpdateCallStatusInput) (models.Call, error)
 	//DELETE
 	DeleteCall(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
@@ -39,6 +40,9 @@ type CompanyService interface {
 	ListUserCompanies(ctx context.Context, userID uuid.UUID) ([]models.Company, error)
 	GetCompanyByUUID(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.Company, error)
 	GetCompanyMembersOverview(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.CompanyMembersOverview, error)
+}
+
+type DepartmentService interface {
 	CreateDepartment(ctx context.Context, input models.CreateDepartmentInput) (models.Department, error)
 	AddDepartmentMember(ctx context.Context, input models.AddDepartmentMemberInput) (models.DepartmentMember, error)
 	ListDepartmentMembers(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID, userID uuid.UUID) ([]models.DepartmentMember, error)
