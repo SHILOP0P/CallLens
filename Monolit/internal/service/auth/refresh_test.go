@@ -1,0 +1,129 @@
+package auth
+
+import (
+	"calllens/monolit/internal/auth/refresh"
+	"calllens/monolit/internal/models"
+	"errors"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
+)
+
+func (s *ServiceSuite) TestRefreshSuccess() {
+	userID := uuid.New()
+	sessionID := uuid.New()
+	rawRefreshToken := "refresh-token"
+	oldHash, err := refresh.Hash(rawRefreshToken, "refresh-secret")
+	s.Require().NoError(err)
+
+	currentSession := models.RefreshSession{
+		ID:               sessionID,
+		UserID:           userID,
+		RefreshTokenHash: oldHash,
+		ExpiresAt:        time.Now().UTC().Add(time.Hour),
+	}
+
+	s.refreshSessionRepository.On("GetRefreshSessionByHash", s.ctx, oldHash).
+		Return(currentSession, nil).
+		Once()
+	rotatedSession := currentSession
+	rotatedSession.RefreshTokenHash = "rotated_hash"
+
+	s.refreshSessionRepository.On("RotateRefreshSession", s.ctx, oldHash, mock.MatchedBy(func(newHash string) bool {
+		return newHash != "" && newHash != oldHash
+	}), mock.MatchedBy(func(expiresAt time.Time) bool {
+		return expiresAt.After(time.Now().UTC())
+	})).
+		Return(rotatedSession, nil).
+		Once()
+	s.userRepository.On("GetUserByUUID", s.ctx, userID).
+		Return(models.User{ID: userID, Email: "user@example.com", Role: models.UserRoleUser}, nil).
+		Once()
+
+	user, accessToken, newRefreshToken, err := s.service.Refresh(s.ctx, models.RefreshTokenInput{
+		RefreshToken: rawRefreshToken,
+	})
+
+	s.Require().NoError(err)
+	s.Require().Equal(userID, user.ID)
+	s.Require().NotEmpty(accessToken)
+	s.Require().NotEmpty(newRefreshToken)
+	s.Require().NotEqual(rawRefreshToken, newRefreshToken)
+}
+
+func (s *ServiceSuite) TestRefreshRejectsEmptyToken() {
+	_, _, _, err := s.service.Refresh(s.ctx, models.RefreshTokenInput{RefreshToken: " "})
+
+	s.Require().ErrorIs(err, models.ErrInvalidRefreshToken)
+}
+
+func (s *ServiceSuite) TestRefreshMapsSessionNotFoundToInvalidToken() {
+	rawRefreshToken := "refresh-token"
+	oldHash, err := refresh.Hash(rawRefreshToken, "refresh-secret")
+	s.Require().NoError(err)
+
+	s.refreshSessionRepository.On("GetRefreshSessionByHash", s.ctx, oldHash).
+		Return(models.RefreshSession{}, models.ErrRefreshSessionNotFound).
+		Once()
+
+	_, _, _, err = s.service.Refresh(s.ctx, models.RefreshTokenInput{RefreshToken: rawRefreshToken})
+
+	s.Require().ErrorIs(err, models.ErrInvalidRefreshToken)
+}
+
+func (s *ServiceSuite) TestRefreshRejectsExpiredOrRevokedSession() {
+	rawRefreshToken := "refresh-token"
+	oldHash, err := refresh.Hash(rawRefreshToken, "refresh-secret")
+	s.Require().NoError(err)
+
+	revokedAt := time.Now().UTC()
+	tests := []models.RefreshSession{
+		{ID: uuid.New(), UserID: uuid.New(), ExpiresAt: time.Now().UTC().Add(-time.Minute)},
+		{ID: uuid.New(), UserID: uuid.New(), ExpiresAt: time.Now().UTC().Add(time.Hour), RevokedAt: &revokedAt},
+	}
+
+	for _, session := range tests {
+		s.Run(session.ID.String(), func() {
+			s.SetupTest()
+			s.refreshSessionRepository.On("GetRefreshSessionByHash", s.ctx, oldHash).
+				Return(session, nil).
+				Once()
+
+			_, _, _, err := s.service.Refresh(s.ctx, models.RefreshTokenInput{RefreshToken: rawRefreshToken})
+
+			s.Require().ErrorIs(err, models.ErrInvalidRefreshToken)
+		})
+	}
+}
+
+func (s *ServiceSuite) TestRefreshMapsRotateNotFoundToInvalidToken() {
+	rawRefreshToken := "refresh-token"
+	oldHash, err := refresh.Hash(rawRefreshToken, "refresh-secret")
+	s.Require().NoError(err)
+	session := models.RefreshSession{ID: uuid.New(), UserID: uuid.New(), ExpiresAt: time.Now().UTC().Add(time.Hour)}
+
+	s.refreshSessionRepository.On("GetRefreshSessionByHash", s.ctx, oldHash).Return(session, nil).Once()
+	s.refreshSessionRepository.On("RotateRefreshSession", s.ctx, oldHash, mock.Anything, mock.Anything).
+		Return(models.RefreshSession{}, models.ErrRefreshSessionNotFound).
+		Once()
+
+	_, _, _, err = s.service.Refresh(s.ctx, models.RefreshTokenInput{RefreshToken: rawRefreshToken})
+
+	s.Require().ErrorIs(err, models.ErrInvalidRefreshToken)
+}
+
+func (s *ServiceSuite) TestRefreshReturnsRepositoryError() {
+	rawRefreshToken := "refresh-token"
+	oldHash, err := refresh.Hash(rawRefreshToken, "refresh-secret")
+	s.Require().NoError(err)
+	repoErr := errors.New("db failed")
+
+	s.refreshSessionRepository.On("GetRefreshSessionByHash", s.ctx, oldHash).
+		Return(models.RefreshSession{}, repoErr).
+		Once()
+
+	_, _, _, err = s.service.Refresh(s.ctx, models.RefreshTokenInput{RefreshToken: rawRefreshToken})
+
+	s.Require().ErrorIs(err, repoErr)
+}

@@ -1,0 +1,55 @@
+package department
+
+import (
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/models"
+	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
+)
+
+func (s *APISuite) TestUpdateDepartmentMemberStatusSuccess() {
+	companyID := uuid.New()
+	departmentID := uuid.New()
+	requestUserID := uuid.New()
+	userID := uuid.New()
+
+	s.service.On("UpdateDepartmentMemberStatus", mock.Anything, models.UpdateDepartmentMemberStatusInput{
+		CompanyUUID:    companyID,
+		DepartmentUUID: departmentID,
+		RequestUser:    requestUserID,
+		UserUUID:       userID,
+		Status:         models.MembershipStatusSuspended,
+	}).
+		Return(models.DepartmentMember{DepartmentUUID: departmentID, UserUUID: userID, Status: models.MembershipStatusSuspended, CreatedAt: time.Now().UTC()}, nil).
+		Once()
+
+	rec, req := s.request(http.MethodPatch, "/api/v1/companies/"+companyID.String()+"/departments/"+departmentID.String()+"/members/"+userID.String()+"/status", `{"status":"suspended"}`, requestUserID, map[string]string{
+		"uuid":            companyID.String(),
+		"department_uuid": departmentID.String(),
+		"user_uuid":       userID.String(),
+	})
+
+	s.api.UpdateDepartmentMemberStatus(rec, req)
+
+	s.Require().Equal(http.StatusOK, rec.Code)
+}
+
+func (s *APISuite) TestUpdateDepartmentMemberStatusRejectsInvalidBody() {
+	companyID := uuid.New()
+	departmentID := uuid.New()
+	userID := uuid.New()
+
+	rec, req := s.request(http.MethodPatch, "/api/v1/companies/"+companyID.String()+"/departments/"+departmentID.String()+"/members/"+userID.String()+"/status", `{`, uuid.New(), map[string]string{
+		"uuid":            companyID.String(),
+		"department_uuid": departmentID.String(),
+		"user_uuid":       userID.String(),
+	})
+
+	s.api.UpdateDepartmentMemberStatus(rec, req)
+
+	s.Require().Equal(http.StatusBadRequest, rec.Code)
+	s.requireErrorCode(rec, response.CodeInvalidRequestBody)
+}
