@@ -41,3 +41,24 @@ type AddDepartmentMemberInput struct {
 	UserUUID       uuid.UUID
 	Role           DepartmentMemberRole
 }
+
+type UpdateDepartmentMemberRoleInput struct {
+	CompanyUUID    uuid.UUID
+	DepartmentUUID uuid.UUID
+	RequestUser    uuid.UUID
+	UserUUID       uuid.UUID
+	Role           DepartmentMemberRole
+}
+
+type UpdateDepartmentMemberStatusInput struct {
+	CompanyUUID    uuid.UUID
+	DepartmentUUID uuid.UUID
+	RequestUser    uuid.UUID
+	UserUUID       uuid.UUID
+	Status         MembershipStatus
+}
+
+type DepartmentMembersOverview struct {
+	Department Department
+	Members    []DepartmentMember
+}

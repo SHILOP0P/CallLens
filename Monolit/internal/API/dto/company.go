@@ -41,10 +41,30 @@ type AddDepartmentMemberRequest struct {
 	Role     string `json:"role"`
 }
 
+type UpdateMemberRoleRequest struct {
+	Role string `json:"role"`
+}
+
+type UpdateMemberStatusRequest struct {
+	Status string `json:"status"`
+}
+
 type DepartmentMemberResponse struct {
 	DepartmentUUID string `json:"department_uuid"`
 	UserUUID       string `json:"user_uuid"`
 	Role           string `json:"role"`
 	Status         string `json:"status"`
 	CreatedAt      string `json:"created_at"`
+}
+
+type CompanyMembersOverviewResponse struct {
+	CompanyUUID      string                              `json:"company_uuid"`
+	Manager          *CompanyMemberResponse              `json:"manager"`
+	CompanyEmployees []CompanyMemberResponse             `json:"company_employees"`
+	Departments      []DepartmentMembersOverviewResponse `json:"departments"`
+}
+
+type DepartmentMembersOverviewResponse struct {
+	Department DepartmentResponse         `json:"department"`
+	Members    []DepartmentMemberResponse `json:"members"`
 }

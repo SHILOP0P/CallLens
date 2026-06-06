@@ -48,3 +48,24 @@ type AddCompanyMemberInput struct {
 	UserUUID    uuid.UUID
 	Role        CompanyMemberRole
 }
+
+type UpdateCompanyMemberRoleInput struct {
+	CompanyUUID uuid.UUID
+	RequestUser uuid.UUID
+	UserUUID    uuid.UUID
+	Role        CompanyMemberRole
+}
+
+type UpdateCompanyMemberStatusInput struct {
+	CompanyUUID uuid.UUID
+	RequestUser uuid.UUID
+	UserUUID    uuid.UUID
+	Status      MembershipStatus
+}
+
+type CompanyMembersOverview struct {
+	CompanyUUID      uuid.UUID
+	Manager          *CompanyMember
+	CompanyEmployees []CompanyMember
+	Departments      []DepartmentMembersOverview
+}

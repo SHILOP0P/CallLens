@@ -1,0 +1,87 @@
+package company
+
+import (
+	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/converter"
+	"calllens/monolit/internal/models"
+	"encoding/json"
+	"errors"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+)
+
+func (h *Handler) UpdateCompanyMemberRole(w http.ResponseWriter, r *http.Request) {
+	requestUserID, ok := userIDFromRequest(r)
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+
+	companyID, userID, ok := companyMemberRouteParams(w, r)
+	if !ok {
+		return
+	}
+
+	var req dto.UpdateMemberRoleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidRequestBody, "invalid request body")
+		return
+	}
+
+	member, err := h.service.UpdateCompanyMemberRole(r.Context(), models.UpdateCompanyMemberRoleInput{
+		CompanyUUID: companyID,
+		RequestUser: requestUserID,
+		UserUUID:    userID,
+		Role:        models.CompanyMemberRole(req.Role),
+	})
+	if err != nil {
+		writeCompanyMemberError(w, err, response.CodeFailedToUpdateCompanyMember, "failed to update company member")
+		return
+	}
+
+	resp, err := converter.CompanyMemberModelToAPI(member)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertCompany, "failed to convert company member")
+		return
+	}
+
+	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
+		return
+	}
+}
+
+func companyMemberRouteParams(w http.ResponseWriter, r *http.Request) (uuid.UUID, uuid.UUID, bool) {
+	companyID, err := uuid.Parse(chi.URLParam(r, "uuid"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCompanyInput, "invalid company uuid")
+		return uuid.Nil, uuid.Nil, false
+	}
+
+	userID, err := uuid.Parse(chi.URLParam(r, "user_uuid"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCompanyInput, "invalid user uuid")
+		return uuid.Nil, uuid.Nil, false
+	}
+
+	return companyID, userID, true
+}
+
+func writeCompanyMemberError(w http.ResponseWriter, err error, fallbackCode string, fallbackMessage string) {
+	if errors.Is(err, models.ErrInvalidCompanyInput) {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCompanyInput, "invalid company input")
+		return
+	}
+	if errors.Is(err, models.ErrCompanyNotFound) {
+		response.WriteError(w, http.StatusNotFound, response.CodeCompanyNotFound, "company member not found")
+		return
+	}
+	if errors.Is(err, models.ErrForbidden) {
+		response.WriteError(w, http.StatusForbidden, response.CodeForbidden, "forbidden")
+		return
+	}
+
+	response.WriteError(w, http.StatusInternalServerError, fallbackCode, fallbackMessage)
+}

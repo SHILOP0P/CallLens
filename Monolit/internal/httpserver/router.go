@@ -50,10 +50,16 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 		r.With(authGuard).Post("/companies", companyAPI.Create)
 		r.With(authGuard).Get("/companies", companyAPI.List)
 		r.With(authGuard).Get("/companies/{uuid}", companyAPI.GetByUUID)
+		r.With(authGuard).Get("/companies/{uuid}/members", companyAPI.GetCompanyMembersOverview)
 		r.With(authGuard).Post("/companies/{uuid}/members", companyAPI.AddCompanyMember)
+		r.With(authGuard).Patch("/companies/{uuid}/members/{user_uuid}/role", companyAPI.UpdateCompanyMemberRole)
+		r.With(authGuard).Patch("/companies/{uuid}/members/{user_uuid}/status", companyAPI.UpdateCompanyMemberStatus)
 		r.With(authGuard).Post("/companies/{uuid}/departments", companyAPI.CreateDepartment)
 		r.With(authGuard).Get("/companies/{uuid}/departments", companyAPI.ListDepartments)
+		r.With(authGuard).Get("/companies/{uuid}/departments/{department_uuid}/members", companyAPI.ListDepartmentMembers)
 		r.With(authGuard).Post("/companies/{uuid}/departments/{department_uuid}/members", companyAPI.AddDepartmentMember)
+		r.With(authGuard).Patch("/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/role", companyAPI.UpdateDepartmentMemberRole)
+		r.With(authGuard).Patch("/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/status", companyAPI.UpdateDepartmentMemberStatus)
 	})
 
 	return r

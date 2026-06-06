@@ -29,9 +29,15 @@ type AuthAPI interface {
 type CompanyAPI interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	AddCompanyMember(w http.ResponseWriter, r *http.Request)
+	UpdateCompanyMemberRole(w http.ResponseWriter, r *http.Request)
+	UpdateCompanyMemberStatus(w http.ResponseWriter, r *http.Request)
 	List(w http.ResponseWriter, r *http.Request)
 	GetByUUID(w http.ResponseWriter, r *http.Request)
+	GetCompanyMembersOverview(w http.ResponseWriter, r *http.Request)
 	CreateDepartment(w http.ResponseWriter, r *http.Request)
 	AddDepartmentMember(w http.ResponseWriter, r *http.Request)
+	ListDepartmentMembers(w http.ResponseWriter, r *http.Request)
+	UpdateDepartmentMemberRole(w http.ResponseWriter, r *http.Request)
+	UpdateDepartmentMemberStatus(w http.ResponseWriter, r *http.Request)
 	ListDepartments(w http.ResponseWriter, r *http.Request)
 }
