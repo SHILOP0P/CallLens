@@ -38,3 +38,8 @@ var ErrInvalidRefreshToken = errors.New("invalid refresh token")
 var ErrTranscriptionNotFound = errors.New("transcription not found")
 var ErrInvalidTranscriptionInput = errors.New("invalid transcription input")
 var ErrNoCallsForProcessing = errors.New("no calls for processing")
+
+// PROCESSING JOB
+var ErrProcessingJobNotFound = errors.New("processing job not found")
+var ErrNoProcessingJobs = errors.New("no processing jobs")
+var ErrInvalidProcessingJobType = errors.New("invalid processing job type")

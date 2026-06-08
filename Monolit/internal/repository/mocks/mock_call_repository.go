@@ -81,6 +81,64 @@ func (_c *CallRepository_CreateCall_Call) RunAndReturn(run func(context.Context,
 	return _c
 }
 
+// CreateCallWithProcessingJob provides a mock function with given fields: ctx, call, job
+func (_m *CallRepository) CreateCallWithProcessingJob(ctx context.Context, call models.Call, job models.ProcessingJob) (models.Call, error) {
+	ret := _m.Called(ctx, call, job)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateCallWithProcessingJob")
+	}
+
+	var r0 models.Call
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.Call, models.ProcessingJob) (models.Call, error)); ok {
+		return rf(ctx, call, job)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.Call, models.ProcessingJob) models.Call); ok {
+		r0 = rf(ctx, call, job)
+	} else {
+		r0 = ret.Get(0).(models.Call)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.Call, models.ProcessingJob) error); ok {
+		r1 = rf(ctx, call, job)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CallRepository_CreateCallWithProcessingJob_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateCallWithProcessingJob'
+type CallRepository_CreateCallWithProcessingJob_Call struct {
+	*mock.Call
+}
+
+// CreateCallWithProcessingJob is a helper method to define mock.On call
+//   - ctx context.Context
+//   - call models.Call
+//   - job models.ProcessingJob
+func (_e *CallRepository_Expecter) CreateCallWithProcessingJob(ctx interface{}, call interface{}, job interface{}) *CallRepository_CreateCallWithProcessingJob_Call {
+	return &CallRepository_CreateCallWithProcessingJob_Call{Call: _e.mock.On("CreateCallWithProcessingJob", ctx, call, job)}
+}
+
+func (_c *CallRepository_CreateCallWithProcessingJob_Call) Run(run func(ctx context.Context, call models.Call, job models.ProcessingJob)) *CallRepository_CreateCallWithProcessingJob_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.Call), args[2].(models.ProcessingJob))
+	})
+	return _c
+}
+
+func (_c *CallRepository_CreateCallWithProcessingJob_Call) Return(_a0 models.Call, _a1 error) *CallRepository_CreateCallWithProcessingJob_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CallRepository_CreateCallWithProcessingJob_Call) RunAndReturn(run func(context.Context, models.Call, models.ProcessingJob) (models.Call, error)) *CallRepository_CreateCallWithProcessingJob_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteCall provides a mock function with given fields: ctx, id, userID
 func (_m *CallRepository) DeleteCall(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
 	ret := _m.Called(ctx, id, userID)

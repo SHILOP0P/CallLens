@@ -76,3 +76,116 @@ func (r *Repository) CreateCall(ctx context.Context, call model.Call) (model.Cal
 
 	return converter.RepoCallToModel(repoCallNew)
 }
+
+func (r *Repository) CreateCallWithProcessingJob(ctx context.Context, call model.Call, job model.ProcessingJob) (model.Call, error) {
+	repoCall, err := converter.ModelCallToRepoCall(call)
+	if err != nil {
+		return model.Call{}, model.ErrCallConvert
+	}
+
+	repoJob, err := converter.ModelProcessingJobToRepoModel(job)
+	if err != nil {
+		return model.Call{}, err
+	}
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return model.Call{}, fmt.Errorf("begin create call with processing job transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	createCall := `
+	INSERT INTO calls (
+		call_uuid,
+		title,
+		status,
+		audio_path,
+		original_filename,
+		mime_type,
+		size_bytes,
+		duration_seconds,
+		uploaded_by_user_uuid,
+		company_uuid,
+		department_uuid,
+		visibility_scope,
+		created_at
+	)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	RETURNING call_uuid,
+	          title,
+	          status,
+	          audio_path,
+	          original_filename,
+	          mime_type,
+	          size_bytes,
+	          duration_seconds,
+	          uploaded_by_user_uuid,
+	          company_uuid,
+	          department_uuid,
+	          visibility_scope,
+	          created_at
+	`
+
+	row := tx.QueryRowContext(ctx, createCall,
+		repoCall.ID,
+		repoCall.Title,
+		repoCall.Status,
+		repoCall.AudioPath,
+		repoCall.OriginalFilename,
+		repoCall.MimeType,
+		repoCall.SizeBytes,
+		repoCall.DurationSeconds,
+		repoCall.UploadedByUserUUID,
+		repoCall.CompanyUUID,
+		repoCall.DepartmentUUID,
+		repoCall.VisibilityScope,
+		repoCall.CreatedAt,
+	)
+
+	createdRepoCall, err := scaner.ScanCall(row)
+	if err != nil {
+		return model.Call{}, fmt.Errorf("create call with processing job: create call: %w", err)
+	}
+
+	createJob := `
+	INSERT INTO processing_jobs (
+		job_uuid,
+		job_type,
+		entity_uuid,
+		status,
+		attempts,
+		max_attempts,
+		available_at,
+		locked_at,
+		locked_by,
+		last_error,
+		created_at,
+		updated_at
+	)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	`
+
+	_, err = tx.ExecContext(ctx, createJob,
+		repoJob.ID,
+		repoJob.Type,
+		repoJob.EntityUUID,
+		repoJob.Status,
+		repoJob.Attempts,
+		repoJob.MaxAttempts,
+		repoJob.AvailableAt,
+		repoJob.LockedAt,
+		repoJob.LockedBy,
+		repoJob.LastError,
+		repoJob.CreatedAt,
+		repoJob.UpdatedAt,
+	)
+	if err != nil {
+		return model.Call{}, fmt.Errorf("create call with processing job: create job: %w", err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return model.Call{}, fmt.Errorf("commit create call with processing job transaction: %w", err)
+	}
+
+	return converter.RepoCallToModel(createdRepoCall)
+}

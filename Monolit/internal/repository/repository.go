@@ -11,6 +11,7 @@ import (
 type CallRepository interface {
 	//POST
 	CreateCall(ctx context.Context, call models.Call) (models.Call, error)
+	CreateCallWithProcessingJob(ctx context.Context, call models.Call, job models.ProcessingJob) (models.Call, error)
 	//GET
 	List(ctx context.Context, userID uuid.UUID) ([]models.Call, error)
 	GetByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Call, error)
@@ -68,4 +69,12 @@ type TranscriptionRepository interface {
 	GetByCallUUID(ctx context.Context, callID uuid.UUID) (models.Transcription, error)
 	MarkTranscribed(ctx context.Context, id uuid.UUID, text string, language *string) (models.Transcription, error)
 	MarkFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.Transcription, error)
+}
+
+type ProcessingJobRepository interface {
+	Create(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error)
+	TakeNext(ctx context.Context, workerID string, staleAfter time.Duration) (models.ProcessingJob, error)
+	MarkDone(ctx context.Context, id uuid.UUID) (models.ProcessingJob, error)
+	MarkRetry(ctx context.Context, id uuid.UUID, lastError string, delay time.Duration) (models.ProcessingJob, error)
+	MarkFailed(ctx context.Context, id uuid.UUID, lastError string) (models.ProcessingJob, error)
 }

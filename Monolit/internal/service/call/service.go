@@ -9,6 +9,7 @@ import (
 type Service struct {
 	repository              repo.CallRepository
 	transcriptionRepository repo.TranscriptionRepository
+	processingJobRepository repo.ProcessingJobRepository
 	companyRepository       repo.CompanyRepository
 	departmentRepository    repo.DepartmentRepository
 	audioStorage            storage.Storage
@@ -37,4 +38,8 @@ func NewService(
 
 func (s *Service) SetTranscriptionRepository(repository repo.TranscriptionRepository) {
 	s.transcriptionRepository = repository
+}
+
+func (s *Service) SetProcessingJobRepository(repository repo.ProcessingJobRepository) {
+	s.processingJobRepository = repository
 }

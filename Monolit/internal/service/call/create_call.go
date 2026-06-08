@@ -48,7 +48,7 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 		return models.Call{}, err
 	}
 
-	createdCall, err := s.repository.CreateCall(ctx, call)
+	createdCall, err := s.createCallRecord(ctx, call, now)
 	if err != nil {
 		_ = s.audioStorage.Delete(context.Background(), savedFile.Path)
 		s.log.Error(ctx, "failed to create call record", zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("call_id", callUUID.String()), zap.Error(err))
@@ -65,4 +65,29 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 	)
 
 	return createdCall, nil
+}
+
+func (s *Service) createCallRecord(ctx context.Context, call models.Call, now time.Time) (models.Call, error) {
+	if s.processingJobRepository == nil {
+		return s.repository.CreateCall(ctx, call)
+	}
+
+	jobID, err := uuid.NewV7()
+	if err != nil {
+		return models.Call{}, err
+	}
+
+	job := models.ProcessingJob{
+		ID:          jobID,
+		Type:        models.ProcessingJobTypeTranscribeCall,
+		EntityUUID:  call.ID,
+		Status:      models.ProcessingJobStatusPending,
+		Attempts:    0,
+		MaxAttempts: 3,
+		AvailableAt: now,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+
+	return s.repository.CreateCallWithProcessingJob(ctx, call, job)
 }

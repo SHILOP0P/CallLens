@@ -12,6 +12,7 @@ import (
 	callRepo "calllens/monolit/internal/repository/call"
 	companyRepo "calllens/monolit/internal/repository/company"
 	departmentRepo "calllens/monolit/internal/repository/department"
+	processingJobRepo "calllens/monolit/internal/repository/processing_job"
 	refreshSessionRepo "calllens/monolit/internal/repository/refresh_session"
 	transcriptionRepo "calllens/monolit/internal/repository/transcription"
 	userRepo "calllens/monolit/internal/repository/user"
@@ -19,7 +20,9 @@ import (
 	callService "calllens/monolit/internal/service/call"
 	companyService "calllens/monolit/internal/service/company"
 	departmentService "calllens/monolit/internal/service/department"
+	processingService "calllens/monolit/internal/service/processing"
 	"calllens/monolit/internal/storage/audio"
+	mockTranscriber "calllens/monolit/internal/transcriber/mock"
 	"context"
 	"net/http"
 
@@ -90,9 +93,16 @@ func main() {
 	companyRepository := companyRepo.NewRepository(sqlDB)
 	departmentRepository := departmentRepo.NewRepository(sqlDB)
 	transcriptionRepository := transcriptionRepo.NewRepository(sqlDB)
+	processingJobRepository := processingJobRepo.NewRepository(sqlDB)
+
+	transcriber := mockTranscriber.New()
+	processingSvc := processingService.NewService(callRepository, transcriptionRepository, processingJobRepository, audioStorage, transcriber, appLogger)
+	processingWorker := processingService.NewWorker(processingSvc, appLogger)
+	go processingWorker.Run(ctx)
 
 	callSvc := callService.NewService(callRepository, companyRepository, departmentRepository, audioStorage, appLogger)
 	callSvc.SetTranscriptionRepository(transcriptionRepository)
+	callSvc.SetProcessingJobRepository(processingJobRepository)
 	authSvc := authService.NewService(
 		userRepository,
 		refreshRepository,

@@ -1,0 +1,56 @@
+package processing_job
+
+import (
+	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	"calllens/monolit/internal/repository/scaner"
+	"context"
+	"fmt"
+)
+
+func (r *Repository) Create(ctx context.Context, job model.ProcessingJob) (model.ProcessingJob, error) {
+	repoJob, err := converter.ModelProcessingJobToRepoModel(job)
+	if err != nil {
+		return model.ProcessingJob{}, err
+	}
+
+	query := `
+	INSERT INTO processing_jobs (
+		job_uuid,
+		job_type,
+		entity_uuid,
+		status,
+		attempts,
+		max_attempts,
+		available_at,
+		locked_at,
+		locked_by,
+		last_error,
+		created_at,
+		updated_at
+	)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	RETURNING ` + processingJobReturningColumns
+
+	row := r.db.QueryRowContext(ctx, query,
+		repoJob.ID,
+		repoJob.Type,
+		repoJob.EntityUUID,
+		repoJob.Status,
+		repoJob.Attempts,
+		repoJob.MaxAttempts,
+		repoJob.AvailableAt,
+		repoJob.LockedAt,
+		repoJob.LockedBy,
+		repoJob.LastError,
+		repoJob.CreatedAt,
+		repoJob.UpdatedAt,
+	)
+
+	createdJob, err := scaner.ScanProcessingJob(row)
+	if err != nil {
+		return model.ProcessingJob{}, fmt.Errorf("create processing job: %w", err)
+	}
+
+	return converter.RepoProcessingJobToModel(createdJob)
+}
