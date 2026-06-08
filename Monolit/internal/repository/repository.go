@@ -20,6 +20,8 @@ type CallRepository interface {
 	UpdateCallStatus(ctx context.Context, id uuid.UUID, status models.CallStatus) (models.Call, error)
 	//DELETE
 	DeleteCall(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
+	//PROCESSING
+	TakeNextForProcessing(ctx context.Context) (models.Call, error)
 }
 
 type UserRepository interface {
@@ -59,4 +61,11 @@ type RefreshSessionRepository interface {
 	RotateRefreshSession(ctx context.Context, oldRefreshTokenHash string, newRefreshTokenHash string, expiresAt time.Time) (models.RefreshSession, error)
 	RevokeRefreshSession(ctx context.Context, sessionID uuid.UUID, reason string) error
 	RevokeAllUserRefreshSessions(ctx context.Context, userID uuid.UUID, reason string) error
+}
+
+type TranscriptionRepository interface {
+	Create(ctx context.Context, transcription models.Transcription) (models.Transcription, error)
+	GetByCallUUID(ctx context.Context, callID uuid.UUID) (models.Transcription, error)
+	MarkTranscribed(ctx context.Context, id uuid.UUID, text string, language *string) (models.Transcription, error)
+	MarkFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.Transcription, error)
 }

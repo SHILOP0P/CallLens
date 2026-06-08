@@ -7,11 +7,12 @@ import (
 )
 
 type Service struct {
-	repository           repo.CallRepository
-	companyRepository    repo.CompanyRepository
-	departmentRepository repo.DepartmentRepository
-	audioStorage         storage.Storage
-	log                  logger.Logger
+	repository              repo.CallRepository
+	transcriptionRepository repo.TranscriptionRepository
+	companyRepository       repo.CompanyRepository
+	departmentRepository    repo.DepartmentRepository
+	audioStorage            storage.Storage
+	log                     logger.Logger
 }
 
 func NewService(
@@ -32,4 +33,8 @@ func NewService(
 		audioStorage:         audioStorage,
 		log:                  log,
 	}
+}
+
+func (s *Service) SetTranscriptionRepository(repository repo.TranscriptionRepository) {
+	s.transcriptionRepository = repository
 }

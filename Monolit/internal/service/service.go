@@ -15,6 +15,7 @@ type CallService interface {
 	List(ctx context.Context, userID uuid.UUID) ([]models.Call, error)
 	GetByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Call, error)
 	GetAudioByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.File, error)
+	GetTranscriptionByCallUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Transcription, error)
 
 	//UPDATE
 	UpdateCallTitle(ctx context.Context, id uuid.UUID, userID uuid.UUID, title string) (models.Call, error)

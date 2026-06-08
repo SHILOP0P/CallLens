@@ -33,6 +33,7 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 		r.With(authGuard).Get("/calls", callAPI.List)
 		r.With(authGuard).Get("/calls/{uuid}", callAPI.GetByUUID)
 		r.With(authGuard).Get("/calls/{uuid}/audio", callAPI.GetAudioByUUID)
+		r.With(authGuard).Get("/calls/{uuid}/transcription", callAPI.GetTranscriptionByCallUUID)
 		//UPDATE
 		r.With(authGuard).Patch("/calls/{uuid}", callAPI.UpdateCallTitle)
 		//DELETE

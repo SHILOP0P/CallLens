@@ -303,6 +303,62 @@ func (_c *CallRepository_List_Call) RunAndReturn(run func(context.Context, uuid.
 	return _c
 }
 
+// TakeNextForProcessing provides a mock function with given fields: ctx
+func (_m *CallRepository) TakeNextForProcessing(ctx context.Context) (models.Call, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for TakeNextForProcessing")
+	}
+
+	var r0 models.Call
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (models.Call, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) models.Call); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(models.Call)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CallRepository_TakeNextForProcessing_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'TakeNextForProcessing'
+type CallRepository_TakeNextForProcessing_Call struct {
+	*mock.Call
+}
+
+// TakeNextForProcessing is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *CallRepository_Expecter) TakeNextForProcessing(ctx interface{}) *CallRepository_TakeNextForProcessing_Call {
+	return &CallRepository_TakeNextForProcessing_Call{Call: _e.mock.On("TakeNextForProcessing", ctx)}
+}
+
+func (_c *CallRepository_TakeNextForProcessing_Call) Run(run func(ctx context.Context)) *CallRepository_TakeNextForProcessing_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *CallRepository_TakeNextForProcessing_Call) Return(_a0 models.Call, _a1 error) *CallRepository_TakeNextForProcessing_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CallRepository_TakeNextForProcessing_Call) RunAndReturn(run func(context.Context) (models.Call, error)) *CallRepository_TakeNextForProcessing_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateCallStatus provides a mock function with given fields: ctx, id, status
 func (_m *CallRepository) UpdateCallStatus(ctx context.Context, id uuid.UUID, status models.CallStatus) (models.Call, error) {
 	ret := _m.Called(ctx, id, status)

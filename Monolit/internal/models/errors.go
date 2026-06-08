@@ -33,3 +33,8 @@ var ErrForbidden = errors.New("forbidden")
 // REFRESH SESSION
 var ErrRefreshSessionNotFound = errors.New("refresh session not found")
 var ErrInvalidRefreshToken = errors.New("invalid refresh token")
+
+// TRANSCRIPT
+var ErrTranscriptionNotFound = errors.New("transcription not found")
+var ErrInvalidTranscriptionInput = errors.New("invalid transcription input")
+var ErrNoCallsForProcessing = errors.New("no calls for processing")

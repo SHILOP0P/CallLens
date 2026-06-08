@@ -13,6 +13,7 @@ import (
 	companyRepo "calllens/monolit/internal/repository/company"
 	departmentRepo "calllens/monolit/internal/repository/department"
 	refreshSessionRepo "calllens/monolit/internal/repository/refresh_session"
+	transcriptionRepo "calllens/monolit/internal/repository/transcription"
 	userRepo "calllens/monolit/internal/repository/user"
 	authService "calllens/monolit/internal/service/auth"
 	callService "calllens/monolit/internal/service/call"
@@ -88,8 +89,10 @@ func main() {
 	refreshRepository := refreshSessionRepo.NewRepository(sqlDB)
 	companyRepository := companyRepo.NewRepository(sqlDB)
 	departmentRepository := departmentRepo.NewRepository(sqlDB)
+	transcriptionRepository := transcriptionRepo.NewRepository(sqlDB)
 
 	callSvc := callService.NewService(callRepository, companyRepository, departmentRepository, audioStorage, appLogger)
+	callSvc.SetTranscriptionRepository(transcriptionRepository)
 	authSvc := authService.NewService(
 		userRepository,
 		refreshRepository,

@@ -10,6 +10,7 @@ type CallAPI interface {
 	GetByUUID(w http.ResponseWriter, r *http.Request)
 	List(w http.ResponseWriter, r *http.Request)
 	GetAudioByUUID(w http.ResponseWriter, r *http.Request)
+	GetTranscriptionByCallUUID(w http.ResponseWriter, r *http.Request)
 
 	//UPDATE
 	UpdateCallTitle(w http.ResponseWriter, r *http.Request)

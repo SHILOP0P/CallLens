@@ -245,6 +245,64 @@ func (_c *CallService_GetByUUID_Call) RunAndReturn(run func(context.Context, uui
 	return _c
 }
 
+// GetTranscriptionByCallUUID provides a mock function with given fields: ctx, id, userID
+func (_m *CallService) GetTranscriptionByCallUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Transcription, error) {
+	ret := _m.Called(ctx, id, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTranscriptionByCallUUID")
+	}
+
+	var r0 models.Transcription
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) (models.Transcription, error)); ok {
+		return rf(ctx, id, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) models.Transcription); ok {
+		r0 = rf(ctx, id, userID)
+	} else {
+		r0 = ret.Get(0).(models.Transcription)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r1 = rf(ctx, id, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CallService_GetTranscriptionByCallUUID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetTranscriptionByCallUUID'
+type CallService_GetTranscriptionByCallUUID_Call struct {
+	*mock.Call
+}
+
+// GetTranscriptionByCallUUID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - userID uuid.UUID
+func (_e *CallService_Expecter) GetTranscriptionByCallUUID(ctx interface{}, id interface{}, userID interface{}) *CallService_GetTranscriptionByCallUUID_Call {
+	return &CallService_GetTranscriptionByCallUUID_Call{Call: _e.mock.On("GetTranscriptionByCallUUID", ctx, id, userID)}
+}
+
+func (_c *CallService_GetTranscriptionByCallUUID_Call) Run(run func(ctx context.Context, id uuid.UUID, userID uuid.UUID)) *CallService_GetTranscriptionByCallUUID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *CallService_GetTranscriptionByCallUUID_Call) Return(_a0 models.Transcription, _a1 error) *CallService_GetTranscriptionByCallUUID_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CallService_GetTranscriptionByCallUUID_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) (models.Transcription, error)) *CallService_GetTranscriptionByCallUUID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // List provides a mock function with given fields: ctx, userID
 func (_m *CallService) List(ctx context.Context, userID uuid.UUID) ([]models.Call, error) {
 	ret := _m.Called(ctx, userID)

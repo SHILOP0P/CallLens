@@ -57,6 +57,9 @@ const (
 	CodeUnsupportedAudioType           = "unsupported_audio_type"
 	CodeAudioNotFound                  = "audio_not_found"
 	CodeFailedToGetAudio               = "failed_to_get_audio"
+	CodeTranscriptionNotFound          = "transcription_not_found"
+	CodeFailedToGetTranscription       = "failed_to_get_transcription"
+	CodeFailedToConvertTranscription   = "failed_to_convert_transcription"
 	CodeFailedToEncodeResponse         = "failed_to_encode_response"
 	CodeInternalServerError            = "internal_server_error"
 )
