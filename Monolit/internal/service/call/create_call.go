@@ -83,7 +83,7 @@ func (s *Service) createCallRecord(ctx context.Context, call models.Call, now ti
 		EntityUUID:  call.ID,
 		Status:      models.ProcessingJobStatusPending,
 		Attempts:    0,
-		MaxAttempts: 3,
+		MaxAttempts: s.processingJobMaxAttempts,
 		AvailableAt: now,
 		CreatedAt:   now,
 		UpdatedAt:   now,

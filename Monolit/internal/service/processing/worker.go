@@ -29,17 +29,37 @@ type Worker struct {
 	log          logger.Logger
 }
 
-func NewWorker(service *Service, log logger.Logger) *Worker {
+type WorkerOptions struct {
+	PollInterval time.Duration
+	Limit        int
+	RetryDelay   time.Duration
+	StaleAfter   time.Duration
+}
+
+func NewWorker(service *Service, opts WorkerOptions, log logger.Logger) *Worker {
 	if log == nil {
 		log = logger.NewNop()
 	}
 
+	if opts.PollInterval <= 0 {
+		opts.PollInterval = defaultPollInterval
+	}
+	if opts.Limit <= 0 {
+		opts.Limit = defaultWorkerLimit
+	}
+	if opts.RetryDelay <= 0 {
+		opts.RetryDelay = defaultRetryDelay
+	}
+	if opts.StaleAfter <= 0 {
+		opts.StaleAfter = defaultStaleAfter
+	}
+
 	return &Worker{
 		service:      service,
-		pollInterval: defaultPollInterval,
-		workerLimit:  defaultWorkerLimit,
-		retryDelay:   defaultRetryDelay,
-		staleAfter:   defaultStaleAfter,
+		pollInterval: opts.PollInterval,
+		workerLimit:  opts.Limit,
+		retryDelay:   opts.RetryDelay,
+		staleAfter:   opts.StaleAfter,
 		workerID:     "processing-worker-" + uuid.NewString(),
 		log:          log,
 	}

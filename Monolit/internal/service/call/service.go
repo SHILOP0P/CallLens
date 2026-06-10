@@ -6,14 +6,17 @@ import (
 	"calllens/monolit/internal/storage"
 )
 
+const defaultProcessingJobMaxAttempts = 3
+
 type Service struct {
-	repository              repo.CallRepository
-	transcriptionRepository repo.TranscriptionRepository
-	processingJobRepository repo.ProcessingJobRepository
-	companyRepository       repo.CompanyRepository
-	departmentRepository    repo.DepartmentRepository
-	audioStorage            storage.Storage
-	log                     logger.Logger
+	repository               repo.CallRepository
+	transcriptionRepository  repo.TranscriptionRepository
+	processingJobRepository  repo.ProcessingJobRepository
+	companyRepository        repo.CompanyRepository
+	departmentRepository     repo.DepartmentRepository
+	audioStorage             storage.Storage
+	processingJobMaxAttempts int
+	log                      logger.Logger
 }
 
 func NewService(
@@ -28,11 +31,12 @@ func NewService(
 	}
 
 	return &Service{
-		repository:           repository,
-		companyRepository:    companyRepository,
-		departmentRepository: departmentRepository,
-		audioStorage:         audioStorage,
-		log:                  log,
+		repository:               repository,
+		companyRepository:        companyRepository,
+		departmentRepository:     departmentRepository,
+		audioStorage:             audioStorage,
+		processingJobMaxAttempts: defaultProcessingJobMaxAttempts,
+		log:                      log,
 	}
 }
 
@@ -42,4 +46,12 @@ func (s *Service) SetTranscriptionRepository(repository repo.TranscriptionReposi
 
 func (s *Service) SetProcessingJobRepository(repository repo.ProcessingJobRepository) {
 	s.processingJobRepository = repository
+}
+
+func (s *Service) SetProcessingJobMaxAttempts(maxAttempts int) {
+	if maxAttempts <= 0 {
+		maxAttempts = defaultProcessingJobMaxAttempts
+	}
+
+	s.processingJobMaxAttempts = maxAttempts
 }

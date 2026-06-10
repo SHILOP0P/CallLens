@@ -29,3 +29,18 @@ type AuthConfig interface {
 	RefreshTokenSecret() string
 	RefreshTokenTTL() time.Duration
 }
+
+type WorkerConfig interface {
+	Enabled() bool
+	PollInterval() time.Duration
+	Limit() int
+	RetryDelay() time.Duration
+	StaleAfter() time.Duration
+	MaxAttempts() int
+}
+
+type TranscriberConfig interface {
+	Provider() string
+	APIKey() string
+	Model() string
+}

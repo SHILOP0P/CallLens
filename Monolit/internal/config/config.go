@@ -11,11 +11,13 @@ import (
 var appConfig *config
 
 type config struct {
-	HTTPConfig HTTPConfig
-	Postgres   PostgresConfig
-	Upload     UploadConfig
-	Logger     LoggerConfig
-	Auth       AuthConfig
+	HTTPConfig  HTTPConfig
+	Postgres    PostgresConfig
+	Upload      UploadConfig
+	Logger      LoggerConfig
+	Auth        AuthConfig
+	Worker      WorkerConfig
+	Transcriber TranscriberConfig
 }
 
 func NewConfig() *config {
@@ -52,12 +54,25 @@ func Load(path ...string) error {
 	if err != nil {
 		return err
 	}
+
+	workerCfg, err := env.NewWorkerConfig()
+	if err != nil {
+		return err
+	}
+
+	transcriberCfg, err := env.NewTranscriberConfig()
+	if err != nil {
+		return err
+	}
+
 	appConfig = &config{
-		HTTPConfig: httpCfg,
-		Postgres:   postgresCfg,
-		Upload:     uploadCfg,
-		Logger:     loggerCfg,
-		Auth:       authCfg,
+		HTTPConfig:  httpCfg,
+		Postgres:    postgresCfg,
+		Upload:      uploadCfg,
+		Logger:      loggerCfg,
+		Auth:        authCfg,
+		Worker:      workerCfg,
+		Transcriber: transcriberCfg,
 	}
 	return nil
 }

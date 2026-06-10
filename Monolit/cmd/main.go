@@ -22,7 +22,7 @@ import (
 	departmentService "calllens/monolit/internal/service/department"
 	processingService "calllens/monolit/internal/service/processing"
 	"calllens/monolit/internal/storage/audio"
-	mockTranscriber "calllens/monolit/internal/transcriber/mock"
+	"calllens/monolit/internal/transcriber"
 	"context"
 	"net/http"
 
@@ -95,14 +95,29 @@ func main() {
 	transcriptionRepository := transcriptionRepo.NewRepository(sqlDB)
 	processingJobRepository := processingJobRepo.NewRepository(sqlDB)
 
-	transcriber := mockTranscriber.New()
-	processingSvc := processingService.NewService(callRepository, transcriptionRepository, processingJobRepository, audioStorage, transcriber, appLogger)
-	processingWorker := processingService.NewWorker(processingSvc, appLogger)
-	go processingWorker.Run(ctx)
+	transcriberProvider, err := transcriber.NewFromConfig(config.AppConfig().Transcriber)
+	if err != nil {
+		appLogger.Error(ctx, "failed to configure transcriber", zap.Error(err))
+		return
+	}
+
+	processingSvc := processingService.NewService(callRepository, transcriptionRepository, processingJobRepository, audioStorage, transcriberProvider, appLogger)
+	if config.AppConfig().Worker.Enabled() {
+		processingWorker := processingService.NewWorker(processingSvc, processingService.WorkerOptions{
+			PollInterval: config.AppConfig().Worker.PollInterval(),
+			Limit:        config.AppConfig().Worker.Limit(),
+			RetryDelay:   config.AppConfig().Worker.RetryDelay(),
+			StaleAfter:   config.AppConfig().Worker.StaleAfter(),
+		}, appLogger)
+		go processingWorker.Run(ctx)
+	} else {
+		appLogger.Info(ctx, "processing worker disabled")
+	}
 
 	callSvc := callService.NewService(callRepository, companyRepository, departmentRepository, audioStorage, appLogger)
 	callSvc.SetTranscriptionRepository(transcriptionRepository)
 	callSvc.SetProcessingJobRepository(processingJobRepository)
+	callSvc.SetProcessingJobMaxAttempts(config.AppConfig().Worker.MaxAttempts())
 	authSvc := authService.NewService(
 		userRepository,
 		refreshRepository,
