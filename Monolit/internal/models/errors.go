@@ -18,6 +18,8 @@ var ErrInvalidCallStatusTransition = errors.New("invalid call status transition"
 var ErrAudioFileNotFound = errors.New("audio file not found")
 var ErrInvalidAudioPath = errors.New("invalid audio path")
 var ErrAudioDurationDetect = errors.New("audio duration detect failed")
+var ErrAudioProbeNotFound = errors.New("audio metadata probe not found")
+var ErrAudioFileUnreadable = errors.New("audio file unreadable")
 
 // USER
 var ErrUserNotFound = errors.New("user not found")

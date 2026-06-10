@@ -54,6 +54,8 @@ const (
 	CodeAudioFileRequired              = "audio_file_required"
 	CodeAudioFileReadFailed            = "audio_file_read_failed"
 	CodeAudioFileExtensionRequired     = "audio_file_extension_required"
+	CodeAudioProbeNotFound             = "audio_probe_not_found"
+	CodeAudioFileUnreadable            = "audio_file_unreadable"
 	CodeUnsupportedAudioType           = "unsupported_audio_type"
 	CodeAudioNotFound                  = "audio_not_found"
 	CodeFailedToGetAudio               = "failed_to_get_audio"

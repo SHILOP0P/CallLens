@@ -168,6 +168,44 @@ func (s *APISuite) TestCreateCallMapsForbidden() {
 	s.requireErrorCode(rec, response.CodeForbidden)
 }
 
+func (s *APISuite) TestCreateCallMapsAudioProbeNotFound() {
+	userID := uuid.New()
+	body, contentType := multipartBody(s.T(), map[string]string{
+		"title": "Test call",
+	}, "audio", "call.wav", []byte("RIFF----WAVEfmt "))
+
+	s.service.On("CreateCall", mock.Anything, mock.Anything).
+		Return(models.Call{}, models.ErrAudioProbeNotFound).
+		Once()
+
+	rec, req := s.request(http.MethodPost, "/api/v1/calls", body.String(), userID, nil)
+	req.Header.Set("Content-Type", contentType)
+
+	s.api.Create(rec, req)
+
+	s.Require().Equal(http.StatusInternalServerError, rec.Code)
+	s.requireErrorCode(rec, response.CodeAudioProbeNotFound)
+}
+
+func (s *APISuite) TestCreateCallMapsAudioFileUnreadable() {
+	userID := uuid.New()
+	body, contentType := multipartBody(s.T(), map[string]string{
+		"title": "Test call",
+	}, "audio", "call.wav", []byte("RIFF----WAVEfmt "))
+
+	s.service.On("CreateCall", mock.Anything, mock.Anything).
+		Return(models.Call{}, models.ErrAudioFileUnreadable).
+		Once()
+
+	rec, req := s.request(http.MethodPost, "/api/v1/calls", body.String(), userID, nil)
+	req.Header.Set("Content-Type", contentType)
+
+	s.api.Create(rec, req)
+
+	s.Require().Equal(http.StatusInternalServerError, rec.Code)
+	s.requireErrorCode(rec, response.CodeAudioFileUnreadable)
+}
+
 func (s *APISuite) TestParseCallPlacementPersonal() {
 	companyID, departmentID, scope, err := parseCallPlacement("", "")
 

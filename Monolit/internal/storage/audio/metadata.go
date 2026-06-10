@@ -3,8 +3,10 @@ package audio
 import (
 	"calllens/monolit/internal/models"
 	"context"
+	"errors"
 	"fmt"
 	"math"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -32,6 +34,12 @@ func (d *FFProbeDurationDetector) DetectDuration(ctx context.Context, path strin
 		return 0, err
 	}
 
+	file, err := os.Open(fullPath)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %w", models.ErrAudioFileUnreadable, err)
+	}
+	_ = file.Close()
+
 	output, err := exec.CommandContext(
 		ctx,
 		d.ffprobePath,
@@ -41,6 +49,10 @@ func (d *FFProbeDurationDetector) DetectDuration(ctx context.Context, path strin
 		fullPath,
 	).CombinedOutput()
 	if err != nil {
+		if errors.Is(err, exec.ErrNotFound) {
+			return 0, fmt.Errorf("%w: %w", models.ErrAudioProbeNotFound, err)
+		}
+
 		message := strings.TrimSpace(string(output))
 		if message == "" {
 			return 0, fmt.Errorf("%w: %w", models.ErrAudioDurationDetect, err)

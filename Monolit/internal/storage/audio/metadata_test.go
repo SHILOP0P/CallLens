@@ -2,7 +2,10 @@ package audio
 
 import (
 	"calllens/monolit/internal/models"
+	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -56,5 +59,29 @@ func TestParseFFProbeDuration(t *testing.T) {
 				t.Fatalf("parseFFProbeDuration() = %d, want %d", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestFFProbeDurationDetectorDetectDurationMapsMissingProbe(t *testing.T) {
+	dir := t.TempDir()
+	filename := "call.wav"
+	if err := os.WriteFile(filepath.Join(dir, filename), []byte("audio"), 0644); err != nil {
+		t.Fatalf("failed to write audio file: %v", err)
+	}
+
+	detector := NewFFProbeDurationDetector(dir, "ffprobe-calllens-test-missing")
+
+	_, err := detector.DetectDuration(context.Background(), filename)
+	if !errors.Is(err, models.ErrAudioProbeNotFound) {
+		t.Fatalf("DetectDuration() error = %v, want %v", err, models.ErrAudioProbeNotFound)
+	}
+}
+
+func TestFFProbeDurationDetectorDetectDurationMapsUnreadableFile(t *testing.T) {
+	detector := NewFFProbeDurationDetector(t.TempDir(), "ffprobe")
+
+	_, err := detector.DetectDuration(context.Background(), "missing.wav")
+	if !errors.Is(err, models.ErrAudioFileUnreadable) {
+		t.Fatalf("DetectDuration() error = %v, want %v", err, models.ErrAudioFileUnreadable)
 	}
 }

@@ -72,19 +72,19 @@ func ContextWithUserID(ctx context.Context, userID string) context.Context {
 }
 
 func (l *zapLogger) Debug(ctx context.Context, msg string, fields ...zap.Field) {
-	l.logger.Debug(msg, append(fieldsFromContext(ctx), fields...)...)
+	l.logger.Debug(msg, fieldsWithContext(ctx, fields)...)
 }
 
 func (l *zapLogger) Info(ctx context.Context, msg string, fields ...zap.Field) {
-	l.logger.Info(msg, append(fieldsFromContext(ctx), fields...)...)
+	l.logger.Info(msg, fieldsWithContext(ctx, fields)...)
 }
 
 func (l *zapLogger) Warn(ctx context.Context, msg string, fields ...zap.Field) {
-	l.logger.Warn(msg, append(fieldsFromContext(ctx), fields...)...)
+	l.logger.Warn(msg, fieldsWithContext(ctx, fields)...)
 }
 
 func (l *zapLogger) Error(ctx context.Context, msg string, fields ...zap.Field) {
-	l.logger.Error(msg, append(fieldsFromContext(ctx), fields...)...)
+	l.logger.Error(msg, fieldsWithContext(ctx, fields)...)
 }
 
 func (nopLogger) Debug(context.Context, string, ...zap.Field) {}
@@ -136,4 +136,29 @@ func fieldsFromContext(ctx context.Context) []zap.Field {
 	}
 
 	return fields
+}
+
+func fieldsWithContext(ctx context.Context, fields []zap.Field) []zap.Field {
+	contextFields := fieldsFromContext(ctx)
+	if len(contextFields) == 0 {
+		return fields
+	}
+	if len(fields) == 0 {
+		return contextFields
+	}
+
+	explicitKeys := make(map[string]struct{}, len(fields))
+	for _, field := range fields {
+		explicitKeys[field.Key] = struct{}{}
+	}
+
+	result := make([]zap.Field, 0, len(contextFields)+len(fields))
+	for _, field := range contextFields {
+		if _, ok := explicitKeys[field.Key]; ok {
+			continue
+		}
+		result = append(result, field)
+	}
+
+	return append(result, fields...)
 }

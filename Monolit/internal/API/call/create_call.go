@@ -107,6 +107,12 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		} else if errors.Is(err, model.ErrForbidden) {
 			response.WriteError(w, http.StatusForbidden, response.CodeForbidden, "forbidden")
 			return
+		} else if errors.Is(err, model.ErrAudioProbeNotFound) {
+			response.WriteError(w, http.StatusInternalServerError, response.CodeAudioProbeNotFound, "audio metadata analyzer is not configured")
+			return
+		} else if errors.Is(err, model.ErrAudioFileUnreadable) {
+			response.WriteError(w, http.StatusInternalServerError, response.CodeAudioFileUnreadable, "audio file cannot be read")
+			return
 		} else {
 			response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToCreateCall, "failed to create call")
 			return
