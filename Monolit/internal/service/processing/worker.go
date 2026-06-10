@@ -124,16 +124,29 @@ func (w *Worker) runBatch(ctx context.Context) error {
 		}
 
 		claimed++
+		w.log.Info(ctx, "processing job claimed", processingJobLogFields(job, w.workerID)...)
+
 		claimedJob := job
 
 		group.Go(func() error {
+			startedAt := time.Now()
+			w.log.Info(groupCtx, "processing job started", processingJobLogFields(claimedJob, w.workerID)...)
+
 			if err := w.service.ProcessJob(groupCtx, claimedJob); err != nil {
-				return w.handleJobError(groupCtx, claimedJob, err)
+				return w.handleJobError(groupCtx, claimedJob, err, time.Since(startedAt))
 			}
 
-			if _, err := w.service.processingJobRepository.MarkDone(groupCtx, claimedJob.ID); err != nil {
+			updatedJob, err := w.service.processingJobRepository.MarkDone(groupCtx, claimedJob.ID)
+			if err != nil {
+				w.log.Error(groupCtx, "processing job mark done failed", append(processingJobLogFields(claimedJob, w.workerID), zap.Error(err))...)
 				return err
 			}
+
+			w.log.Info(
+				groupCtx,
+				"processing job done",
+				append(processingJobLogFields(updatedJob, w.workerID), zap.Duration("duration", time.Since(startedAt)))...,
+			)
 
 			return nil
 		})
@@ -148,27 +161,87 @@ func (w *Worker) runBatch(ctx context.Context) error {
 	return group.Wait()
 }
 
-func (w *Worker) handleJobError(ctx context.Context, job models.ProcessingJob, cause error) error {
+func (w *Worker) handleJobError(ctx context.Context, job models.ProcessingJob, cause error, duration time.Duration) error {
+	if isPermanentProcessingError(cause) {
+		return w.handlePermanentJobError(ctx, job, cause, duration)
+	}
+
 	updatedJob, err := w.service.processingJobRepository.MarkRetry(ctx, job.ID, cause.Error(), w.retryDelay)
 	if err != nil {
+		w.log.Error(
+			ctx,
+			"processing job mark retry failed",
+			append(
+				processingJobLogFields(job, w.workerID),
+				zap.NamedError("cause", cause),
+				zap.Error(err),
+			)...,
+		)
 		return err
 	}
 
+	message := "processing job scheduled for retry"
+	fields := append(
+		processingJobLogFields(updatedJob, w.workerID),
+		zap.Duration("duration", duration),
+		zap.Error(cause),
+	)
+
 	if updatedJob.Status == models.ProcessingJobStatusFailed {
 		w.service.MarkJobFailed(ctx, job, cause)
+		message = "processing job exhausted retries"
+	} else {
+		fields = append(fields, zap.Duration("retry_delay", w.retryDelay))
 	}
 
 	w.log.Warn(
 		ctx,
-		"processing job failed",
-		zap.String("job_id", job.ID.String()),
-		zap.String("job_type", string(job.Type)),
-		zap.String("entity_id", job.EntityUUID.String()),
-		zap.String("status", string(updatedJob.Status)),
-		zap.Int("attempts", updatedJob.Attempts),
-		zap.Int("max_attempts", updatedJob.MaxAttempts),
-		zap.Error(cause),
+		message,
+		fields...,
 	)
 
 	return nil
+}
+
+func (w *Worker) handlePermanentJobError(ctx context.Context, job models.ProcessingJob, cause error, duration time.Duration) error {
+	updatedJob, err := w.service.processingJobRepository.MarkFailed(ctx, job.ID, cause.Error())
+	if err != nil {
+		w.log.Error(
+			ctx,
+			"processing job mark failed status failed",
+			append(
+				processingJobLogFields(job, w.workerID),
+				zap.NamedError("cause", cause),
+				zap.Error(err),
+			)...,
+		)
+		return err
+	}
+
+	w.service.MarkJobFailed(ctx, job, cause)
+
+	w.log.Warn(
+		ctx,
+		"processing job failed without retry",
+		append(
+			processingJobLogFields(updatedJob, w.workerID),
+			zap.String("failure_type", "permanent"),
+			zap.Duration("duration", duration),
+			zap.Error(cause),
+		)...,
+	)
+
+	return nil
+}
+
+func processingJobLogFields(job models.ProcessingJob, workerID string) []zap.Field {
+	return []zap.Field{
+		zap.String("job_id", job.ID.String()),
+		zap.String("job_type", string(job.Type)),
+		zap.String("entity_id", job.EntityUUID.String()),
+		zap.String("status", string(job.Status)),
+		zap.Int("attempts", job.Attempts),
+		zap.Int("max_attempts", job.MaxAttempts),
+		zap.String("worker_id", workerID),
+	}
 }

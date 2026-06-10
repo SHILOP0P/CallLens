@@ -14,6 +14,10 @@ var ErrInvalidCallPlacement = errors.New("invalid call placement")
 var ErrInvalidCallStatus = errors.New("invalid call status")
 var ErrInvalidCallStatusTransition = errors.New("invalid call status transition")
 
+// AUDIO
+var ErrAudioFileNotFound = errors.New("audio file not found")
+var ErrInvalidAudioPath = errors.New("invalid audio path")
+
 // USER
 var ErrUserNotFound = errors.New("user not found")
 var ErrUserAlreadyExists = errors.New("user already exists")
@@ -38,6 +42,9 @@ var ErrInvalidRefreshToken = errors.New("invalid refresh token")
 var ErrTranscriptionNotFound = errors.New("transcription not found")
 var ErrInvalidTranscriptionInput = errors.New("invalid transcription input")
 var ErrNoCallsForProcessing = errors.New("no calls for processing")
+
+// TRANSCRIBER
+var ErrTranscriberNotConfigured = errors.New("transcriber not configured")
 
 // PROCESSING JOB
 var ErrProcessingJobNotFound = errors.New("processing job not found")

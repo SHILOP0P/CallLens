@@ -45,7 +45,7 @@ func (s *Service) ProcessTranscribeCall(ctx context.Context, callID uuid.UUID) e
 	}
 
 	if s.transcriber == nil {
-		return fmt.Errorf("transcriber not configured")
+		return models.ErrTranscriberNotConfigured
 	}
 
 	call, err := s.callRepository.GetByUUIDForProcessing(ctx, callID)
@@ -58,7 +58,7 @@ func (s *Service) ProcessTranscribeCall(ctx context.Context, callID uuid.UUID) e
 
 func (s *Service) processTranscribeCall(ctx context.Context, call models.Call) error {
 	if s.transcriber == nil {
-		return fmt.Errorf("transcriber not configured")
+		return models.ErrTranscriberNotConfigured
 	}
 
 	if call.Status == models.CallStatusTranscribed {

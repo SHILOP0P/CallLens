@@ -66,6 +66,10 @@ func (l *LocalStorage) Open(ctx context.Context, path string) (io.ReadCloser, er
 
 	file, err := os.Open(fullPath)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("%w: %w", models.ErrAudioFileNotFound, err)
+		}
+
 		return nil, fmt.Errorf("open audio file failed: %w", err)
 	}
 
@@ -94,11 +98,11 @@ func (l *LocalStorage) safePath(path string) (string, error) {
 	cleanPath := filepath.Clean(path)
 
 	if cleanPath == "." || cleanPath == ".." || filepath.IsAbs(cleanPath) {
-		return "", fmt.Errorf(`invalid audio path`)
+		return "", models.ErrInvalidAudioPath
 	}
 
 	if strings.HasPrefix(cleanPath, ".."+string(os.PathSeparator)) {
-		return "", fmt.Errorf(`invalid audio path`)
+		return "", models.ErrInvalidAudioPath
 	}
 
 	return filepath.Join(l.baseDir, cleanPath), nil
