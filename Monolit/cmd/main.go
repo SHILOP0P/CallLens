@@ -25,6 +25,9 @@ import (
 	"calllens/monolit/internal/transcriber"
 	"context"
 	"net/http"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
@@ -32,11 +35,14 @@ import (
 )
 
 const (
-	configPath = "./.env"
+	configPath      = "./.env"
+	shutdownTimeout = 10 * time.Second
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	startupLogger := logger.New("info", false)
 
 	err := config.Load(configPath)
@@ -60,8 +66,8 @@ func main() {
 		return
 	}
 	defer func() {
-		if cerr := con.Close(ctx); cerr != nil {
-			appLogger.Error(ctx, "failed to close postgres connection", zap.Error(cerr))
+		if cerr := con.Close(context.Background()); cerr != nil {
+			appLogger.Error(context.Background(), "failed to close postgres connection", zap.Error(cerr))
 		}
 	}()
 
@@ -102,6 +108,7 @@ func main() {
 	}
 
 	processingSvc := processingService.NewService(callRepository, transcriptionRepository, processingJobRepository, audioStorage, transcriberProvider, appLogger)
+	var workerDone <-chan struct{}
 	if config.AppConfig().Worker.Enabled() {
 		processingWorker := processingService.NewWorker(processingSvc, processingService.WorkerOptions{
 			PollInterval: config.AppConfig().Worker.PollInterval(),
@@ -109,7 +116,13 @@ func main() {
 			RetryDelay:   config.AppConfig().Worker.RetryDelay(),
 			StaleAfter:   config.AppConfig().Worker.StaleAfter(),
 		}, appLogger)
-		go processingWorker.Run(ctx)
+
+		done := make(chan struct{})
+		workerDone = done
+		go func() {
+			defer close(done)
+			processingWorker.Run(ctx)
+		}()
 	} else {
 		appLogger.Info(ctx, "processing worker disabled")
 	}
@@ -146,7 +159,41 @@ func main() {
 
 	appLogger.Info(ctx, "api server started", zap.String("address", server.Addr))
 
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		appLogger.Error(ctx, "api server stopped with error", zap.Error(err))
+	serverErr := make(chan error, 1)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serverErr <- err
+			return
+		}
+
+		serverErr <- nil
+	}()
+
+	select {
+	case <-ctx.Done():
+		appLogger.Info(context.Background(), "shutdown signal received")
+	case err := <-serverErr:
+		if err != nil {
+			appLogger.Error(context.Background(), "api server stopped with error", zap.Error(err))
+		}
+		stop()
+	}
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		appLogger.Error(context.Background(), "failed to shutdown api server", zap.Error(err))
+	} else {
+		appLogger.Info(context.Background(), "api server stopped")
+	}
+
+	if workerDone != nil {
+		select {
+		case <-workerDone:
+			appLogger.Info(context.Background(), "processing worker shutdown completed")
+		case <-shutdownCtx.Done():
+			appLogger.Warn(context.Background(), "processing worker shutdown timed out", zap.Error(shutdownCtx.Err()))
+		}
 	}
 }
