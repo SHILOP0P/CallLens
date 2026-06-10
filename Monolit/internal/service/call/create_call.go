@@ -40,6 +40,13 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 		return models.Call{}, err
 	}
 
+	durationSeconds, err := s.detectAudioDuration(ctx, savedFile.Path)
+	if err != nil {
+		_ = s.audioStorage.Delete(context.Background(), savedFile.Path)
+		s.log.Error(ctx, "failed to detect audio duration", zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("call_id", callUUID.String()), zap.String("audio_path", savedFile.Path), zap.Error(err))
+		return models.Call{}, err
+	}
+
 	now := time.Now().UTC()
 	call, err := converter.SavedFileToModel(savedFile, callUUID, input, now)
 	if err != nil {
@@ -47,6 +54,7 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 		s.log.Error(ctx, "failed to build call model", zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("call_id", callUUID.String()), zap.Error(err))
 		return models.Call{}, err
 	}
+	call.DurationSeconds = durationSeconds
 
 	createdCall, err := s.createCallRecord(ctx, call, now)
 	if err != nil {
@@ -65,6 +73,19 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 	)
 
 	return createdCall, nil
+}
+
+func (s *Service) detectAudioDuration(ctx context.Context, path string) (int, error) {
+	if s.durationDetector == nil {
+		return 0, nil
+	}
+
+	durationSeconds, err := s.durationDetector.DetectDuration(ctx, path)
+	if err != nil {
+		return 0, err
+	}
+
+	return durationSeconds, nil
 }
 
 func (s *Service) createCallRecord(ctx context.Context, call models.Call, now time.Time) (models.Call, error) {

@@ -95,6 +95,10 @@ func (l *LocalStorage) Delete(ctx context.Context, path string) error {
 }
 
 func (l *LocalStorage) safePath(path string) (string, error) {
+	return safeLocalPath(l.baseDir, path)
+}
+
+func safeLocalPath(baseDir string, path string) (string, error) {
 	cleanPath := filepath.Clean(path)
 
 	if cleanPath == "." || cleanPath == ".." || filepath.IsAbs(cleanPath) {
@@ -105,5 +109,5 @@ func (l *LocalStorage) safePath(path string) (string, error) {
 		return "", models.ErrInvalidAudioPath
 	}
 
-	return filepath.Join(l.baseDir, cleanPath), nil
+	return filepath.Join(baseDir, cleanPath), nil
 }

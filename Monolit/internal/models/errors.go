@@ -17,6 +17,7 @@ var ErrInvalidCallStatusTransition = errors.New("invalid call status transition"
 // AUDIO
 var ErrAudioFileNotFound = errors.New("audio file not found")
 var ErrInvalidAudioPath = errors.New("invalid audio path")
+var ErrAudioDurationDetect = errors.New("audio duration detect failed")
 
 // USER
 var ErrUserNotFound = errors.New("user not found")

@@ -131,6 +131,7 @@ func main() {
 	callSvc.SetTranscriptionRepository(transcriptionRepository)
 	callSvc.SetProcessingJobRepository(processingJobRepository)
 	callSvc.SetProcessingJobMaxAttempts(config.AppConfig().Worker.MaxAttempts())
+	callSvc.SetDurationDetector(audio.NewFFProbeDurationDetector(uploadPath, config.AppConfig().Upload.FFProbePath()))
 	authSvc := authService.NewService(
 		userRepository,
 		refreshRepository,

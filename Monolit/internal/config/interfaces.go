@@ -15,6 +15,7 @@ type PostgresConfig interface {
 
 type UploadConfig interface {
 	Path() string
+	FFProbePath() string
 }
 
 type LoggerConfig interface {

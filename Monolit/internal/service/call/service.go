@@ -4,9 +4,14 @@ import (
 	"calllens/monolit/internal/logger"
 	repo "calllens/monolit/internal/repository"
 	"calllens/monolit/internal/storage"
+	"context"
 )
 
 const defaultProcessingJobMaxAttempts = 3
+
+type DurationDetector interface {
+	DetectDuration(ctx context.Context, path string) (int, error)
+}
 
 type Service struct {
 	repository               repo.CallRepository
@@ -15,6 +20,7 @@ type Service struct {
 	companyRepository        repo.CompanyRepository
 	departmentRepository     repo.DepartmentRepository
 	audioStorage             storage.Storage
+	durationDetector         DurationDetector
 	processingJobMaxAttempts int
 	log                      logger.Logger
 }
@@ -54,4 +60,8 @@ func (s *Service) SetProcessingJobMaxAttempts(maxAttempts int) {
 	}
 
 	s.processingJobMaxAttempts = maxAttempts
+}
+
+func (s *Service) SetDurationDetector(detector DurationDetector) {
+	s.durationDetector = detector
 }

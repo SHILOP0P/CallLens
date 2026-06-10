@@ -3,7 +3,8 @@ package env
 import "github.com/caarlos0/env/v11"
 
 type uploadEnvConfig struct {
-	Path string `env:"UPLOAD_PATH,required"`
+	Path        string `env:"UPLOAD_PATH,required"`
+	FFProbePath string `env:"FFPROBE_PATH" envDefault:"ffprobe"`
 }
 
 type uploadConfig struct {
@@ -20,4 +21,8 @@ func NewUploadConfig() (*uploadConfig, error) {
 
 func (config *uploadConfig) Path() string {
 	return config.raw.Path
+}
+
+func (config *uploadConfig) FFProbePath() string {
+	return config.raw.FFProbePath
 }

@@ -2,12 +2,19 @@ package call
 
 import (
 	"calllens/monolit/internal/models"
+	"context"
 	"errors"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
+
+type durationDetectorFunc func(ctx context.Context, path string) (int, error)
+
+func (f durationDetectorFunc) DetectDuration(ctx context.Context, path string) (int, error) {
+	return f(ctx, path)
+}
 
 func validCreateCallInput(userID uuid.UUID) models.CreateCallInput {
 	return models.CreateCallInput{
@@ -57,6 +64,52 @@ func (s *ServiceSuite) TestCreateCallSuccessPersonal() {
 	s.Require().NoError(err)
 	s.Require().Equal(models.CallStatusNew, got.Status)
 	s.Require().Equal(savedFile.Path, got.AudioPath)
+}
+
+func (s *ServiceSuite) TestCreateCallUsesDetectedDuration() {
+	userID := uuid.New()
+	input := validCreateCallInput(userID)
+	savedFile := models.SavedFile{Path: "uploads/call.wav", SizeBytes: input.SizeBytes}
+
+	s.service.SetDurationDetector(durationDetectorFunc(func(ctx context.Context, path string) (int, error) {
+		s.Require().Equal(savedFile.Path, path)
+		return 42, nil
+	}))
+	s.audioStorage.EXPECT().Save(mock.Anything, mock.Anything).Return(savedFile, nil).Once()
+	s.repository.EXPECT().
+		CreateCall(mock.Anything, mock.MatchedBy(func(call models.Call) bool {
+			return call.DurationSeconds == 42
+		})).
+		Return(models.Call{
+			Title:              input.Title,
+			Status:             models.CallStatusNew,
+			AudioPath:          savedFile.Path,
+			DurationSeconds:    42,
+			UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+			VisibilityScope:    models.CallVisibilityScopePersonal,
+		}, nil).
+		Once()
+
+	got, err := s.service.CreateCall(s.ctx, input)
+
+	s.Require().NoError(err)
+	s.Require().Equal(42, got.DurationSeconds)
+}
+
+func (s *ServiceSuite) TestCreateCallDeletesSavedFileWhenDurationDetectionFails() {
+	input := validCreateCallInput(uuid.New())
+	savedFile := models.SavedFile{Path: "uploads/call.wav", SizeBytes: input.SizeBytes}
+	durationErr := errors.New("detect duration failed")
+
+	s.service.SetDurationDetector(durationDetectorFunc(func(ctx context.Context, path string) (int, error) {
+		return 0, durationErr
+	}))
+	s.audioStorage.EXPECT().Save(mock.Anything, mock.Anything).Return(savedFile, nil).Once()
+	s.audioStorage.EXPECT().Delete(mock.Anything, savedFile.Path).Return(nil).Once()
+
+	_, err := s.service.CreateCall(s.ctx, input)
+
+	s.Require().ErrorIs(err, durationErr)
 }
 
 func (s *ServiceSuite) TestCreateCallRejectsInvalidAudioInput() {
