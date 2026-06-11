@@ -19,7 +19,7 @@ type Service struct {
 	processingJobRepository  repo.ProcessingJobRepository
 	companyRepository        repo.CompanyRepository
 	departmentRepository     repo.DepartmentRepository
-	audioStorage             storage.Storage
+	audioStorage             storage.AudioStorage
 	durationDetector         DurationDetector
 	processingJobMaxAttempts int
 	log                      logger.Logger
@@ -29,7 +29,7 @@ func NewService(
 	repository repo.CallRepository,
 	companyRepository repo.CompanyRepository,
 	departmentRepository repo.DepartmentRepository,
-	audioStorage storage.Storage,
+	audioStorage storage.AudioStorage,
 	log logger.Logger,
 ) *Service {
 	if log == nil {

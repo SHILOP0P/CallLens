@@ -45,3 +45,10 @@ type DepartmentAPI interface {
 	UpdateDepartmentMemberStatus(w http.ResponseWriter, r *http.Request)
 	ListDepartments(w http.ResponseWriter, r *http.Request)
 }
+
+type AnalysisInstructionAPI interface {
+	Create(w http.ResponseWriter, r *http.Request)
+	List(w http.ResponseWriter, r *http.Request)
+	GetFile(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+}

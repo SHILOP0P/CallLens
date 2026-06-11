@@ -78,3 +78,11 @@ type ProcessingJobRepository interface {
 	MarkRetry(ctx context.Context, id uuid.UUID, lastError string, delay time.Duration) (models.ProcessingJob, error)
 	MarkFailed(ctx context.Context, id uuid.UUID, lastError string) (models.ProcessingJob, error)
 }
+
+type AnalysisInstructionRepository interface {
+	Create(ctx context.Context, instruction models.AnalysisInstruction) (models.AnalysisInstruction, error)
+	GetByUUID(ctx context.Context, id uuid.UUID) (models.AnalysisInstruction, error)
+	List(ctx context.Context, input models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error)
+	CountActive(ctx context.Context, input models.ListAnalysisInstructionsInput) (int, error)
+	Deactivate(ctx context.Context, id uuid.UUID) error
+}

@@ -11,7 +11,7 @@ type Service struct {
 	callRepository          repository.CallRepository
 	transcriptionRepository repository.TranscriptionRepository
 	processingJobRepository repository.ProcessingJobRepository
-	audioStorage            storage.Storage
+	audioStorage            storage.AudioStorage
 	transcriber             transcriber.Transcriber
 	log                     logger.Logger
 }
@@ -20,7 +20,7 @@ func NewService(
 	callRepository repository.CallRepository,
 	transcriptionRepository repository.TranscriptionRepository,
 	processingJobRepository repository.ProcessingJobRepository,
-	audioStorage storage.Storage,
+	audioStorage storage.AudioStorage,
 	transcriber transcriber.Transcriber,
 	log logger.Logger,
 ) *Service {

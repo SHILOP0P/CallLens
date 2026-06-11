@@ -1,6 +1,7 @@
 package main
 
 import (
+	instructionAPI "calllens/monolit/internal/API/analysis_instruction"
 	authAPI "calllens/monolit/internal/API/auth"
 	"calllens/monolit/internal/API/call"
 	companyAPI "calllens/monolit/internal/API/company"
@@ -9,6 +10,7 @@ import (
 	"calllens/monolit/internal/httpserver"
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/migrator"
+	analysisInstructionRepo "calllens/monolit/internal/repository/analysis_instruction"
 	callRepo "calllens/monolit/internal/repository/call"
 	companyRepo "calllens/monolit/internal/repository/company"
 	departmentRepo "calllens/monolit/internal/repository/department"
@@ -16,16 +18,20 @@ import (
 	refreshSessionRepo "calllens/monolit/internal/repository/refresh_session"
 	transcriptionRepo "calllens/monolit/internal/repository/transcription"
 	userRepo "calllens/monolit/internal/repository/user"
+	analysisInstructionService "calllens/monolit/internal/service/analysis_instruction"
 	authService "calllens/monolit/internal/service/auth"
 	callService "calllens/monolit/internal/service/call"
 	companyService "calllens/monolit/internal/service/company"
 	departmentService "calllens/monolit/internal/service/department"
 	processingService "calllens/monolit/internal/service/processing"
 	"calllens/monolit/internal/storage/audio"
+	"calllens/monolit/internal/storage/instruction"
 	"calllens/monolit/internal/transcriber"
 	"context"
 	"net/http"
+	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -37,6 +43,9 @@ import (
 const (
 	configPath      = "./.env"
 	shutdownTimeout = 10 * time.Second
+
+	audioUploadDirName       = "audio"
+	instructionUploadDirName = "instructions"
 )
 
 func main() {
@@ -90,9 +99,20 @@ func main() {
 	}
 
 	uploadPath := config.AppConfig().Upload.Path()
+	audioUploadPath := filepath.Join(uploadPath, audioUploadDirName)
+	instructionUploadPath := filepath.Join(uploadPath, instructionUploadDirName)
 
-	audioStorage := audio.NewLocalStorage(uploadPath)
+	for _, dir := range []string{audioUploadPath, instructionUploadPath} {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			appLogger.Error(ctx, "failed to create upload directory", zap.String("path", dir), zap.Error(err))
+			return
+		}
+	}
 
+	audioStorage := audio.NewLocalStorage(audioUploadPath)
+	instructionStorage := instruction.NewLocalStorage(instructionUploadPath)
+
+	analysisInstructionRepository := analysisInstructionRepo.NewRepository(sqlDB)
 	callRepository := callRepo.NewRepository(sqlDB)
 	userRepository := userRepo.NewUserRepository(sqlDB)
 	refreshRepository := refreshSessionRepo.NewRepository(sqlDB)
@@ -131,7 +151,7 @@ func main() {
 	callSvc.SetTranscriptionRepository(transcriptionRepository)
 	callSvc.SetProcessingJobRepository(processingJobRepository)
 	callSvc.SetProcessingJobMaxAttempts(config.AppConfig().Worker.MaxAttempts())
-	callSvc.SetDurationDetector(audio.NewFFProbeDurationDetector(uploadPath, config.AppConfig().Upload.FFProbePath()))
+	callSvc.SetDurationDetector(audio.NewFFProbeDurationDetector(audioUploadPath, config.AppConfig().Upload.FFProbePath()))
 	authSvc := authService.NewService(
 		userRepository,
 		refreshRepository,
@@ -144,13 +164,15 @@ func main() {
 	)
 	companySvc := companyService.NewService(companyRepository, appLogger)
 	departmentSvc := departmentService.NewService(companyRepository, departmentRepository, appLogger)
+	instructionSvc := analysisInstructionService.NewService(analysisInstructionRepository, companyRepository, departmentRepository, instructionStorage, appLogger)
 
 	callHandler := call.NewCallHandler(callSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc)
 	companyHandler := companyAPI.NewCompanyHandler(companySvc)
 	departmentHandler := departmentAPI.NewDepartmentHandler(departmentSvc)
+	instructionHandler := instructionAPI.NewHandler(instructionSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

@@ -51,3 +51,10 @@ type DepartmentService interface {
 	UpdateDepartmentMemberStatus(ctx context.Context, input models.UpdateDepartmentMemberStatusInput) (models.DepartmentMember, error)
 	ListCompanyDepartments(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) ([]models.Department, error)
 }
+
+type AnalysisInstructionService interface {
+	Create(ctx context.Context, input models.CreateAnalysisInstructionInput) (models.AnalysisInstruction, error)
+	List(ctx context.Context, input models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error)
+	GetFile(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.File, error)
+	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
+}

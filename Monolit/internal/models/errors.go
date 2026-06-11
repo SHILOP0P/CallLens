@@ -53,3 +53,11 @@ var ErrTranscriberNotConfigured = errors.New("transcriber not configured")
 var ErrProcessingJobNotFound = errors.New("processing job not found")
 var ErrNoProcessingJobs = errors.New("no processing jobs")
 var ErrInvalidProcessingJobType = errors.New("invalid processing job type")
+
+// ANALYSIS INSTRUCTION
+var ErrAnalysisInstructionNotFound = errors.New("analysis instruction not found")
+var ErrInvalidAnalysisInstructionInput = errors.New("invalid analysis instruction input")
+var ErrUnsupportedInstructionType = errors.New("unsupported instruction type")
+var ErrInstructionFileNotFound = errors.New("instruction file not found")
+var ErrInvalidInstructionPath = errors.New("invalid instruction path")
+var ErrInstructionLimitExceeded = errors.New("instruction limit exceeded")
