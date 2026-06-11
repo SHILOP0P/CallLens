@@ -71,6 +71,14 @@ type TranscriptionRepository interface {
 	MarkFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.Transcription, error)
 }
 
+type AnalysisRepository interface {
+	Create(ctx context.Context, analysis models.CallAnalysis) (models.CallAnalysis, error)
+	GetByCallUUID(ctx context.Context, callID uuid.UUID) (models.CallAnalysis, error)
+	MarkProcessing(ctx context.Context, id uuid.UUID) (models.CallAnalysis, error)
+	MarkDone(ctx context.Context, id uuid.UUID, result models.AnalysisResult) (models.CallAnalysis, error)
+	MarkFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.CallAnalysis, error)
+}
+
 type ProcessingJobRepository interface {
 	Create(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error)
 	TakeNext(ctx context.Context, workerID string, staleAfter time.Duration) (models.ProcessingJob, error)

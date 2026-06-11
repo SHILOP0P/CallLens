@@ -18,6 +18,7 @@ type config struct {
 	Auth        AuthConfig
 	Worker      WorkerConfig
 	Transcriber TranscriberConfig
+	Analyzer    AnalyzerConfig
 }
 
 func NewConfig() *config {
@@ -65,6 +66,11 @@ func Load(path ...string) error {
 		return err
 	}
 
+	analyzerCfg, err := env.NewAnalyzerConfig()
+	if err != nil {
+		return err
+	}
+
 	appConfig = &config{
 		HTTPConfig:  httpCfg,
 		Postgres:    postgresCfg,
@@ -73,6 +79,7 @@ func Load(path ...string) error {
 		Auth:        authCfg,
 		Worker:      workerCfg,
 		Transcriber: transcriberCfg,
+		Analyzer:    analyzerCfg,
 	}
 	return nil
 }

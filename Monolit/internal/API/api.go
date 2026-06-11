@@ -52,3 +52,8 @@ type AnalysisInstructionAPI interface {
 	GetFile(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)
 }
+
+type AnalysisAPI interface {
+	AnalyzeCall(w http.ResponseWriter, r *http.Request)
+	GetByCallUUID(w http.ResponseWriter, r *http.Request)
+}

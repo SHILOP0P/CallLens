@@ -49,6 +49,12 @@ var ErrNoCallsForProcessing = errors.New("no calls for processing")
 // TRANSCRIBER
 var ErrTranscriberNotConfigured = errors.New("transcriber not configured")
 
+// ANALYSIS
+var ErrAnalysisNotFound = errors.New("analysis not found")
+var ErrInvalidAnalysisInput = errors.New("invalid analysis input")
+var ErrAnalyzerNotConfigured = errors.New("analyzer not configured")
+var ErrInvalidAnalysisStatus = errors.New("invalid analysis status")
+
 // PROCESSING JOB
 var ErrProcessingJobNotFound = errors.New("processing job not found")
 var ErrNoProcessingJobs = errors.New("no processing jobs")

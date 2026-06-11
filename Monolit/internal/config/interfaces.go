@@ -45,3 +45,9 @@ type TranscriberConfig interface {
 	APIKey() string
 	Model() string
 }
+
+type AnalyzerConfig interface {
+	Provider() string
+	APIKey() string
+	Model() string
+}

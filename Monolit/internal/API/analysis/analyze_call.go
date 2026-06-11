@@ -1,0 +1,66 @@
+package analysis
+
+import (
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/converter"
+	"calllens/monolit/internal/models"
+	"errors"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+)
+
+func (h *Handler) AnalyzeCall(w http.ResponseWriter, r *http.Request) {
+	userID, ok := userIDFromRequest(r)
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+
+	callUUID, err := uuid.Parse(chi.URLParam(r, "uuid"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCallUUID, "invalid call uuid")
+		return
+	}
+
+	analysis, err := h.service.AnalyzeCall(r.Context(), models.AnalyzeCallInput{
+		CallUUID: callUUID,
+		UserUUID: userID,
+	})
+	if err != nil {
+		writeAnalyzeError(w, err)
+		return
+	}
+
+	resp, err := converter.AnalysisModelToAPI(analysis)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToAnalyzeCall, "failed to analyze call")
+		return
+	}
+
+	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
+		return
+	}
+}
+
+func writeAnalyzeError(w http.ResponseWriter, err error) {
+	if errors.Is(err, models.ErrCallNotFound) || errors.Is(err, models.ErrTranscriptionNotFound) {
+		response.WriteError(w, http.StatusNotFound, response.CodeCallNotFound, "call or transcription not found")
+		return
+	}
+	if errors.Is(err, models.ErrInvalidAnalysisInput) {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidAnalysisInput, "invalid analysis input")
+		return
+	}
+	if errors.Is(err, models.ErrAnalyzerNotConfigured) {
+		response.WriteError(w, http.StatusServiceUnavailable, response.CodeAnalyzerNotConfigured, "analyzer not configured")
+		return
+	}
+	if errors.Is(err, models.ErrInvalidAnalysisStatus) {
+		response.WriteError(w, http.StatusConflict, response.CodeInvalidAnalysisStatus, "invalid analysis status")
+		return
+	}
+
+	response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToAnalyzeCall, "failed to analyze call")
+}

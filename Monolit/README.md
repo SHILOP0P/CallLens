@@ -1,8 +1,8 @@
 # CallLens Monolith
 
-CallLens - backend-монолит на Go для будущего продукта, который хранит записи звонков продаж/поддержки и готовит основу для транскрибации и AI-анализа.
+CallLens - backend-монолит на Go для будущего продукта, который хранит записи звонков продаж/поддержки, транскрибирует аудио и сохраняет результат анализа звонка.
 
-На текущем этапе проект реализует авторизацию, локальную загрузку и хранение аудио, права доступа к звонкам, структуру компаний/отделов и управление участниками.
+На текущем этапе проект реализует авторизацию, локальную загрузку и хранение аудио, права доступа к звонкам, структуру компаний/отделов, управление участниками, фоновые задания транскрибации, инструкции анализа и mock-анализ звонков по готовой транскрипции.
 
 ## Стек
 
@@ -13,6 +13,7 @@ CallLens - backend-монолит на Go для будущего продукт
 - JWT access tokens
 - Refresh sessions в PostgreSQL
 - Локальное хранение аудио на файловой системе
+- Локальное хранение markdown-инструкций анализа на файловой системе
 - Структурированный logger на базе zap
 - Docker Compose для локального PostgreSQL
 
@@ -28,8 +29,16 @@ CallLens - backend-монолит на Go для будущего продукт
 - Ручка текущего пользователя.
 - Загрузка звонка с аудиофайлом.
 - Проверка типа аудиофайла.
+- Определение длительности аудио через `ffprobe`.
 - Локальное сохранение аудио.
-- Список/получение/скачивание аудио/обновление title/удаление звонка.
+- Список/получение/скачивание аудио/получение транскрипции/обновление title/удаление звонка.
+- Очередь `processing_jobs` и worker для фоновой транскрибации.
+- Абстракция transcriber с mock-провайдером и factory-заглушкой для OpenAI.
+- Сохранение транскрипций звонков в `call_transcriptions`.
+- Управление markdown-инструкциями анализа для личного, корпоративного и отделского scope.
+- Абстракция analyzer с mock-провайдером и factory-заглушкой для OpenAI.
+- Синхронный MVP-анализ звонка по готовой транскрипции и инструкциям.
+- Сохранение анализа звонка в `call_analyses`.
 - Создание компании.
 - Создание отдела.
 - Управление участниками компании и отдела.
@@ -40,8 +49,8 @@ CallLens - backend-монолит на Go для будущего продукт
 
 Пока не реализовано:
 
-- Транскрибация аудио.
-- AI-анализ звонков.
+- Реальные OpenAI-провайдеры для transcriber и analyzer.
+- Асинхронная очередь для анализа звонков.
 - Frontend.
 - Оплата и тарифы.
 - Email-приглашения.
@@ -60,6 +69,10 @@ flowchart LR
     departments["departments<br/>department_uuid PK<br/>company_uuid FK<br/>name<br/>created_at"]
     department_members["department_members<br/>department_uuid FK<br/>user_uuid FK<br/>role<br/>status<br/>created_at"]
     calls["calls<br/>call_uuid PK<br/>title<br/>status<br/>audio_path<br/>original_filename<br/>mime_type<br/>size_bytes<br/>duration_seconds<br/>uploaded_by_user_uuid FK<br/>company_uuid FK nullable<br/>department_uuid FK nullable<br/>visibility_scope<br/>created_at"]
+    processing_jobs["processing_jobs<br/>job_uuid PK<br/>type<br/>entity_uuid<br/>status<br/>attempts<br/>available_at<br/>created_at<br/>updated_at"]
+    call_transcriptions["call_transcriptions<br/>transcription_uuid PK<br/>call_uuid FK unique<br/>status<br/>text<br/>language<br/>provider<br/>error_message<br/>created_at<br/>updated_at"]
+    analysis_instructions["analysis_instructions<br/>instruction_uuid PK<br/>scope<br/>user_uuid nullable<br/>company_uuid nullable<br/>department_uuid nullable<br/>file_path<br/>is_active<br/>created_at<br/>updated_at"]
+    call_analyses["call_analyses<br/>analysis_uuid PK<br/>call_uuid FK unique<br/>status<br/>provider<br/>model<br/>result_json<br/>result_text<br/>error_message<br/>created_at<br/>updated_at"]
 
     users -->|"1:N"| refresh_sessions
     users -->|"1:N"| company_members
@@ -72,6 +85,14 @@ flowchart LR
 
     departments -->|"1:N"| department_members
     departments -->|"1:N optional scope"| calls
+
+    calls -->|"1:1"| call_transcriptions
+    calls -->|"1:1"| call_analyses
+    calls -->|"1:N processing"| processing_jobs
+
+    users -->|"1:N personal"| analysis_instructions
+    companies -->|"1:N company"| analysis_instructions
+    departments -->|"1:N department"| analysis_instructions
 ```
 
 ## Роли и статусы
@@ -110,7 +131,20 @@ flowchart LR
 - `analyzed` - по транскрипту построен анализ.
 - `failed` - обработка завершилась ошибкой.
 
-`new` нужен как состояние очереди. Сейчас обработчик ещё не реализован, но в будущем монолит или отдельный микросервис сможет забирать звонки со статусом `new`, переводить их в `processing`, а затем в `transcribed` и `analyzed`.
+`new` используется как состояние очереди. Worker забирает задания транскрибации, переводит звонок в `processing`, сохраняет транскрипцию и переводит звонок в `transcribed`. Анализ запускается отдельной HTTP-ручкой по готовой транскрипции и при успехе переводит звонок в `analyzed`.
+
+Статусы транскрипции:
+
+- `processing`
+- `transcribed`
+- `failed`
+
+Статусы анализа:
+
+- `pending`
+- `processing`
+- `done`
+- `failed`
 
 Правила целостности в БД:
 
@@ -253,8 +287,20 @@ Calls:
 | GET | `/api/v1/calls` | Да | Получить список видимых звонков |
 | GET | `/api/v1/calls/{uuid}` | Да | Получить видимый звонок по UUID |
 | GET | `/api/v1/calls/{uuid}/audio` | Да | Получить аудиофайл звонка |
+| GET | `/api/v1/calls/{uuid}/transcription` | Да | Получить сохраненную транскрипцию звонка |
+| POST | `/api/v1/calls/{uuid}/analysis` | Да | Запустить синхронный анализ по готовой транскрипции |
+| GET | `/api/v1/calls/{uuid}/analysis` | Да | Получить сохраненный анализ звонка |
 | PATCH | `/api/v1/calls/{uuid}` | Да | Обновить title звонка |
 | DELETE | `/api/v1/calls/{uuid}` | Да | Удалить звонок и аудиофайл |
+
+Analysis instructions:
+
+| Method | Path | Auth | Описание |
+| --- | --- | --- | --- |
+| POST | `/api/v1/instructions` | Да | Загрузить markdown-инструкцию анализа |
+| GET | `/api/v1/instructions` | Да | Получить список активных инструкций по scope |
+| GET | `/api/v1/instructions/{uuid}/file` | Да | Скачать файл инструкции |
+| DELETE | `/api/v1/instructions/{uuid}` | Да | Деактивировать инструкцию |
 
 Companies and departments:
 
@@ -349,6 +395,31 @@ company_uuid = optional UUID
 department_uuid = optional UUID
 ```
 
+Запуск анализа не требует body:
+
+```text
+POST /api/v1/calls/{uuid}/analysis
+```
+
+GET анализа возвращает сохраненный результат:
+
+```json
+{
+  "id": "...",
+  "call_uuid": "...",
+  "status": "done",
+  "provider": "mock",
+  "model": null,
+  "result_json": {
+    "summary": "Mock call analysis"
+  },
+  "result_text": "Mock call analysis: transcription and instructions were accepted.",
+  "error_message": null,
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
+
 ## Формат ошибок API
 
 Ошибки возвращаются в едином JSON-формате:
@@ -379,7 +450,7 @@ docker compose up -d
 3. Запустить API:
 
 ```powershell
-go run ./cmd/api
+go run ./cmd
 ```
 
 4. Проверить health:
@@ -405,8 +476,21 @@ http://localhost:8080/health
 - `POSTGRES_PASSWORD`
 - `MIGRATION_DIRECTORY`
 - `UPLOAD_PATH`
+- `FFPROBE_PATH`
 - `LOG_LEVEL`
 - `LOG_AS_JSON`
+- `WORKER_ENABLED`
+- `WORKER_POLL_INTERVAL`
+- `WORKER_LIMIT`
+- `WORKER_RETRY_DELAY`
+- `WORKER_STALE_AFTER`
+- `WORKER_MAX_ATTEMPTS`
+- `TRANSCRIBER_PROVIDER`
+- `TRANSCRIBER_API_KEY`
+- `TRANSCRIBER_MODEL`
+- `ANALYZER_PROVIDER`
+- `ANALYZER_API_KEY`
+- `ANALYZER_MODEL`
 - `PASSWORD_PEPPER`
 - `JWT_SECRET`
 - `JWT_ACCESS_TOKEN_TTL`
@@ -416,8 +500,9 @@ http://localhost:8080/health
 ## Структура проекта
 
 ```text
-cmd/api/                    Точка входа приложения
+cmd/                        Точка входа приложения
 internal/API/               HTTP handlers, DTO, response helpers
+internal/analyzer/          Абстракция и mock-провайдер анализа
 internal/auth/              Password, token, refresh helpers
 internal/config/            Конфигурация из env
 internal/converter/         Конвертеры domain -> API
@@ -428,6 +513,8 @@ internal/models/            Доменные модели
 internal/repository/        PostgreSQL repositories
 internal/service/           Бизнес-логика
 internal/storage/audio/     Локальное хранение аудио
+internal/storage/instruction/ Локальное хранение markdown-инструкций
+internal/transcriber/       Абстракция и mock-провайдер транскрибации
 migrations/                 SQL-миграции goose
 ```
 
@@ -436,8 +523,7 @@ migrations/                 SQL-миграции goose
 Рекомендуемый порядок:
 
 1. Вручную проверить сценарии membership и visibility через Postman.
-2. Добавить тесты на правила доступа и repository-запросы.
-3. Добавить процессинг статусов для транскрибации.
-4. Добавить abstraction для провайдера транскрибации.
-5. Добавить сущности и endpoints для AI-анализа.
-6. Начать frontend после стабилизации backend workflows.
+2. Добавить тесты для repository/service/API анализа звонков.
+3. Добавить асинхронный processing job для анализа звонков.
+4. Добавить реальные OpenAI-провайдеры для transcriber и analyzer.
+5. Начать frontend после стабилизации backend workflows.

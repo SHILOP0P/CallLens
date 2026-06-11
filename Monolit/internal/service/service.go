@@ -58,3 +58,8 @@ type AnalysisInstructionService interface {
 	GetFile(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.File, error)
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
+
+type AnalysisService interface {
+	AnalyzeCall(ctx context.Context, input models.AnalyzeCallInput) (models.CallAnalysis, error)
+	GetByCallUUID(ctx context.Context, callUUID uuid.UUID, userID uuid.UUID) (models.CallAnalysis, error)
+}

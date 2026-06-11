@@ -1,15 +1,18 @@
 package main
 
 import (
+	analysisAPI "calllens/monolit/internal/API/analysis"
 	instructionAPI "calllens/monolit/internal/API/analysis_instruction"
 	authAPI "calllens/monolit/internal/API/auth"
 	"calllens/monolit/internal/API/call"
 	companyAPI "calllens/monolit/internal/API/company"
 	departmentAPI "calllens/monolit/internal/API/department"
+	"calllens/monolit/internal/analyzer"
 	"calllens/monolit/internal/config"
 	"calllens/monolit/internal/httpserver"
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/migrator"
+	analysisRepo "calllens/monolit/internal/repository/analysis"
 	analysisInstructionRepo "calllens/monolit/internal/repository/analysis_instruction"
 	callRepo "calllens/monolit/internal/repository/call"
 	companyRepo "calllens/monolit/internal/repository/company"
@@ -18,6 +21,7 @@ import (
 	refreshSessionRepo "calllens/monolit/internal/repository/refresh_session"
 	transcriptionRepo "calllens/monolit/internal/repository/transcription"
 	userRepo "calllens/monolit/internal/repository/user"
+	analysisService "calllens/monolit/internal/service/analysis"
 	analysisInstructionService "calllens/monolit/internal/service/analysis_instruction"
 	authService "calllens/monolit/internal/service/auth"
 	callService "calllens/monolit/internal/service/call"
@@ -113,6 +117,7 @@ func main() {
 	instructionStorage := instruction.NewLocalStorage(instructionUploadPath)
 
 	analysisInstructionRepository := analysisInstructionRepo.NewRepository(sqlDB)
+	analysisRepository := analysisRepo.NewRepository(sqlDB)
 	callRepository := callRepo.NewRepository(sqlDB)
 	userRepository := userRepo.NewUserRepository(sqlDB)
 	refreshRepository := refreshSessionRepo.NewRepository(sqlDB)
@@ -124,6 +129,12 @@ func main() {
 	transcriberProvider, err := transcriber.NewFromConfig(config.AppConfig().Transcriber)
 	if err != nil {
 		appLogger.Error(ctx, "failed to configure transcriber", zap.Error(err))
+		return
+	}
+
+	analyzerProvider, err := analyzer.NewFromConfig(config.AppConfig().Analyzer)
+	if err != nil {
+		appLogger.Error(ctx, "failed to configure analyzer", zap.Error(err))
 		return
 	}
 
@@ -165,14 +176,16 @@ func main() {
 	companySvc := companyService.NewService(companyRepository, appLogger)
 	departmentSvc := departmentService.NewService(companyRepository, departmentRepository, appLogger)
 	instructionSvc := analysisInstructionService.NewService(analysisInstructionRepository, companyRepository, departmentRepository, instructionStorage, appLogger)
+	analysisSvc := analysisService.NewService(callRepository, transcriptionRepository, analysisInstructionRepository, analysisRepository, instructionStorage, analyzerProvider, appLogger)
 
 	callHandler := call.NewCallHandler(callSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc)
 	companyHandler := companyAPI.NewCompanyHandler(companySvc)
 	departmentHandler := departmentAPI.NewDepartmentHandler(departmentSvc)
 	instructionHandler := instructionAPI.NewHandler(instructionSvc)
+	analysisHandler := analysisAPI.NewHandler(analysisSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),
