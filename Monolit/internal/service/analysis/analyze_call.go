@@ -3,8 +3,10 @@ package analysis
 import (
 	"calllens/monolit/internal/models"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,6 +27,33 @@ func (s *Service) AnalyzeCall(ctx context.Context, input models.AnalyzeCallInput
 		return models.CallAnalysis{}, fmt.Errorf("get call: %w", err)
 	}
 
+	return s.analyzeCall(ctx, call, input.UserUUID)
+}
+
+func (s *Service) ProcessAnalyzeCall(ctx context.Context, callID uuid.UUID) error {
+	if callID == uuid.Nil {
+		return models.ErrCallNotFound
+	}
+
+	call, err := s.callRepository.GetByUUIDForProcessing(ctx, callID)
+	if err != nil {
+		return fmt.Errorf("get call for analysis processing: %w", err)
+	}
+
+	if call.Status == models.CallStatusAnalyzed {
+		s.log.Info(ctx, "call already analyzed", zap.String("call_id", call.ID.String()))
+		return nil
+	}
+
+	if !call.UploadedByUserUUID.Valid {
+		return models.ErrInvalidAnalysisInput
+	}
+
+	_, err = s.analyzeCall(ctx, call, call.UploadedByUserUUID.UUID)
+	return err
+}
+
+func (s *Service) analyzeCall(ctx context.Context, call models.Call, userID uuid.UUID) (models.CallAnalysis, error) {
 	transcription, err := s.transcriptionRepository.GetByCallUUID(ctx, call.ID)
 	if err != nil {
 		return models.CallAnalysis{}, fmt.Errorf("get transcription: %w", err)
@@ -34,7 +63,7 @@ func (s *Service) AnalyzeCall(ctx context.Context, input models.AnalyzeCallInput
 		return models.CallAnalysis{}, models.ErrInvalidAnalysisStatus
 	}
 
-	instructions, err := s.loadInstructions(ctx, call, input.UserUUID)
+	instructions, err := s.loadInstructions(ctx, call, userID)
 	if err != nil {
 		return models.CallAnalysis{}, fmt.Errorf("load instructions: %w", err)
 	}
@@ -61,6 +90,16 @@ func (s *Service) AnalyzeCall(ctx context.Context, input models.AnalyzeCallInput
 		}
 		s.log.Error(ctx, "call analysis failed", zap.String("call_id", call.ID.String()), zap.Error(err))
 		return failedAnalysis, fmt.Errorf("analyze call: %w", err)
+	}
+
+	result, err = normalizeAnalysisResult(result)
+	if err != nil {
+		failedAnalysis, markErr := s.analysisRepository.MarkFailed(ctx, analysis.ID, err.Error())
+		if markErr != nil {
+			return models.CallAnalysis{}, fmt.Errorf("mark analysis failed: %w", markErr)
+		}
+		s.log.Error(ctx, "call analysis result is invalid", zap.String("call_id", call.ID.String()), zap.Error(err))
+		return failedAnalysis, fmt.Errorf("normalize analysis result: %w", err)
 	}
 
 	analysis, err = s.analysisRepository.MarkDone(ctx, analysis.ID, result)
@@ -167,4 +206,79 @@ func (s *Service) readInstructionContent(ctx context.Context, instruction models
 		Title:   instruction.Title,
 		Content: string(data),
 	}, nil
+}
+
+func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResult, error) {
+	payload := map[string]any{}
+
+	if len(result.ResultJSON) > 0 {
+		if err := json.Unmarshal(result.ResultJSON, &payload); err != nil {
+			return models.AnalysisResult{}, fmt.Errorf("decode analysis result json: %w", err)
+		}
+	}
+
+	resultText := ""
+	if result.ResultText != nil {
+		resultText = strings.TrimSpace(*result.ResultText)
+	}
+
+	summary := stringField(payload, "summary")
+	if summary == "" {
+		summary = resultText
+	}
+	if summary == "" {
+		summary = "Analysis completed, but provider returned no summary."
+	}
+	payload["summary"] = summary
+
+	if _, ok := payload["topics"]; !ok {
+		payload["topics"] = []any{}
+	}
+
+	if stringField(payload, "next_step") == "" {
+		payload["next_step"] = firstStringFromArray(payload["next_steps"])
+	}
+
+	if resultText == "" {
+		resultText = summary
+		result.ResultText = &resultText
+	}
+
+	resultJSON, err := json.Marshal(payload)
+	if err != nil {
+		return models.AnalysisResult{}, fmt.Errorf("encode normalized analysis result json: %w", err)
+	}
+
+	result.ResultJSON = resultJSON
+
+	return result, nil
+}
+
+func stringField(payload map[string]any, key string) string {
+	value, ok := payload[key].(string)
+	if !ok {
+		return ""
+	}
+
+	return strings.TrimSpace(value)
+}
+
+func firstStringFromArray(value any) string {
+	values, ok := value.([]any)
+	if !ok {
+		return ""
+	}
+
+	for _, item := range values {
+		text, ok := item.(string)
+		if !ok {
+			continue
+		}
+		text = strings.TrimSpace(text)
+		if text != "" {
+			return text
+		}
+	}
+
+	return ""
 }

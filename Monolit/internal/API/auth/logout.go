@@ -25,5 +25,6 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.clearAuthCookies(w, r)
 	response.WriteNoContent(w)
 }

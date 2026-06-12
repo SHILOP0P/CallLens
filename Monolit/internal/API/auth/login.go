@@ -40,10 +40,10 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.setAuthCookies(w, r, accessToken, refreshToken)
+
 	resp := dto.AuthResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		User:         userResponse,
+		User: userResponse,
 	}
 
 	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {

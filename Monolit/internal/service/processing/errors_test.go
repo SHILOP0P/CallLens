@@ -44,8 +44,23 @@ func TestIsPermanentProcessingError(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "unsupported audio type",
+			err:  fmt.Errorf("transcribe audio: %w", models.ErrUnsupportedAudioType),
+			want: true,
+		},
+		{
 			name: "transcriber not configured",
 			err:  models.ErrTranscriberNotConfigured,
+			want: true,
+		},
+		{
+			name: "analyzer not configured",
+			err:  models.ErrAnalyzerNotConfigured,
+			want: true,
+		},
+		{
+			name: "invalid analysis status",
+			err:  fmt.Errorf("analyze call: %w", models.ErrInvalidAnalysisStatus),
 			want: true,
 		},
 		{

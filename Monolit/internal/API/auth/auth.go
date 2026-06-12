@@ -1,13 +1,20 @@
 package auth
 
-import "calllens/monolit/internal/service"
+import (
+	"calllens/monolit/internal/service"
+	"time"
+)
 
 type AuthHandler struct {
-	service service.AuthService
+	service         service.AuthService
+	accessTokenTTL  time.Duration
+	refreshTokenTTL time.Duration
 }
 
-func NewAuthHandler(service service.AuthService) *AuthHandler {
+func NewAuthHandler(service service.AuthService, accessTokenTTL time.Duration, refreshTokenTTL time.Duration) *AuthHandler {
 	return &AuthHandler{
-		service: service,
+		service:         service,
+		accessTokenTTL:  accessTokenTTL,
+		refreshTokenTTL: refreshTokenTTL,
 	}
 }

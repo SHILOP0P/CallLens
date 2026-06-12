@@ -19,6 +19,7 @@ func (s *APISuite) TestLogoutAllSuccess() {
 	s.api.LogoutAll(rec, req)
 
 	s.Require().Equal(http.StatusNoContent, rec.Code)
+	s.requireClearedAuthCookies(rec)
 }
 
 func (s *APISuite) TestLogoutAllRequiresAuth() {

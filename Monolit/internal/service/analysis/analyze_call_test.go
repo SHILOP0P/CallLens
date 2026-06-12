@@ -1,0 +1,314 @@
+package analysis
+
+import (
+	"calllens/monolit/internal/models"
+	"context"
+	"encoding/json"
+	"io"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/google/uuid"
+)
+
+func TestAnalyzeCallPassesCompanyAndDepartmentInstructions(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	callID := uuid.New()
+	companyID := uuid.New()
+	departmentID := uuid.New()
+
+	transcriptionText := "Client asked about pricing."
+	callRepo := &analysisCallRepository{
+		call: models.Call{
+			ID:                 callID,
+			Status:             models.CallStatusTranscribed,
+			UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+			CompanyUUID:        uuid.NullUUID{UUID: companyID, Valid: true},
+			DepartmentUUID:     uuid.NullUUID{UUID: departmentID, Valid: true},
+			VisibilityScope:    models.CallVisibilityScopeDepartment,
+		},
+	}
+	transcriptionRepo := &analysisTranscriptionRepository{
+		transcription: models.Transcription{
+			ID:       uuid.New(),
+			CallUUID: callID,
+			Status:   models.TranscriptionStatusTranscribed,
+			Text:     &transcriptionText,
+		},
+	}
+	companyInstruction := models.AnalysisInstruction{
+		ID:          uuid.New(),
+		Scope:       models.AnalysisInstructionScopeCompany,
+		CompanyUUID: uuid.NullUUID{UUID: companyID, Valid: true},
+		Title:       "Company criteria",
+		FilePath:    "company.md",
+		IsActive:    true,
+	}
+	departmentInstruction := models.AnalysisInstruction{
+		ID:             uuid.New(),
+		Scope:          models.AnalysisInstructionScopeDepartment,
+		CompanyUUID:    uuid.NullUUID{UUID: companyID, Valid: true},
+		DepartmentUUID: uuid.NullUUID{UUID: departmentID, Valid: true},
+		Title:          "Department criteria",
+		FilePath:       "department.md",
+		IsActive:       true,
+	}
+	instructionRepo := &analysisInstructionRepository{
+		instructions: map[models.AnalysisInstructionScope][]models.AnalysisInstruction{
+			models.AnalysisInstructionScopeCompany:    {companyInstruction},
+			models.AnalysisInstructionScopeDepartment: {departmentInstruction},
+		},
+	}
+	analysisRepo := &analysisRepository{
+		analysisID: uuid.New(),
+		callID:     callID,
+	}
+	instructionStorage := &analysisInstructionStorage{
+		files: map[string]string{
+			"company.md":    "Require a short company summary.",
+			"department.md": "Add the department next step.",
+		},
+	}
+	analyzerProvider := &recordingAnalyzer{
+		result: models.AnalysisResult{
+			ResultJSON: json.RawMessage(`{"summary":"Client discussed pricing.","next_steps":["Send pricing details."]}`),
+		},
+	}
+
+	service := NewService(callRepo, transcriptionRepo, instructionRepo, analysisRepo, instructionStorage, analyzerProvider, nil)
+
+	analysis, err := service.AnalyzeCall(ctx, models.AnalyzeCallInput{
+		CallUUID: callID,
+		UserUUID: userID,
+	})
+	if err != nil {
+		t.Fatalf("analyze call: %v", err)
+	}
+
+	if analysis.Status != models.CallAnalysisStatusDone {
+		t.Fatalf("analysis status = %s, want %s", analysis.Status, models.CallAnalysisStatusDone)
+	}
+	if len(analyzerProvider.request.Instructions) != 2 {
+		t.Fatalf("instructions len = %d, want 2", len(analyzerProvider.request.Instructions))
+	}
+	if analyzerProvider.request.Instructions[0].Scope != models.AnalysisInstructionScopeCompany {
+		t.Fatalf("first instruction scope = %s", analyzerProvider.request.Instructions[0].Scope)
+	}
+	if analyzerProvider.request.Instructions[1].Scope != models.AnalysisInstructionScopeDepartment {
+		t.Fatalf("second instruction scope = %s", analyzerProvider.request.Instructions[1].Scope)
+	}
+	if !strings.Contains(analyzerProvider.request.Instructions[0].Content, "company summary") {
+		t.Fatalf("company instruction content was not passed: %#v", analyzerProvider.request.Instructions[0])
+	}
+	if !strings.Contains(analyzerProvider.request.Instructions[1].Content, "department next step") {
+		t.Fatalf("department instruction content was not passed: %#v", analyzerProvider.request.Instructions[1])
+	}
+	if !callRepo.updatedStatus || callRepo.lastStatus != models.CallStatusAnalyzed {
+		t.Fatalf("call status was not marked analyzed")
+	}
+
+	var payload map[string]any
+	if err = json.Unmarshal(analysisRepo.doneResult.ResultJSON, &payload); err != nil {
+		t.Fatalf("decode saved result json: %v", err)
+	}
+	if payload["summary"] != "Client discussed pricing." {
+		t.Fatalf("summary = %v", payload["summary"])
+	}
+	if _, ok := payload["topics"]; !ok {
+		t.Fatalf("topics key is missing from saved result")
+	}
+	if payload["next_step"] != "Send pricing details." {
+		t.Fatalf("next_step = %v", payload["next_step"])
+	}
+	if analysisRepo.doneResult.ResultText == nil || *analysisRepo.doneResult.ResultText != "Client discussed pricing." {
+		t.Fatalf("result text = %v", analysisRepo.doneResult.ResultText)
+	}
+}
+
+type recordingAnalyzer struct {
+	request models.AnalysisRequest
+	result  models.AnalysisResult
+}
+
+func (a *recordingAnalyzer) Provider() string {
+	return "test"
+}
+
+func (a *recordingAnalyzer) Analyze(ctx context.Context, request models.AnalysisRequest) (models.AnalysisResult, error) {
+	a.request = request
+	return a.result, nil
+}
+
+type analysisInstructionStorage struct {
+	files map[string]string
+}
+
+func (s *analysisInstructionStorage) Save(ctx context.Context, input models.SaveInstructionInput) (models.SavedInstructionFile, error) {
+	panic("not implemented")
+}
+
+func (s *analysisInstructionStorage) Open(ctx context.Context, path string) (io.ReadCloser, error) {
+	return io.NopCloser(strings.NewReader(s.files[path])), nil
+}
+
+func (s *analysisInstructionStorage) Delete(ctx context.Context, path string) error {
+	panic("not implemented")
+}
+
+type analysisCallRepository struct {
+	call          models.Call
+	updatedStatus bool
+	lastStatus    models.CallStatus
+}
+
+func (r *analysisCallRepository) CreateCall(ctx context.Context, call models.Call) (models.Call, error) {
+	panic("not implemented")
+}
+
+func (r *analysisCallRepository) CreateCallWithProcessingJob(ctx context.Context, call models.Call, job models.ProcessingJob) (models.Call, error) {
+	panic("not implemented")
+}
+
+func (r *analysisCallRepository) List(ctx context.Context, userID uuid.UUID) ([]models.Call, error) {
+	panic("not implemented")
+}
+
+func (r *analysisCallRepository) GetByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Call, error) {
+	if id != r.call.ID {
+		return models.Call{}, models.ErrCallNotFound
+	}
+	return r.call, nil
+}
+
+func (r *analysisCallRepository) GetByUUIDForProcessing(ctx context.Context, id uuid.UUID) (models.Call, error) {
+	panic("not implemented")
+}
+
+func (r *analysisCallRepository) UpdateCallTitle(ctx context.Context, id uuid.UUID, userID uuid.UUID, title string) (models.Call, error) {
+	panic("not implemented")
+}
+
+func (r *analysisCallRepository) UpdateCallStatus(ctx context.Context, id uuid.UUID, status models.CallStatus) (models.Call, error) {
+	r.updatedStatus = true
+	r.lastStatus = status
+	r.call.Status = status
+	return r.call, nil
+}
+
+func (r *analysisCallRepository) DeleteCall(ctx context.Context, id uuid.UUID, userID uuid.UUID) error {
+	panic("not implemented")
+}
+
+func (r *analysisCallRepository) TakeNextForProcessing(ctx context.Context) (models.Call, error) {
+	panic("not implemented")
+}
+
+type analysisTranscriptionRepository struct {
+	transcription models.Transcription
+}
+
+func (r *analysisTranscriptionRepository) Create(ctx context.Context, transcription models.Transcription) (models.Transcription, error) {
+	panic("not implemented")
+}
+
+func (r *analysisTranscriptionRepository) GetByCallUUID(ctx context.Context, callID uuid.UUID) (models.Transcription, error) {
+	if callID != r.transcription.CallUUID {
+		return models.Transcription{}, models.ErrTranscriptionNotFound
+	}
+	return r.transcription, nil
+}
+
+func (r *analysisTranscriptionRepository) MarkTranscribed(ctx context.Context, id uuid.UUID, text string, language *string) (models.Transcription, error) {
+	panic("not implemented")
+}
+
+func (r *analysisTranscriptionRepository) MarkFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.Transcription, error) {
+	panic("not implemented")
+}
+
+type analysisInstructionRepository struct {
+	instructions map[models.AnalysisInstructionScope][]models.AnalysisInstruction
+}
+
+func (r *analysisInstructionRepository) Create(ctx context.Context, instruction models.AnalysisInstruction) (models.AnalysisInstruction, error) {
+	panic("not implemented")
+}
+
+func (r *analysisInstructionRepository) GetByUUID(ctx context.Context, id uuid.UUID) (models.AnalysisInstruction, error) {
+	panic("not implemented")
+}
+
+func (r *analysisInstructionRepository) List(ctx context.Context, input models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error) {
+	instructions := r.instructions[input.Scope]
+	result := make([]models.AnalysisInstruction, 0, len(instructions))
+	for _, instruction := range instructions {
+		if input.Scope == models.AnalysisInstructionScopeCompany && instruction.CompanyUUID != input.CompanyUUID {
+			continue
+		}
+		if input.Scope == models.AnalysisInstructionScopeDepartment &&
+			(instruction.CompanyUUID != input.CompanyUUID || instruction.DepartmentUUID != input.DepartmentUUID) {
+			continue
+		}
+		result = append(result, instruction)
+	}
+	return result, nil
+}
+
+func (r *analysisInstructionRepository) CountActive(ctx context.Context, input models.ListAnalysisInstructionsInput) (int, error) {
+	panic("not implemented")
+}
+
+func (r *analysisInstructionRepository) Deactivate(ctx context.Context, id uuid.UUID) error {
+	panic("not implemented")
+}
+
+type analysisRepository struct {
+	analysisID  uuid.UUID
+	callID      uuid.UUID
+	doneResult  models.AnalysisResult
+	createdTime time.Time
+}
+
+func (r *analysisRepository) Create(ctx context.Context, analysis models.CallAnalysis) (models.CallAnalysis, error) {
+	r.createdTime = analysis.CreatedAt
+	analysis.ID = r.analysisID
+	analysis.CallUUID = r.callID
+	analysis.Status = models.CallAnalysisStatusPending
+	return analysis, nil
+}
+
+func (r *analysisRepository) GetByCallUUID(ctx context.Context, callID uuid.UUID) (models.CallAnalysis, error) {
+	panic("not implemented")
+}
+
+func (r *analysisRepository) MarkProcessing(ctx context.Context, id uuid.UUID) (models.CallAnalysis, error) {
+	return models.CallAnalysis{
+		ID:        id,
+		CallUUID:  r.callID,
+		Status:    models.CallAnalysisStatusProcessing,
+		Provider:  "test",
+		CreatedAt: r.createdTime,
+		UpdatedAt: time.Now().UTC(),
+	}, nil
+}
+
+func (r *analysisRepository) MarkDone(ctx context.Context, id uuid.UUID, result models.AnalysisResult) (models.CallAnalysis, error) {
+	r.doneResult = result
+	return models.CallAnalysis{
+		ID:         id,
+		CallUUID:   r.callID,
+		Status:     models.CallAnalysisStatusDone,
+		Provider:   "test",
+		Model:      result.Model,
+		ResultJSON: result.ResultJSON,
+		ResultText: result.ResultText,
+		CreatedAt:  r.createdTime,
+		UpdatedAt:  time.Now().UTC(),
+	}, nil
+}
+
+func (r *analysisRepository) MarkFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.CallAnalysis, error) {
+	return models.CallAnalysis{}, nil
+}

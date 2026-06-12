@@ -34,6 +34,8 @@ func (s *Service) ProcessJob(ctx context.Context, job models.ProcessingJob) erro
 	switch job.Type {
 	case models.ProcessingJobTypeTranscribeCall:
 		return s.ProcessTranscribeCall(ctx, job.EntityUUID)
+	case models.ProcessingJobTypeAnalyzeCall:
+		return s.ProcessAnalyzeCall(ctx, job.EntityUUID)
 	default:
 		return models.ErrInvalidProcessingJobType
 	}
@@ -61,7 +63,15 @@ func (s *Service) processTranscribeCall(ctx context.Context, call models.Call) e
 		return models.ErrTranscriberNotConfigured
 	}
 
+	if call.Status == models.CallStatusAnalyzed {
+		s.log.Info(ctx, "call already analyzed", zap.String("call_id", call.ID.String()))
+		return nil
+	}
+
 	if call.Status == models.CallStatusTranscribed {
+		if err := s.enqueueAnalyzeJob(ctx, call.ID); err != nil {
+			return fmt.Errorf("enqueue analysis job: %w", err)
+		}
 		s.log.Info(ctx, "call already transcribed", zap.String("call_id", call.ID.String()))
 		return nil
 	}
@@ -103,7 +113,53 @@ func (s *Service) processTranscribeCall(ctx context.Context, call models.Call) e
 		return fmt.Errorf("mark call transcribed: %w", err)
 	}
 
+	if err = s.enqueueAnalyzeJob(ctx, call.ID); err != nil {
+		return fmt.Errorf("enqueue analysis job: %w", err)
+	}
+
 	s.log.Info(ctx, "call transcribed", zap.String("call_id", call.ID.String()), zap.String("provider", s.transcriber.Provider()))
+
+	return nil
+}
+
+func (s *Service) ProcessAnalyzeCall(ctx context.Context, callID uuid.UUID) error {
+	if callID == uuid.Nil {
+		return models.ErrCallNotFound
+	}
+
+	if s.analysisProcessor == nil {
+		return models.ErrAnalyzerNotConfigured
+	}
+
+	return s.analysisProcessor.ProcessAnalyzeCall(ctx, callID)
+}
+
+func (s *Service) enqueueAnalyzeJob(ctx context.Context, callID uuid.UUID) error {
+	if s.processingJobRepository == nil {
+		return nil
+	}
+
+	jobID, err := uuid.NewV7()
+	if err != nil {
+		return fmt.Errorf("generate analysis job uuid: %w", err)
+	}
+
+	now := time.Now().UTC()
+
+	_, err = s.processingJobRepository.Enqueue(ctx, models.ProcessingJob{
+		ID:          jobID,
+		Type:        models.ProcessingJobTypeAnalyzeCall,
+		EntityUUID:  callID,
+		Status:      models.ProcessingJobStatusPending,
+		Attempts:    0,
+		MaxAttempts: s.processingJobMaxAttempts,
+		AvailableAt: now,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

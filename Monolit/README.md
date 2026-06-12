@@ -32,12 +32,13 @@ CallLens - backend-монолит на Go для будущего продукт
 - Определение длительности аудио через `ffprobe`.
 - Локальное сохранение аудио.
 - Список/получение/скачивание аудио/получение транскрипции/обновление title/удаление звонка.
-- Очередь `processing_jobs` и worker для фоновой транскрибации.
-- Абстракция transcriber с mock-провайдером и factory-заглушкой для OpenAI.
+- Очередь `processing_jobs` и worker для фоновой транскрибации и анализа.
+- Абстракция transcriber с mock-провайдером, OpenRouter-провайдером и factory-заглушкой для OpenAI.
 - Сохранение транскрипций звонков в `call_transcriptions`.
 - Управление markdown-инструкциями анализа для личного, корпоративного и отделского scope.
-- Абстракция analyzer с mock-провайдером и factory-заглушкой для OpenAI.
-- Синхронный MVP-анализ звонка по готовой транскрипции и инструкциям.
+- Абстракция analyzer с mock-провайдером, OpenRouter-провайдером и factory-заглушкой для OpenAI.
+- Асинхронный анализ звонка по готовой транскрипции и инструкциям через `processing_jobs`.
+- Ручной запуск анализа через HTTP-ручку по готовой транскрипции.
 - Сохранение анализа звонка в `call_analyses`.
 - Создание компании.
 - Создание отдела.
@@ -131,7 +132,7 @@ flowchart LR
 - `analyzed` - по транскрипту построен анализ.
 - `failed` - обработка завершилась ошибкой.
 
-`new` используется как состояние очереди. Worker забирает задания транскрибации, переводит звонок в `processing`, сохраняет транскрипцию и переводит звонок в `transcribed`. Анализ запускается отдельной HTTP-ручкой по готовой транскрипции и при успехе переводит звонок в `analyzed`.
+`new` используется как состояние очереди. Worker забирает задания `transcribe_call`, переводит звонок в `processing`, сохраняет транскрипцию, переводит звонок в `transcribed` и ставит в очередь задание `analyze_call`. Задание анализа загружает готовую транскрипцию, выбирает подходящие инструкции, сохраняет результат в `call_analyses` и при успехе переводит звонок в `analyzed`. HTTP-ручка анализа остается для ручного запуска по готовой транскрипции.
 
 Статусы транскрипции:
 
@@ -202,16 +203,16 @@ sequenceDiagram
     API->>API: Создаем access token
     API->>API: Генерируем refresh token
     API->>DB: Сохраняем hash refresh token в refresh_sessions
-    API-->>Client: access_token + refresh_token + user
+    API-->>Client: HttpOnly cookies access_token/refresh_token + user
 
     Client->>API: POST /api/v1/auth/refresh
-    API->>DB: Ищем активную refresh session по hash token
+    API->>DB: Ищем активную refresh session по hash refresh cookie
     API->>DB: Ротируем refresh token hash
-    API-->>Client: новый access_token + новый refresh_token
+    API-->>Client: новые HttpOnly cookies access_token/refresh_token + user
 
     Client->>API: POST /api/v1/auth/logout
     API->>DB: Отзываем текущую refresh session
-    API-->>Client: OK
+    API-->>Client: Очищаем auth cookies
 ```
 
 ## Управление участниками
@@ -273,8 +274,8 @@ Auth:
 | Method | Path | Auth | Описание |
 | --- | --- | --- | --- |
 | POST | `/api/v1/auth/register` | Нет | Регистрация пользователя |
-| POST | `/api/v1/auth/login` | Нет | Логин и создание refresh session |
-| POST | `/api/v1/auth/refresh` | Нет | Ротация refresh token |
+| POST | `/api/v1/auth/login` | Нет | Логин, создание refresh session и установка auth cookies |
+| POST | `/api/v1/auth/refresh` | Нет | Ротация refresh token из cookie |
 | GET | `/api/v1/auth/me` | Да | Получить текущего пользователя |
 | POST | `/api/v1/auth/logout` | Да | Отозвать текущую session |
 | POST | `/api/v1/auth/logout-all` | Да | Отозвать все session пользователя |
@@ -524,6 +525,6 @@ migrations/                 SQL-миграции goose
 
 1. Вручную проверить сценарии membership и visibility через Postman.
 2. Добавить тесты для repository/service/API анализа звонков.
-3. Добавить асинхронный processing job для анализа звонков.
+3. Добавить ручной перезапуск анализа через постановку `analyze_call` job вместо синхронного HTTP-выполнения.
 4. Добавить реальные OpenAI-провайдеры для transcriber и analyzer.
 5. Начать frontend после стабилизации backend workflows.

@@ -2,6 +2,7 @@ package analyzer
 
 import (
 	mockAnalyzer "calllens/monolit/internal/analyzer/mock"
+	openrouterAnalyzer "calllens/monolit/internal/analyzer/openrouter"
 	"fmt"
 	"strings"
 )
@@ -18,6 +19,8 @@ func NewFromConfig(cfg Config) (Analyzer, error) {
 	switch provider {
 	case "", "mock":
 		return mockAnalyzer.New(cfg.Model()), nil
+	case "openrouter":
+		return openrouterAnalyzer.New(cfg.APIKey(), cfg.Model())
 	case "openai":
 		return nil, fmt.Errorf("openai analyzer is not implemented yet")
 	default:

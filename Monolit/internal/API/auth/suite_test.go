@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
@@ -25,7 +26,7 @@ type APISuite struct {
 func (s *APISuite) SetupTest() {
 	s.ctx = context.Background()
 	s.service = serviceMocks.NewAuthService(s.T())
-	s.api = NewAuthHandler(s.service)
+	s.api = NewAuthHandler(s.service, 15*time.Minute, 30*24*time.Hour)
 }
 
 func TestAPISuite(t *testing.T) {
@@ -54,4 +55,48 @@ func (s *APISuite) requireErrorCode(rec *httptest.ResponseRecorder, expectedCode
 	var resp response.ErrorResponse
 	s.Require().NoError(json.Unmarshal(rec.Body.Bytes(), &resp))
 	s.Require().Equal(expectedCode, resp.Error.Code)
+}
+
+func (s *APISuite) requireAuthCookies(rec *httptest.ResponseRecorder, expectedAccessToken string, expectedRefreshToken string) {
+	cookies := rec.Result().Cookies()
+
+	accessCookie := findCookie(cookies, accessTokenCookieName)
+	s.Require().NotNil(accessCookie)
+	s.Require().Equal(expectedAccessToken, accessCookie.Value)
+	s.Require().True(accessCookie.HttpOnly)
+	s.Require().Equal(accessTokenCookiePath, accessCookie.Path)
+	s.Require().Equal(http.SameSiteLaxMode, accessCookie.SameSite)
+
+	refreshCookie := findCookie(cookies, refreshTokenCookieName)
+	s.Require().NotNil(refreshCookie)
+	s.Require().Equal(expectedRefreshToken, refreshCookie.Value)
+	s.Require().True(refreshCookie.HttpOnly)
+	s.Require().Equal(refreshTokenCookiePath, refreshCookie.Path)
+	s.Require().Equal(http.SameSiteLaxMode, refreshCookie.SameSite)
+}
+
+func (s *APISuite) requireClearedAuthCookies(rec *httptest.ResponseRecorder) {
+	cookies := rec.Result().Cookies()
+
+	accessCookie := findCookie(cookies, accessTokenCookieName)
+	s.Require().NotNil(accessCookie)
+	s.Require().Equal("", accessCookie.Value)
+	s.Require().Negative(accessCookie.MaxAge)
+	s.Require().Equal(accessTokenCookiePath, accessCookie.Path)
+
+	refreshCookie := findCookie(cookies, refreshTokenCookieName)
+	s.Require().NotNil(refreshCookie)
+	s.Require().Equal("", refreshCookie.Value)
+	s.Require().Negative(refreshCookie.MaxAge)
+	s.Require().Equal(refreshTokenCookiePath, refreshCookie.Path)
+}
+
+func findCookie(cookies []*http.Cookie, name string) *http.Cookie {
+	for _, cookie := range cookies {
+		if cookie.Name == name {
+			return cookie
+		}
+	}
+
+	return nil
 }

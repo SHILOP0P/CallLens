@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/models"
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -27,6 +29,13 @@ func (s *APISuite) TestLoginSuccess() {
 	s.api.Login(rec, req)
 
 	s.Require().Equal(http.StatusOK, rec.Code)
+	s.requireAuthCookies(rec, "access", "refresh")
+
+	var resp dto.AuthResponse
+	s.Require().NoError(json.Unmarshal(rec.Body.Bytes(), &resp))
+	s.Require().Equal(userID.String(), resp.User.ID)
+	s.Require().NotContains(rec.Body.String(), "access_token")
+	s.Require().NotContains(rec.Body.String(), "refresh_token")
 }
 
 func (s *APISuite) TestLoginRejectsInvalidBody() {

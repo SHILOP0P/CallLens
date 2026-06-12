@@ -138,7 +138,11 @@ func main() {
 		return
 	}
 
+	analysisSvc := analysisService.NewService(callRepository, transcriptionRepository, analysisInstructionRepository, analysisRepository, instructionStorage, analyzerProvider, appLogger)
 	processingSvc := processingService.NewService(callRepository, transcriptionRepository, processingJobRepository, audioStorage, transcriberProvider, appLogger)
+	processingSvc.SetProcessingJobMaxAttempts(config.AppConfig().Worker.MaxAttempts())
+	processingSvc.SetAnalysisProcessor(analysisSvc)
+
 	var workerDone <-chan struct{}
 	if config.AppConfig().Worker.Enabled() {
 		processingWorker := processingService.NewWorker(processingSvc, processingService.WorkerOptions{
@@ -176,10 +180,9 @@ func main() {
 	companySvc := companyService.NewService(companyRepository, appLogger)
 	departmentSvc := departmentService.NewService(companyRepository, departmentRepository, appLogger)
 	instructionSvc := analysisInstructionService.NewService(analysisInstructionRepository, companyRepository, departmentRepository, instructionStorage, appLogger)
-	analysisSvc := analysisService.NewService(callRepository, transcriptionRepository, analysisInstructionRepository, analysisRepository, instructionStorage, analyzerProvider, appLogger)
 
 	callHandler := call.NewCallHandler(callSvc)
-	authHandler := authAPI.NewAuthHandler(authSvc)
+	authHandler := authAPI.NewAuthHandler(authSvc, config.AppConfig().Auth.AccessTokenTTL(), config.AppConfig().Auth.RefreshTokenTTL())
 	companyHandler := companyAPI.NewCompanyHandler(companySvc)
 	departmentHandler := departmentAPI.NewDepartmentHandler(departmentSvc)
 	instructionHandler := instructionAPI.NewHandler(instructionSvc)

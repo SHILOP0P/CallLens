@@ -2,18 +2,28 @@ package processing
 
 import (
 	"calllens/monolit/internal/logger"
+	"calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository"
 	"calllens/monolit/internal/storage"
 	"calllens/monolit/internal/transcriber"
+	"context"
+
+	"github.com/google/uuid"
 )
 
+type AnalysisProcessor interface {
+	ProcessAnalyzeCall(ctx context.Context, callID uuid.UUID) error
+}
+
 type Service struct {
-	callRepository          repository.CallRepository
-	transcriptionRepository repository.TranscriptionRepository
-	processingJobRepository repository.ProcessingJobRepository
-	audioStorage            storage.AudioStorage
-	transcriber             transcriber.Transcriber
-	log                     logger.Logger
+	callRepository           repository.CallRepository
+	transcriptionRepository  repository.TranscriptionRepository
+	processingJobRepository  repository.ProcessingJobRepository
+	audioStorage             storage.AudioStorage
+	transcriber              transcriber.Transcriber
+	analysisProcessor        AnalysisProcessor
+	processingJobMaxAttempts int
+	log                      logger.Logger
 }
 
 func NewService(
@@ -29,11 +39,24 @@ func NewService(
 	}
 
 	return &Service{
-		callRepository:          callRepository,
-		transcriptionRepository: transcriptionRepository,
-		processingJobRepository: processingJobRepository,
-		audioStorage:            audioStorage,
-		transcriber:             transcriber,
-		log:                     log,
+		callRepository:           callRepository,
+		transcriptionRepository:  transcriptionRepository,
+		processingJobRepository:  processingJobRepository,
+		audioStorage:             audioStorage,
+		transcriber:              transcriber,
+		processingJobMaxAttempts: models.DefaultProcessingJobMaxAttempts,
+		log:                      log,
 	}
+}
+
+func (s *Service) SetAnalysisProcessor(processor AnalysisProcessor) {
+	s.analysisProcessor = processor
+}
+
+func (s *Service) SetProcessingJobMaxAttempts(maxAttempts int) {
+	if maxAttempts <= 0 {
+		maxAttempts = models.DefaultProcessingJobMaxAttempts
+	}
+
+	s.processingJobMaxAttempts = maxAttempts
 }

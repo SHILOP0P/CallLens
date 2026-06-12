@@ -27,6 +27,8 @@ func (a *Analyzer) Analyze(ctx context.Context, request models.AnalysisRequest) 
 
 	payload := map[string]any{
 		"summary":            "Mock call analysis",
+		"topics":             []string{"mock_analysis"},
+		"next_step":          "Review the generated mock summary.",
 		"call_uuid":          request.CallUUID.String(),
 		"transcription_size": len(request.Transcription),
 		"instruction_count":  len(request.Instructions),

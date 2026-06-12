@@ -12,24 +12,14 @@ import (
 	"github.com/google/uuid"
 )
 
+const accessTokenCookieName = "access_token"
+
 func Auth(secret string, refreshSessionRepository repository.RefreshSessionRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			authHeader := r.Header.Get("Authorization")
-			if authHeader == "" {
+			rawToken, ok := accessTokenFromRequest(r)
+			if !ok {
 				response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidAuthorizationHeader, "invalid authorization header")
-				return
-			}
-
-			const bearerPrefix = "Bearer "
-			if !strings.HasPrefix(authHeader, bearerPrefix) {
-				response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidAuthorizationHeader, "invalid authorization header")
-				return
-			}
-
-			rawToken := strings.TrimSpace(strings.TrimPrefix(authHeader, bearerPrefix))
-			if rawToken == "" {
-				response.WriteError(w, http.StatusUnauthorized, response.CodeEmptyAccessToken, "empty access token")
 				return
 			}
 
@@ -63,4 +53,24 @@ func Auth(secret string, refreshSessionRepository repository.RefreshSessionRepos
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func accessTokenFromRequest(r *http.Request) (string, bool) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" {
+		const bearerPrefix = "Bearer "
+		if !strings.HasPrefix(authHeader, bearerPrefix) {
+			return "", false
+		}
+
+		rawToken := strings.TrimSpace(strings.TrimPrefix(authHeader, bearerPrefix))
+		return rawToken, rawToken != ""
+	}
+
+	if cookie, err := r.Cookie(accessTokenCookieName); err == nil {
+		rawToken := strings.TrimSpace(cookie.Value)
+		return rawToken, rawToken != ""
+	}
+
+	return "", false
 }

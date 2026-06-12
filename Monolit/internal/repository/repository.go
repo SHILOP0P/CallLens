@@ -81,6 +81,7 @@ type AnalysisRepository interface {
 
 type ProcessingJobRepository interface {
 	Create(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error)
+	Enqueue(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error)
 	TakeNext(ctx context.Context, workerID string, staleAfter time.Duration) (models.ProcessingJob, error)
 	MarkDone(ctx context.Context, id uuid.UUID) (models.ProcessingJob, error)
 	MarkRetry(ctx context.Context, id uuid.UUID, lastError string, delay time.Duration) (models.ProcessingJob, error)

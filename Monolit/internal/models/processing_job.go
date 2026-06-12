@@ -26,7 +26,10 @@ type ProcessingJobStatus string
 
 const (
 	ProcessingJobTypeTranscribeCall ProcessingJobType = "transcribe_call"
+	ProcessingJobTypeAnalyzeCall    ProcessingJobType = "analyze_call"
 )
+
+const DefaultProcessingJobMaxAttempts = 3
 
 const (
 	ProcessingJobStatusPending ProcessingJobStatus = "pending"
