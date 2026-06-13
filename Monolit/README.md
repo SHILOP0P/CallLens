@@ -492,6 +492,9 @@ http://localhost:8080/health
 - `ANALYZER_PROVIDER`
 - `ANALYZER_API_KEY`
 - `ANALYZER_MODEL`
+
+Для анализа через OpenRouter рекомендуется недорогая модель `mistralai/mistral-nemo`: она подходит для русских звонков, поддерживает структурированные JSON-ответы и не использует более строгие лимиты `:free` моделей.
+
 - `PASSWORD_PEPPER`
 - `JWT_SECRET`
 - `JWT_ACCESS_TOKEN_TTL`
