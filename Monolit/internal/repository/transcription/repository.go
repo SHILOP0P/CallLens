@@ -17,6 +17,7 @@ const transcriptionReturningColumns = `
 	call_uuid,
 	status,
 	text,
+	segments,
 	language,
 	provider,
 	error_message,

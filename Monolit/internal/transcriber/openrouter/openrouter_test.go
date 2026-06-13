@@ -65,7 +65,7 @@ func TestTranscribeSendsOpenRouterRequest(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"text":" [музыка]\nПривет, это тест!!!\nСубтитры сделал Иван "}`))
+		_, _ = w.Write([]byte(`{"text":" [музыка]\nПривет, это тест!!!\nСубтитры сделал Иван ","segments":[{"speaker":"speaker_0","start":0,"end":1.25,"text":"Привет, это тест!!!"}]}`))
 	}))
 	defer server.Close()
 
@@ -86,6 +86,18 @@ func TestTranscribeSendsOpenRouterRequest(t *testing.T) {
 	}
 	if got.Text != "Привет, это тест!" {
 		t.Fatalf("text = %q", got.Text)
+	}
+	if len(got.Segments) != 1 {
+		t.Fatalf("segments len = %d, want 1", len(got.Segments))
+	}
+	if got.Segments[0].Speaker != "speaker_0" || got.Segments[0].Text != "Привет, это тест!" {
+		t.Fatalf("segment = %#v", got.Segments[0])
+	}
+	if got.Segments[0].StartSeconds == nil || *got.Segments[0].StartSeconds != 0 {
+		t.Fatalf("segment start = %v", got.Segments[0].StartSeconds)
+	}
+	if got.Segments[0].EndSeconds == nil || *got.Segments[0].EndSeconds != 1.25 {
+		t.Fatalf("segment end = %v", got.Segments[0].EndSeconds)
 	}
 	if got.Language == nil || *got.Language != defaultLanguage {
 		t.Fatalf("language = %v", got.Language)

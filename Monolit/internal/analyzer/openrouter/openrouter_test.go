@@ -56,6 +56,9 @@ func TestAnalyzeSendsTranscriptionAndInstructions(t *testing.T) {
 		if len(req.Messages) != 2 {
 			t.Fatalf("messages len = %d", len(req.Messages))
 		}
+		if !strings.Contains(req.Messages[0].Content, "Всегда отвечай на русском языке") {
+			t.Fatalf("system message does not require Russian output:\n%s", req.Messages[0].Content)
+		}
 
 		userMessage := req.Messages[1].Content
 		for _, want := range []string{

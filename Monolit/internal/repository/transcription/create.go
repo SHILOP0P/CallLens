@@ -20,16 +20,18 @@ func (r *Repository) Create(ctx context.Context, transcription model.Transcripti
 		call_uuid,
 		status,
 		text,
+		segments,
 		language,
 		provider,
 		error_message,
 		created_at,
 		updated_at
 	)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10)
 	ON CONFLICT (call_uuid) DO UPDATE
 	SET status = EXCLUDED.status,
 	    text = NULL,
+	    segments = NULL,
 	    language = NULL,
 	    provider = EXCLUDED.provider,
 	    error_message = NULL,
@@ -41,6 +43,7 @@ func (r *Repository) Create(ctx context.Context, transcription model.Transcripti
 		repoTranscription.CallUUID,
 		repoTranscription.Status,
 		repoTranscription.Text,
+		repoTranscription.Segments,
 		repoTranscription.Language,
 		repoTranscription.Provider,
 		repoTranscription.ErrorMessage,

@@ -307,13 +307,36 @@ func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResul
 		summary = resultText
 	}
 	if summary == "" {
-		summary = "Analysis completed, but provider returned no summary."
+		summary = "Анализ завершен, но провайдер не вернул резюме."
 	}
 	payload["summary"] = summary
 
-	if _, ok := payload["topics"]; !ok {
-		payload["topics"] = []any{}
-	}
+	ensureArrayField(payload, "topics")
+	ensureObjectFields(payload, "dialogue_tone", map[string]any{
+		"overall":         "",
+		"manager":         "",
+		"client":          "",
+		"evidence_quotes": []any{},
+	})
+	ensureArrayField(payload, "client_questions")
+	ensureObjectFields(payload, "question_coverage", map[string]any{
+		"status":               "unclear",
+		"summary":              "",
+		"unanswered_questions": []any{},
+	})
+	ensureObjectFields(payload, "manager_quality", map[string]any{
+		"strengths":       []any{},
+		"issues":          []any{},
+		"recommendations": []any{},
+	})
+	ensureStringField(payload, "call_outcome")
+	ensureNumberField(payload, "score")
+	ensureArrayField(payload, "criteria_results")
+	ensureArrayField(payload, "customer_objections")
+	ensureArrayField(payload, "risks")
+	ensureArrayField(payload, "next_steps")
+	ensureArrayField(payload, "evidence_quotes")
+	ensureConfidenceField(payload)
 
 	if stringField(payload, "next_step") == "" {
 		payload["next_step"] = firstStringFromArray(payload["next_steps"])
@@ -361,4 +384,52 @@ func firstStringFromArray(value any) string {
 	}
 
 	return ""
+}
+
+func ensureArrayField(payload map[string]any, key string) {
+	if _, ok := payload[key].([]any); ok {
+		return
+	}
+
+	payload[key] = []any{}
+}
+
+func ensureObjectFields(payload map[string]any, key string, defaults map[string]any) {
+	value, ok := payload[key].(map[string]any)
+	if !ok {
+		payload[key] = defaults
+		return
+	}
+
+	for defaultKey, defaultValue := range defaults {
+		if _, exists := value[defaultKey]; !exists {
+			value[defaultKey] = defaultValue
+		}
+	}
+}
+
+func ensureStringField(payload map[string]any, key string) {
+	if _, ok := payload[key].(string); ok {
+		return
+	}
+
+	payload[key] = ""
+}
+
+func ensureNumberField(payload map[string]any, key string) {
+	switch payload[key].(type) {
+	case float64, int, int64:
+		return
+	default:
+		payload[key] = 0
+	}
+}
+
+func ensureConfidenceField(payload map[string]any) {
+	switch stringField(payload, "confidence") {
+	case "low", "medium", "high":
+		return
+	default:
+		payload["confidence"] = "low"
+	}
 }

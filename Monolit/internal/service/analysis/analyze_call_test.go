@@ -120,6 +120,15 @@ func TestAnalyzeCallPassesCompanyAndDepartmentInstructions(t *testing.T) {
 	if _, ok := payload["topics"]; !ok {
 		t.Fatalf("topics key is missing from saved result")
 	}
+	if _, ok := payload["dialogue_tone"]; !ok {
+		t.Fatalf("dialogue_tone key is missing from saved result")
+	}
+	if _, ok := payload["question_coverage"]; !ok {
+		t.Fatalf("question_coverage key is missing from saved result")
+	}
+	if _, ok := payload["manager_quality"]; !ok {
+		t.Fatalf("manager_quality key is missing from saved result")
+	}
 	if payload["next_step"] != "Send pricing details." {
 		t.Fatalf("next_step = %v", payload["next_step"])
 	}
@@ -320,7 +329,7 @@ func (r *analysisTranscriptionRepository) GetByCallUUID(ctx context.Context, cal
 	return r.transcription, nil
 }
 
-func (r *analysisTranscriptionRepository) MarkTranscribed(ctx context.Context, id uuid.UUID, text string, language *string) (models.Transcription, error) {
+func (r *analysisTranscriptionRepository) MarkTranscribed(ctx context.Context, id uuid.UUID, text string, segments []models.TranscriptionSegment, language *string) (models.Transcription, error) {
 	panic("not implemented")
 }
 

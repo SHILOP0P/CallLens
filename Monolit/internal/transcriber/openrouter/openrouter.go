@@ -44,7 +44,17 @@ type inputAudio struct {
 }
 
 type transcriptionResponse struct {
-	Text string `json:"text"`
+	Text     string                 `json:"text"`
+	Segments []transcriptionSegment `json:"segments"`
+}
+
+type transcriptionSegment struct {
+	Speaker      string   `json:"speaker"`
+	Start        *float64 `json:"start"`
+	End          *float64 `json:"end"`
+	StartSeconds *float64 `json:"start_seconds"`
+	EndSeconds   *float64 `json:"end_seconds"`
+	Text         string   `json:"text"`
 }
 
 type errorResponse struct {
@@ -136,7 +146,11 @@ func (t *Transcriber) Transcribe(ctx context.Context, file models.File) (models.
 		return models.TranscriptionResult{}, fmt.Errorf("decode openrouter transcription response: %w", err)
 	}
 
+	segments := normalizeSegments(result.Segments)
 	result.Text = cleaner.Clean(result.Text)
+	if result.Text == "" && len(segments) > 0 {
+		result.Text = textFromSegments(segments)
+	}
 	if result.Text == "" {
 		return models.TranscriptionResult{}, errors.New("openrouter transcription response is empty")
 	}
@@ -144,6 +158,7 @@ func (t *Transcriber) Transcribe(ctx context.Context, file models.File) (models.
 	language := t.language
 	return models.TranscriptionResult{
 		Text:     result.Text,
+		Segments: segments,
 		Language: &language,
 	}, nil
 }
@@ -200,6 +215,51 @@ func supportedFormatFromExt(name string) string {
 	default:
 		return ""
 	}
+}
+
+func normalizeSegments(segments []transcriptionSegment) []models.TranscriptionSegment {
+	result := make([]models.TranscriptionSegment, 0, len(segments))
+	for _, segment := range segments {
+		text := cleaner.Clean(segment.Text)
+		if text == "" {
+			continue
+		}
+
+		start := segment.StartSeconds
+		if start == nil {
+			start = segment.Start
+		}
+		end := segment.EndSeconds
+		if end == nil {
+			end = segment.End
+		}
+
+		result = append(result, models.TranscriptionSegment{
+			Speaker:      strings.TrimSpace(segment.Speaker),
+			StartSeconds: start,
+			EndSeconds:   end,
+			Text:         text,
+		})
+	}
+
+	return result
+}
+
+func textFromSegments(segments []models.TranscriptionSegment) string {
+	lines := make([]string, 0, len(segments))
+	for _, segment := range segments {
+		text := strings.TrimSpace(segment.Text)
+		if text == "" {
+			continue
+		}
+		if speaker := strings.TrimSpace(segment.Speaker); speaker != "" {
+			lines = append(lines, speaker+": "+text)
+			continue
+		}
+		lines = append(lines, text)
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 func decodeError(resp *http.Response) error {

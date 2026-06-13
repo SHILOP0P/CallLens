@@ -67,7 +67,7 @@ type RefreshSessionRepository interface {
 type TranscriptionRepository interface {
 	Create(ctx context.Context, transcription models.Transcription) (models.Transcription, error)
 	GetByCallUUID(ctx context.Context, callID uuid.UUID) (models.Transcription, error)
-	MarkTranscribed(ctx context.Context, id uuid.UUID, text string, language *string) (models.Transcription, error)
+	MarkTranscribed(ctx context.Context, id uuid.UUID, text string, segments []models.TranscriptionSegment, language *string) (models.Transcription, error)
 	MarkFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.Transcription, error)
 }
 

@@ -12,6 +12,7 @@ type Transcription struct {
 	CallUUID     uuid.UUID
 	Status       TranscriptionStatus
 	Text         sql.NullString
+	Segments     sql.NullString
 	Language     sql.NullString
 	Provider     string
 	ErrorMessage sql.NullString

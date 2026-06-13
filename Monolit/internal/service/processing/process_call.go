@@ -105,7 +105,7 @@ func (s *Service) processTranscribeCall(ctx context.Context, call models.Call) e
 		return fmt.Errorf("transcribe audio: %w", err)
 	}
 
-	if _, err = s.transcriptionRepository.MarkTranscribed(ctx, transcription.ID, result.Text, result.Language); err != nil {
+	if _, err = s.transcriptionRepository.MarkTranscribed(ctx, transcription.ID, result.Text, result.Segments, result.Language); err != nil {
 		return fmt.Errorf("mark transcription transcribed: %w", err)
 	}
 

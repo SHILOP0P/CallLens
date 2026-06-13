@@ -10,6 +10,7 @@ func ScanTranscription(row rowScanner) (repoModel.Transcription, error) {
 		&transcription.CallUUID,
 		&transcription.Status,
 		&transcription.Text,
+		&transcription.Segments,
 		&transcription.Language,
 		&transcription.Provider,
 		&transcription.ErrorMessage,

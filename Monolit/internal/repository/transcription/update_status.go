@@ -12,18 +12,24 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *Repository) MarkTranscribed(ctx context.Context, id uuid.UUID, text string, language *string) (model.Transcription, error) {
+func (r *Repository) MarkTranscribed(ctx context.Context, id uuid.UUID, text string, segments []model.TranscriptionSegment, language *string) (model.Transcription, error) {
+	repoSegments, err := converter.TranscriptionSegmentsToNullString(segments)
+	if err != nil {
+		return model.Transcription{}, err
+	}
+
 	query := `
 	UPDATE call_transcriptions
 	SET status = $2,
 	    text = $3,
-	    language = $4,
+	    segments = $4::jsonb,
+	    language = $5,
 	    error_message = NULL,
 	    updated_at = now()
 	WHERE transcription_uuid = $1
 	RETURNING ` + transcriptionReturningColumns
 
-	row := r.db.QueryRowContext(ctx, query, id, string(model.TranscriptionStatusTranscribed), text, language)
+	row := r.db.QueryRowContext(ctx, query, id, string(model.TranscriptionStatusTranscribed), text, repoSegments, language)
 
 	return scanUpdatedTranscription(row, "mark transcription transcribed")
 }
@@ -33,6 +39,7 @@ func (r *Repository) MarkFailed(ctx context.Context, id uuid.UUID, errorMessage 
 	UPDATE call_transcriptions
 	SET status = $2,
 	    text = NULL,
+	    segments = NULL,
 	    language = NULL,
 	    error_message = $3,
 	    updated_at = now()
