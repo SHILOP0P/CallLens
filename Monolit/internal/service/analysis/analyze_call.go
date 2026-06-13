@@ -4,6 +4,7 @@ import (
 	"calllens/monolit/internal/models"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -27,7 +28,9 @@ func (s *Service) AnalyzeCall(ctx context.Context, input models.AnalyzeCallInput
 		return models.CallAnalysis{}, fmt.Errorf("get call: %w", err)
 	}
 
-	return s.analyzeCall(ctx, call, input.UserUUID)
+	return s.analyzeCall(ctx, call, input.UserUUID, analyzeCallOptions{
+		markAttemptFailed: true,
+	})
 }
 
 func (s *Service) ProcessAnalyzeCall(ctx context.Context, callID uuid.UUID) error {
@@ -49,11 +52,51 @@ func (s *Service) ProcessAnalyzeCall(ctx context.Context, callID uuid.UUID) erro
 		return models.ErrInvalidAnalysisInput
 	}
 
-	_, err = s.analyzeCall(ctx, call, call.UploadedByUserUUID.UUID)
+	_, err = s.analyzeCall(ctx, call, call.UploadedByUserUUID.UUID, analyzeCallOptions{
+		markAttemptFailed: false,
+	})
 	return err
 }
 
-func (s *Service) analyzeCall(ctx context.Context, call models.Call, userID uuid.UUID) (models.CallAnalysis, error) {
+func (s *Service) MarkAnalyzeCallFailed(ctx context.Context, callID uuid.UUID, cause error) error {
+	if callID == uuid.Nil {
+		return models.ErrCallNotFound
+	}
+
+	errorMessage := "analysis failed"
+	if cause != nil && strings.TrimSpace(cause.Error()) != "" {
+		errorMessage = cause.Error()
+	}
+
+	analysis, err := s.analysisRepository.GetByCallUUID(ctx, callID)
+	if err != nil {
+		if !errors.Is(err, models.ErrAnalysisNotFound) {
+			return fmt.Errorf("get analysis for failure: %w", err)
+		}
+
+		failedAnalysis, createErr := s.createFailedAnalysis(ctx, callID, errorMessage)
+		if createErr != nil {
+			return fmt.Errorf("create failed analysis: %w", createErr)
+		}
+		analysis = failedAnalysis
+	} else {
+		failedAnalysis, markErr := s.analysisRepository.MarkFailed(ctx, analysis.ID, errorMessage)
+		if markErr != nil {
+			return fmt.Errorf("mark analysis failed: %w", markErr)
+		}
+		analysis = failedAnalysis
+	}
+
+	s.log.Error(ctx, "call analysis permanently failed", zap.String("call_id", callID.String()), zap.String("analysis_id", analysis.ID.String()), zap.Error(cause))
+
+	return nil
+}
+
+type analyzeCallOptions struct {
+	markAttemptFailed bool
+}
+
+func (s *Service) analyzeCall(ctx context.Context, call models.Call, userID uuid.UUID, opts analyzeCallOptions) (models.CallAnalysis, error) {
 	transcription, err := s.transcriptionRepository.GetByCallUUID(ctx, call.ID)
 	if err != nil {
 		return models.CallAnalysis{}, fmt.Errorf("get transcription: %w", err)
@@ -84,22 +127,28 @@ func (s *Service) analyzeCall(ctx context.Context, call models.Call, userID uuid
 		Instructions:  instructions,
 	})
 	if err != nil {
-		failedAnalysis, markErr := s.analysisRepository.MarkFailed(ctx, analysis.ID, err.Error())
-		if markErr != nil {
-			return models.CallAnalysis{}, fmt.Errorf("mark analysis failed: %w", markErr)
+		if opts.markAttemptFailed {
+			failedAnalysis, markErr := s.analysisRepository.MarkFailed(ctx, analysis.ID, err.Error())
+			if markErr != nil {
+				return models.CallAnalysis{}, fmt.Errorf("mark analysis failed: %w", markErr)
+			}
+			analysis = failedAnalysis
 		}
 		s.log.Error(ctx, "call analysis failed", zap.String("call_id", call.ID.String()), zap.Error(err))
-		return failedAnalysis, fmt.Errorf("analyze call: %w", err)
+		return analysis, fmt.Errorf("analyze call: %w", err)
 	}
 
 	result, err = normalizeAnalysisResult(result)
 	if err != nil {
-		failedAnalysis, markErr := s.analysisRepository.MarkFailed(ctx, analysis.ID, err.Error())
-		if markErr != nil {
-			return models.CallAnalysis{}, fmt.Errorf("mark analysis failed: %w", markErr)
+		if opts.markAttemptFailed {
+			failedAnalysis, markErr := s.analysisRepository.MarkFailed(ctx, analysis.ID, err.Error())
+			if markErr != nil {
+				return models.CallAnalysis{}, fmt.Errorf("mark analysis failed: %w", markErr)
+			}
+			analysis = failedAnalysis
 		}
 		s.log.Error(ctx, "call analysis result is invalid", zap.String("call_id", call.ID.String()), zap.Error(err))
-		return failedAnalysis, fmt.Errorf("normalize analysis result: %w", err)
+		return analysis, fmt.Errorf("normalize analysis result: %w", err)
 	}
 
 	analysis, err = s.analysisRepository.MarkDone(ctx, analysis.ID, result)
@@ -132,6 +181,33 @@ func (s *Service) createPendingAnalysis(ctx context.Context, callID uuid.UUID) (
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
+}
+
+func (s *Service) createFailedAnalysis(ctx context.Context, callID uuid.UUID, errorMessage string) (models.CallAnalysis, error) {
+	analysisID, err := uuid.NewV7()
+	if err != nil {
+		return models.CallAnalysis{}, err
+	}
+
+	now := time.Now().UTC()
+
+	return s.analysisRepository.Create(ctx, models.CallAnalysis{
+		ID:           analysisID,
+		CallUUID:     callID,
+		Status:       models.CallAnalysisStatusFailed,
+		Provider:     s.analyzerProviderName(),
+		ErrorMessage: &errorMessage,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	})
+}
+
+func (s *Service) analyzerProviderName() string {
+	if s.analyzer == nil {
+		return "unknown"
+	}
+
+	return s.analyzer.Provider()
 }
 
 func (s *Service) loadInstructions(ctx context.Context, call models.Call, userID uuid.UUID) ([]models.AnalysisInstructionContent, error) {

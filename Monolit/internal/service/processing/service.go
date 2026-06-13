@@ -13,6 +13,7 @@ import (
 
 type AnalysisProcessor interface {
 	ProcessAnalyzeCall(ctx context.Context, callID uuid.UUID) error
+	MarkAnalyzeCallFailed(ctx context.Context, callID uuid.UUID, cause error) error
 }
 
 type Service struct {

@@ -198,16 +198,31 @@ func (s *Service) openAudio(ctx context.Context, call models.Call) (models.File,
 }
 
 func (s *Service) MarkJobFailed(ctx context.Context, job models.ProcessingJob, cause error) {
-	if job.Type != models.ProcessingJobTypeTranscribeCall {
+	switch job.Type {
+	case models.ProcessingJobTypeTranscribeCall:
+		transcription, err := s.transcriptionRepository.GetByCallUUID(ctx, job.EntityUUID)
+		if err == nil && transcription.ID != uuid.Nil {
+			_, _ = s.transcriptionRepository.MarkFailed(context.Background(), transcription.ID, cause.Error())
+		}
+
+		_, _ = s.callRepository.UpdateCallStatus(context.Background(), job.EntityUUID, models.CallStatusFailed)
+
+		s.log.Error(ctx, "processing job permanently failed", zap.String("call_id", job.EntityUUID.String()), zap.String("job_id", job.ID.String()), zap.Error(cause))
+
+	case models.ProcessingJobTypeAnalyzeCall:
+		if s.analysisProcessor == nil {
+			s.log.Error(ctx, "analysis job permanently failed but processor is not configured", zap.String("call_id", job.EntityUUID.String()), zap.String("job_id", job.ID.String()), zap.Error(cause))
+			return
+		}
+
+		if err := s.analysisProcessor.MarkAnalyzeCallFailed(context.Background(), job.EntityUUID, cause); err != nil {
+			s.log.Error(ctx, "mark analysis job permanently failed", zap.String("call_id", job.EntityUUID.String()), zap.String("job_id", job.ID.String()), zap.Error(err), zap.NamedError("cause", cause))
+			return
+		}
+
+		s.log.Error(ctx, "analysis processing job permanently failed", zap.String("call_id", job.EntityUUID.String()), zap.String("job_id", job.ID.String()), zap.Error(cause))
+
+	default:
 		return
 	}
-
-	transcription, err := s.transcriptionRepository.GetByCallUUID(ctx, job.EntityUUID)
-	if err == nil && transcription.ID != uuid.Nil {
-		_, _ = s.transcriptionRepository.MarkFailed(context.Background(), transcription.ID, cause.Error())
-	}
-
-	_, _ = s.callRepository.UpdateCallStatus(context.Background(), job.EntityUUID, models.CallStatusFailed)
-
-	s.log.Error(ctx, "processing job permanently failed", zap.String("call_id", job.EntityUUID.String()), zap.String("job_id", job.ID.String()), zap.Error(cause))
 }

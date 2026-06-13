@@ -4,6 +4,7 @@ import (
 	"calllens/monolit/internal/models"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -127,9 +128,93 @@ func TestAnalyzeCallPassesCompanyAndDepartmentInstructions(t *testing.T) {
 	}
 }
 
+func TestProcessAnalyzeCallKeepsAnalysisProcessingOnProviderError(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	callID := uuid.New()
+	transcriptionText := "Client asked about pricing."
+
+	callRepo := &analysisCallRepository{
+		call: models.Call{
+			ID:                 callID,
+			Status:             models.CallStatusTranscribed,
+			UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+			VisibilityScope:    models.CallVisibilityScopePersonal,
+		},
+	}
+	transcriptionRepo := &analysisTranscriptionRepository{
+		transcription: models.Transcription{
+			ID:       uuid.New(),
+			CallUUID: callID,
+			Status:   models.TranscriptionStatusTranscribed,
+			Text:     &transcriptionText,
+		},
+	}
+	analysisRepo := &analysisRepository{
+		analysisID: uuid.New(),
+		callID:     callID,
+	}
+	service := NewService(
+		callRepo,
+		transcriptionRepo,
+		&analysisInstructionRepository{},
+		analysisRepo,
+		&analysisInstructionStorage{},
+		&recordingAnalyzer{err: errors.New("openrouter analysis failed with status 429")},
+		nil,
+	)
+
+	err := service.ProcessAnalyzeCall(ctx, callID)
+	if err == nil {
+		t.Fatal("expected provider error")
+	}
+	if !analysisRepo.markedProcessing {
+		t.Fatal("analysis was not marked processing")
+	}
+	if analysisRepo.markedFailed {
+		t.Fatal("analysis attempt was marked failed before processing retries were exhausted")
+	}
+}
+
+func TestMarkAnalyzeCallFailedMarksExistingAnalysis(t *testing.T) {
+	ctx := context.Background()
+	callID := uuid.New()
+	analysisID := uuid.New()
+	analysisRepo := &analysisRepository{
+		callID: callID,
+		existingAnalysis: &models.CallAnalysis{
+			ID:       analysisID,
+			CallUUID: callID,
+			Status:   models.CallAnalysisStatusProcessing,
+			Provider: "test",
+		},
+	}
+	service := NewService(
+		&analysisCallRepository{},
+		&analysisTranscriptionRepository{},
+		&analysisInstructionRepository{},
+		analysisRepo,
+		&analysisInstructionStorage{},
+		&recordingAnalyzer{},
+		nil,
+	)
+
+	err := service.MarkAnalyzeCallFailed(ctx, callID, errors.New("openrouter analysis failed with status 429"))
+	if err != nil {
+		t.Fatalf("mark analyze call failed: %v", err)
+	}
+	if !analysisRepo.markedFailed {
+		t.Fatal("analysis was not marked failed")
+	}
+	if analysisRepo.failedMessage != "openrouter analysis failed with status 429" {
+		t.Fatalf("failed message = %q", analysisRepo.failedMessage)
+	}
+}
+
 type recordingAnalyzer struct {
 	request models.AnalysisRequest
 	result  models.AnalysisResult
+	err     error
 }
 
 func (a *recordingAnalyzer) Provider() string {
@@ -138,6 +223,9 @@ func (a *recordingAnalyzer) Provider() string {
 
 func (a *recordingAnalyzer) Analyze(ctx context.Context, request models.AnalysisRequest) (models.AnalysisResult, error) {
 	a.request = request
+	if a.err != nil {
+		return models.AnalysisResult{}, a.err
+	}
 	return a.result, nil
 }
 
@@ -183,7 +271,10 @@ func (r *analysisCallRepository) GetByUUID(ctx context.Context, id uuid.UUID, us
 }
 
 func (r *analysisCallRepository) GetByUUIDForProcessing(ctx context.Context, id uuid.UUID) (models.Call, error) {
-	panic("not implemented")
+	if id != r.call.ID {
+		return models.Call{}, models.ErrCallNotFound
+	}
+	return r.call, nil
 }
 
 func (r *analysisCallRepository) UpdateCallTitle(ctx context.Context, id uuid.UUID, userID uuid.UUID, title string) (models.Call, error) {
@@ -265,25 +356,36 @@ func (r *analysisInstructionRepository) Deactivate(ctx context.Context, id uuid.
 }
 
 type analysisRepository struct {
-	analysisID  uuid.UUID
-	callID      uuid.UUID
-	doneResult  models.AnalysisResult
-	createdTime time.Time
+	analysisID       uuid.UUID
+	callID           uuid.UUID
+	doneResult       models.AnalysisResult
+	createdTime      time.Time
+	existingAnalysis *models.CallAnalysis
+	markedProcessing bool
+	markedFailed     bool
+	failedMessage    string
 }
 
 func (r *analysisRepository) Create(ctx context.Context, analysis models.CallAnalysis) (models.CallAnalysis, error) {
 	r.createdTime = analysis.CreatedAt
-	analysis.ID = r.analysisID
-	analysis.CallUUID = r.callID
-	analysis.Status = models.CallAnalysisStatusPending
+	if r.analysisID != uuid.Nil {
+		analysis.ID = r.analysisID
+	}
+	if r.callID != uuid.Nil {
+		analysis.CallUUID = r.callID
+	}
 	return analysis, nil
 }
 
 func (r *analysisRepository) GetByCallUUID(ctx context.Context, callID uuid.UUID) (models.CallAnalysis, error) {
-	panic("not implemented")
+	if r.existingAnalysis == nil || callID != r.existingAnalysis.CallUUID {
+		return models.CallAnalysis{}, models.ErrAnalysisNotFound
+	}
+	return *r.existingAnalysis, nil
 }
 
 func (r *analysisRepository) MarkProcessing(ctx context.Context, id uuid.UUID) (models.CallAnalysis, error) {
+	r.markedProcessing = true
 	return models.CallAnalysis{
 		ID:        id,
 		CallUUID:  r.callID,
@@ -310,5 +412,15 @@ func (r *analysisRepository) MarkDone(ctx context.Context, id uuid.UUID, result 
 }
 
 func (r *analysisRepository) MarkFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.CallAnalysis, error) {
-	return models.CallAnalysis{}, nil
+	r.markedFailed = true
+	r.failedMessage = errorMessage
+	return models.CallAnalysis{
+		ID:           id,
+		CallUUID:     r.callID,
+		Status:       models.CallAnalysisStatusFailed,
+		Provider:     "test",
+		ErrorMessage: &errorMessage,
+		CreatedAt:    r.createdTime,
+		UpdatedAt:    time.Now().UTC(),
+	}, nil
 }
