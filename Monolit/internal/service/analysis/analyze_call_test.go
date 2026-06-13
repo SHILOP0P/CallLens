@@ -189,8 +189,11 @@ func TestMarkAnalyzeCallFailedMarksExistingAnalysis(t *testing.T) {
 			Provider: "test",
 		},
 	}
+	callRepo := &analysisCallRepository{
+		call: models.Call{ID: callID, Status: models.CallStatusTranscribed},
+	}
 	service := NewService(
-		&analysisCallRepository{},
+		callRepo,
 		&analysisTranscriptionRepository{},
 		&analysisInstructionRepository{},
 		analysisRepo,
@@ -208,6 +211,12 @@ func TestMarkAnalyzeCallFailedMarksExistingAnalysis(t *testing.T) {
 	}
 	if analysisRepo.failedMessage != "openrouter analysis failed with status 429" {
 		t.Fatalf("failed message = %q", analysisRepo.failedMessage)
+	}
+	if !callRepo.updatedStatus {
+		t.Fatal("call was not marked failed")
+	}
+	if callRepo.lastStatus != models.CallStatusFailed {
+		t.Fatalf("call status = %q", callRepo.lastStatus)
 	}
 }
 

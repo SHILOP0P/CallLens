@@ -24,6 +24,13 @@ type CallResponse struct {
 	CreatedAt          string  `json:"created_at"`
 }
 
+type CallStatusEvent struct {
+	CallID    string `json:"call_id"`
+	Status    string `json:"status"`
+	Terminal  bool   `json:"terminal"`
+	Timestamp string `json:"timestamp"`
+}
+
 type UpdateCallTitleRequest struct {
 	Title string `json:"title"`
 }

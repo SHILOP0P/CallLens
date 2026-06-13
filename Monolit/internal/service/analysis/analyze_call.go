@@ -87,6 +87,10 @@ func (s *Service) MarkAnalyzeCallFailed(ctx context.Context, callID uuid.UUID, c
 		analysis = failedAnalysis
 	}
 
+	if _, err := s.callRepository.UpdateCallStatus(ctx, callID, models.CallStatusFailed); err != nil {
+		return fmt.Errorf("mark call failed: %w", err)
+	}
+
 	s.log.Error(ctx, "call analysis permanently failed", zap.String("call_id", callID.String()), zap.String("analysis_id", analysis.ID.String()), zap.Error(cause))
 
 	return nil
