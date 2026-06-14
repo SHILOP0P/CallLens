@@ -36,6 +36,18 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 			response.WriteError(w, http.StatusConflict, response.CodeUserAlreadyManagesCompany, "user already manages company")
 			return
 		}
+		if errors.Is(err, models.ErrSubscriptionRequired) {
+			response.WriteError(w, http.StatusPaymentRequired, response.CodeSubscriptionRequired, "subscription required")
+			return
+		}
+		if errors.Is(err, models.ErrCompanyLimitExceeded) {
+			response.WriteError(w, http.StatusBadRequest, response.CodeCompanyLimitExceeded, "company limit exceeded")
+			return
+		}
+		if errors.Is(err, models.ErrPlanLimitExceeded) {
+			response.WriteError(w, http.StatusBadRequest, response.CodePlanLimitExceeded, "plan limit exceeded")
+			return
+		}
 
 		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToCreateCompany, "failed to create company")
 		return

@@ -31,6 +31,12 @@ func (s *Service) AddCompanyMember(ctx context.Context, input models.AddCompanyM
 		return models.CompanyMember{}, models.ErrForbidden
 	}
 
+	if s.billingLimiter != nil {
+		if err := s.billingLimiter.CanAddCompanyMember(ctx, input.CompanyUUID); err != nil {
+			return models.CompanyMember{}, err
+		}
+	}
+
 	member := models.CompanyMember{
 		CompanyUUID: input.CompanyUUID,
 		UserUUID:    input.UserUUID,

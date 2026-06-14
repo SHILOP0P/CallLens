@@ -3,7 +3,6 @@ package company
 import (
 	"calllens/monolit/internal/models"
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -19,12 +18,10 @@ func (s *Service) CreateCompany(ctx context.Context, input models.CreateCompanyI
 		return models.Company{}, models.ErrInvalidCompanyInput
 	}
 
-	_, err := s.companyRepository.GetManagedCompanyByUserUUID(ctx, input.ManagerUserID)
-	if err == nil {
-		return models.Company{}, models.ErrUserAlreadyManagesCompany
-	}
-	if err != nil && !errors.Is(err, models.ErrCompanyNotFound) {
-		return models.Company{}, err
+	if s.billingLimiter != nil {
+		if err := s.billingLimiter.CanCreateCompany(ctx, input.ManagerUserID); err != nil {
+			return models.Company{}, err
+		}
 	}
 
 	companyID, err := uuid.NewV7()

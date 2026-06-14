@@ -95,3 +95,18 @@ type AnalysisInstructionRepository interface {
 	CountActive(ctx context.Context, input models.ListAnalysisInstructionsInput) (int, error)
 	Deactivate(ctx context.Context, id uuid.UUID) error
 }
+
+type BillingRepository interface {
+	GetPlanByCode(ctx context.Context, code models.PlanCode) (models.Plan, error)
+	ListPlans(ctx context.Context) ([]models.Plan, error)
+	GetActivePersonalSubscription(ctx context.Context, userID uuid.UUID) (models.Subscription, error)
+	GetActiveBusinessSubscription(ctx context.Context, companyID uuid.UUID) (models.Subscription, error)
+	GetActiveBusinessSubscriptionForOwner(ctx context.Context, ownerID uuid.UUID) (models.Subscription, error)
+	UpsertSubscription(ctx context.Context, input models.UpsertSubscriptionInput) (models.Subscription, error)
+	CountUsedMinutes(ctx context.Context, subscriptionID uuid.UUID, periodStart time.Time) (int, error)
+	AddUsageMinutes(ctx context.Context, subscriptionID uuid.UUID, periodStart time.Time, minutes int) (models.UsageCounter, error)
+	CountOwnerCompanies(ctx context.Context, ownerID uuid.UUID) (int, error)
+	CountCompanyDepartments(ctx context.Context, companyID uuid.UUID) (int, error)
+	CountCompanyMembers(ctx context.Context, companyID uuid.UUID) (int, error)
+	CountActiveInstructions(ctx context.Context, input models.ListAnalysisInstructionsInput) (int, error)
+}

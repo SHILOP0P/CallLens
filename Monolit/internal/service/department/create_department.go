@@ -25,6 +25,12 @@ func (s *Service) CreateDepartment(ctx context.Context, input models.CreateDepar
 		return models.Department{}, models.ErrForbidden
 	}
 
+	if s.billingLimiter != nil {
+		if err := s.billingLimiter.CanCreateDepartment(ctx, input.CompanyUUID); err != nil {
+			return models.Department{}, err
+		}
+	}
+
 	departmentID, err := uuid.NewV7()
 	if err != nil {
 		return models.Department{}, err

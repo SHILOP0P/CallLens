@@ -1,0 +1,36 @@
+package billing
+
+import (
+	"calllens/monolit/internal/repository/repositorytest"
+	"context"
+	"database/sql"
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+)
+
+type RepositorySuite struct {
+	suite.Suite
+	ctx        context.Context
+	db         *sql.DB
+	repository *Repository
+}
+
+func (s *RepositorySuite) SetupSuite() {
+	if testing.Short() {
+		s.T().Skip("skip integration tests in short mode")
+	}
+
+	s.ctx = context.Background()
+	s.db = repositorytest.OpenTestDB(s.T())
+	repositorytest.RunMigrations(s.T(), s.db)
+}
+
+func (s *RepositorySuite) SetupTest() {
+	repositorytest.TruncateTables(s.T(), s.db)
+	s.repository = NewRepository(s.db)
+}
+
+func TestRepositorySuite(t *testing.T) {
+	suite.Run(t, new(RepositorySuite))
+}

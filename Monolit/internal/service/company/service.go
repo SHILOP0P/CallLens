@@ -3,10 +3,19 @@ package company
 import (
 	"calllens/monolit/internal/logger"
 	repo "calllens/monolit/internal/repository"
+	"context"
+
+	"github.com/google/uuid"
 )
+
+type BillingLimiter interface {
+	CanCreateCompany(ctx context.Context, ownerID uuid.UUID) error
+	CanAddCompanyMember(ctx context.Context, companyID uuid.UUID) error
+}
 
 type Service struct {
 	companyRepository repo.CompanyRepository
+	billingLimiter    BillingLimiter
 	log               logger.Logger
 }
 
@@ -19,4 +28,8 @@ func NewService(companyRepository repo.CompanyRepository, log logger.Logger) *Se
 		companyRepository: companyRepository,
 		log:               log,
 	}
+}
+
+func (s *Service) SetBillingLimiter(limiter BillingLimiter) {
+	s.billingLimiter = limiter
 }

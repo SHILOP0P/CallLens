@@ -13,7 +13,71 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestAnalyzeCallPassesCompanyAndDepartmentInstructions(t *testing.T) {
+func TestAnalyzeCallEnqueuesAnalysisJob(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	callID := uuid.New()
+
+	transcriptionText := "Client asked about pricing."
+	callRepo := &analysisCallRepository{
+		call: models.Call{
+			ID:                 callID,
+			Status:             models.CallStatusTranscribed,
+			UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+			VisibilityScope:    models.CallVisibilityScopePersonal,
+		},
+	}
+	transcriptionRepo := &analysisTranscriptionRepository{
+		transcription: models.Transcription{
+			ID:       uuid.New(),
+			CallUUID: callID,
+			Status:   models.TranscriptionStatusTranscribed,
+			Text:     &transcriptionText,
+		},
+	}
+	analysisRepo := &analysisRepository{
+		analysisID: uuid.New(),
+		callID:     callID,
+	}
+	jobRepo := &analysisProcessingJobRepository{}
+	analyzerProvider := &recordingAnalyzer{}
+
+	service := NewService(callRepo, transcriptionRepo, &analysisInstructionRepository{}, analysisRepo, &analysisInstructionStorage{}, analyzerProvider, nil)
+	service.SetProcessingJobRepository(jobRepo)
+	service.SetProcessingJobMaxAttempts(5)
+
+	analysis, err := service.AnalyzeCall(ctx, models.AnalyzeCallInput{
+		CallUUID: callID,
+		UserUUID: userID,
+	})
+	if err != nil {
+		t.Fatalf("analyze call: %v", err)
+	}
+
+	if analysis.Status != models.CallAnalysisStatusPending {
+		t.Fatalf("analysis status = %s, want %s", analysis.Status, models.CallAnalysisStatusPending)
+	}
+	if analyzerProvider.called {
+		t.Fatal("analyzer was called synchronously")
+	}
+	if !jobRepo.enqueued {
+		t.Fatal("analysis job was not enqueued")
+	}
+	if jobRepo.job.Type != models.ProcessingJobTypeAnalyzeCall {
+		t.Fatalf("job type = %s, want %s", jobRepo.job.Type, models.ProcessingJobTypeAnalyzeCall)
+	}
+	if jobRepo.job.EntityUUID != callID {
+		t.Fatalf("job entity uuid = %s, want %s", jobRepo.job.EntityUUID, callID)
+	}
+	if jobRepo.job.Status != models.ProcessingJobStatusPending {
+		t.Fatalf("job status = %s, want %s", jobRepo.job.Status, models.ProcessingJobStatusPending)
+	}
+	if jobRepo.job.MaxAttempts != 5 {
+		t.Fatalf("job max attempts = %d, want 5", jobRepo.job.MaxAttempts)
+	}
+}
+
+func TestProcessAnalyzeCallPassesCompanyAndDepartmentInstructions(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()
 	callID := uuid.New()
@@ -80,17 +144,11 @@ func TestAnalyzeCallPassesCompanyAndDepartmentInstructions(t *testing.T) {
 
 	service := NewService(callRepo, transcriptionRepo, instructionRepo, analysisRepo, instructionStorage, analyzerProvider, nil)
 
-	analysis, err := service.AnalyzeCall(ctx, models.AnalyzeCallInput{
-		CallUUID: callID,
-		UserUUID: userID,
-	})
+	err := service.ProcessAnalyzeCall(ctx, callID)
 	if err != nil {
-		t.Fatalf("analyze call: %v", err)
+		t.Fatalf("process analyze call: %v", err)
 	}
 
-	if analysis.Status != models.CallAnalysisStatusDone {
-		t.Fatalf("analysis status = %s, want %s", analysis.Status, models.CallAnalysisStatusDone)
-	}
 	if len(analyzerProvider.request.Instructions) != 2 {
 		t.Fatalf("instructions len = %d, want 2", len(analyzerProvider.request.Instructions))
 	}
@@ -233,6 +291,7 @@ type recordingAnalyzer struct {
 	request models.AnalysisRequest
 	result  models.AnalysisResult
 	err     error
+	called  bool
 }
 
 func (a *recordingAnalyzer) Provider() string {
@@ -240,11 +299,43 @@ func (a *recordingAnalyzer) Provider() string {
 }
 
 func (a *recordingAnalyzer) Analyze(ctx context.Context, request models.AnalysisRequest) (models.AnalysisResult, error) {
+	a.called = true
 	a.request = request
 	if a.err != nil {
 		return models.AnalysisResult{}, a.err
 	}
 	return a.result, nil
+}
+
+type analysisProcessingJobRepository struct {
+	enqueued bool
+	job      models.ProcessingJob
+}
+
+func (r *analysisProcessingJobRepository) Create(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error) {
+	panic("not implemented")
+}
+
+func (r *analysisProcessingJobRepository) Enqueue(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error) {
+	r.enqueued = true
+	r.job = job
+	return job, nil
+}
+
+func (r *analysisProcessingJobRepository) TakeNext(ctx context.Context, workerID string, staleAfter time.Duration) (models.ProcessingJob, error) {
+	panic("not implemented")
+}
+
+func (r *analysisProcessingJobRepository) MarkDone(ctx context.Context, id uuid.UUID) (models.ProcessingJob, error) {
+	panic("not implemented")
+}
+
+func (r *analysisProcessingJobRepository) MarkRetry(ctx context.Context, id uuid.UUID, lastError string, delay time.Duration) (models.ProcessingJob, error) {
+	panic("not implemented")
+}
+
+func (r *analysisProcessingJobRepository) MarkFailed(ctx context.Context, id uuid.UUID, lastError string) (models.ProcessingJob, error) {
+	panic("not implemented")
 }
 
 type analysisInstructionStorage struct {

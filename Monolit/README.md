@@ -132,7 +132,7 @@ flowchart LR
 - `analyzed` - по транскрипту построен анализ.
 - `failed` - обработка завершилась ошибкой.
 
-`new` используется как состояние очереди. Worker забирает задания `transcribe_call`, переводит звонок в `processing`, сохраняет транскрипцию, переводит звонок в `transcribed` и ставит в очередь задание `analyze_call`. Задание анализа загружает готовую транскрипцию, выбирает подходящие инструкции, сохраняет результат в `call_analyses` и при успехе переводит звонок в `analyzed`. HTTP-ручка анализа остается для ручного запуска по готовой транскрипции.
+`new` используется как состояние очереди. Worker забирает задания `transcribe_call`, переводит звонок в `processing`, сохраняет транскрипцию, переводит звонок в `transcribed` и ставит в очередь задание `analyze_call`. Задание анализа загружает готовую транскрипцию, выбирает подходящие инструкции, сохраняет результат в `call_analyses` и при успехе переводит звонок в `analyzed`. HTTP-ручка анализа ставит `analyze_call` job для ручного запуска по готовой транскрипции.
 
 Статусы транскрипции:
 
@@ -289,7 +289,7 @@ Calls:
 | GET | `/api/v1/calls/{uuid}` | Да | Получить видимый звонок по UUID |
 | GET | `/api/v1/calls/{uuid}/audio` | Да | Получить аудиофайл звонка |
 | GET | `/api/v1/calls/{uuid}/transcription` | Да | Получить сохраненную транскрипцию звонка |
-| POST | `/api/v1/calls/{uuid}/analysis` | Да | Запустить синхронный анализ по готовой транскрипции |
+| POST | `/api/v1/calls/{uuid}/analysis` | Да | Поставить `analyze_call` job по готовой транскрипции |
 | GET | `/api/v1/calls/{uuid}/analysis` | Да | Получить сохраненный анализ звонка |
 | PATCH | `/api/v1/calls/{uuid}` | Да | Обновить title звонка |
 | DELETE | `/api/v1/calls/{uuid}` | Да | Удалить звонок и аудиофайл |
@@ -396,7 +396,7 @@ company_uuid = optional UUID
 department_uuid = optional UUID
 ```
 
-Запуск анализа не требует body:
+Запуск анализа не требует body и возвращает `202 Accepted` с записью анализа в статусе `pending`:
 
 ```text
 POST /api/v1/calls/{uuid}/analysis
@@ -528,6 +528,5 @@ migrations/                 SQL-миграции goose
 
 1. Вручную проверить сценарии membership и visibility через Postman.
 2. Добавить тесты для repository/service/API анализа звонков.
-3. Добавить ручной перезапуск анализа через постановку `analyze_call` job вместо синхронного HTTP-выполнения.
-4. Добавить реальные OpenAI-провайдеры для transcriber и analyzer.
-5. Начать frontend после стабилизации backend workflows.
+3. Добавить реальные OpenAI-провайдеры для transcriber и analyzer.
+4. Начать frontend после стабилизации backend workflows.

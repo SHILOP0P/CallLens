@@ -19,23 +19,41 @@ func (s *Service) AnalyzeCall(ctx context.Context, input models.AnalyzeCallInput
 		return models.CallAnalysis{}, models.ErrInvalidAnalysisInput
 	}
 
-	if s.analyzer == nil {
-		return models.CallAnalysis{}, models.ErrAnalyzerNotConfigured
-	}
-
 	call, err := s.callRepository.GetByUUID(ctx, input.CallUUID, input.UserUUID)
 	if err != nil {
 		return models.CallAnalysis{}, fmt.Errorf("get call: %w", err)
 	}
 
-	return s.analyzeCall(ctx, call, input.UserUUID, analyzeCallOptions{
-		markAttemptFailed: true,
-	})
+	transcription, err := s.transcriptionRepository.GetByCallUUID(ctx, call.ID)
+	if err != nil {
+		return models.CallAnalysis{}, fmt.Errorf("get transcription: %w", err)
+	}
+
+	if transcription.Status != models.TranscriptionStatusTranscribed || transcription.Text == nil {
+		return models.CallAnalysis{}, models.ErrInvalidAnalysisStatus
+	}
+
+	analysis, err := s.createPendingAnalysis(ctx, call.ID)
+	if err != nil {
+		return models.CallAnalysis{}, fmt.Errorf("create analysis: %w", err)
+	}
+
+	if err = s.enqueueAnalyzeJob(ctx, call.ID); err != nil {
+		return models.CallAnalysis{}, fmt.Errorf("enqueue analysis job: %w", err)
+	}
+
+	s.log.Info(ctx, "call analysis job enqueued", zap.String("call_id", call.ID.String()), zap.String("analysis_id", analysis.ID.String()))
+
+	return analysis, nil
 }
 
 func (s *Service) ProcessAnalyzeCall(ctx context.Context, callID uuid.UUID) error {
 	if callID == uuid.Nil {
 		return models.ErrCallNotFound
+	}
+
+	if s.analyzer == nil {
+		return models.ErrAnalyzerNotConfigured
 	}
 
 	call, err := s.callRepository.GetByUUIDForProcessing(ctx, callID)
@@ -181,10 +199,40 @@ func (s *Service) createPendingAnalysis(ctx context.Context, callID uuid.UUID) (
 		ID:        analysisID,
 		CallUUID:  callID,
 		Status:    models.CallAnalysisStatusPending,
-		Provider:  s.analyzer.Provider(),
+		Provider:  s.analyzerProviderName(),
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
+}
+
+func (s *Service) enqueueAnalyzeJob(ctx context.Context, callID uuid.UUID) error {
+	if s.processingJobRepository == nil {
+		return models.ErrProcessingJobNotFound
+	}
+
+	jobID, err := uuid.NewV7()
+	if err != nil {
+		return fmt.Errorf("generate analysis job uuid: %w", err)
+	}
+
+	now := time.Now().UTC()
+
+	_, err = s.processingJobRepository.Enqueue(ctx, models.ProcessingJob{
+		ID:          jobID,
+		Type:        models.ProcessingJobTypeAnalyzeCall,
+		EntityUUID:  callID,
+		Status:      models.ProcessingJobStatusPending,
+		Attempts:    0,
+		MaxAttempts: s.processingJobMaxAttempts,
+		AvailableAt: now,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *Service) createFailedAnalysis(ctx context.Context, callID uuid.UUID, errorMessage string) (models.CallAnalysis, error) {

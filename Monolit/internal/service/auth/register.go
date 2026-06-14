@@ -67,6 +67,21 @@ func (s *Service) Register(ctx context.Context, input model.CreateUserInput) (mo
 		return model.User{}, err
 	}
 
+	if s.billingRepository != nil {
+		_, err = s.billingRepository.UpsertSubscription(ctx, model.UpsertSubscriptionInput{
+			PlanCode: model.PlanCodePersonalStart,
+			UserUUID: uuid.NullUUID{
+				UUID:  createUser.ID,
+				Valid: true,
+			},
+			Status:   model.SubscriptionStatusActive,
+			StartsAt: time.Now().UTC(),
+		})
+		if err != nil {
+			return model.User{}, err
+		}
+	}
+
 	return createUser, nil
 }
 

@@ -51,6 +51,14 @@ func (h *Handler) CreateDepartment(w http.ResponseWriter, r *http.Request) {
 			response.WriteError(w, http.StatusForbidden, response.CodeForbidden, "forbidden")
 			return
 		}
+		if errors.Is(err, models.ErrSubscriptionRequired) {
+			response.WriteError(w, http.StatusPaymentRequired, response.CodeSubscriptionRequired, "subscription required")
+			return
+		}
+		if errors.Is(err, models.ErrDepartmentLimitExceeded) {
+			response.WriteError(w, http.StatusBadRequest, response.CodeDepartmentLimitExceeded, "department limit exceeded")
+			return
+		}
 
 		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToCreateDepartment, "failed to create department")
 		return

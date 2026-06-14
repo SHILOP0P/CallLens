@@ -113,6 +113,12 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		} else if errors.Is(err, model.ErrAudioFileUnreadable) {
 			response.WriteError(w, http.StatusInternalServerError, response.CodeAudioFileUnreadable, "audio file cannot be read")
 			return
+		} else if errors.Is(err, model.ErrSubscriptionRequired) {
+			response.WriteError(w, http.StatusPaymentRequired, response.CodeSubscriptionRequired, "subscription required")
+			return
+		} else if errors.Is(err, model.ErrMonthlyMinutesLimitExceeded) {
+			response.WriteError(w, http.StatusBadRequest, response.CodeMonthlyMinutesLimitExceeded, "monthly minutes limit exceeded")
+			return
 		} else {
 			response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToCreateCall, "failed to create call")
 			return

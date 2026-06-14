@@ -56,10 +56,21 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 	}
 	call.DurationSeconds = durationSeconds
 
+	if err := s.checkUploadMinutes(ctx, input, durationSeconds); err != nil {
+		_ = s.audioStorage.Delete(context.Background(), savedFile.Path)
+		s.log.Warn(ctx, "create call failed", zap.String("reason", "billing_limit"), zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("call_id", callUUID.String()), zap.Error(err))
+		return models.Call{}, err
+	}
+
 	createdCall, err := s.createCallRecord(ctx, call, now)
 	if err != nil {
 		_ = s.audioStorage.Delete(context.Background(), savedFile.Path)
 		s.log.Error(ctx, "failed to create call record", zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("call_id", callUUID.String()), zap.Error(err))
+		return models.Call{}, err
+	}
+
+	if err := s.addUsageMinutes(ctx, input, durationSeconds); err != nil {
+		s.log.Error(ctx, "failed to add call usage minutes", zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("call_id", createdCall.ID.String()), zap.Error(err))
 		return models.Call{}, err
 	}
 
@@ -73,6 +84,30 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 	)
 
 	return createdCall, nil
+}
+
+func (s *Service) checkUploadMinutes(ctx context.Context, input models.CreateCallInput, durationSeconds int) error {
+	if s.billingLimiter == nil {
+		return nil
+	}
+
+	if input.CompanyUUID.Valid {
+		return s.billingLimiter.CanUploadBusinessCall(ctx, input.CompanyUUID.UUID, durationSeconds)
+	}
+
+	return s.billingLimiter.CanUploadPersonalCall(ctx, input.UploadedByUserUUID, durationSeconds)
+}
+
+func (s *Service) addUsageMinutes(ctx context.Context, input models.CreateCallInput, durationSeconds int) error {
+	if s.billingLimiter == nil {
+		return nil
+	}
+
+	if input.CompanyUUID.Valid {
+		return s.billingLimiter.AddBusinessUsageMinutes(ctx, input.CompanyUUID.UUID, durationSeconds)
+	}
+
+	return s.billingLimiter.AddPersonalUsageMinutes(ctx, input.UploadedByUserUUID, durationSeconds)
 }
 
 func (s *Service) detectAudioDuration(ctx context.Context, path string) (int, error) {

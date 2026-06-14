@@ -39,7 +39,7 @@ func (h *Handler) AnalyzeCall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
+	if err := response.WriteJSON(w, http.StatusAccepted, resp); err != nil {
 		return
 	}
 }

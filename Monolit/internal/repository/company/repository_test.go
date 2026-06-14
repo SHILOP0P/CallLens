@@ -72,15 +72,16 @@ func (s *RepositorySuite) TestCreateCompanyCreatesManagerMember() {
 	s.Require().Equal(models.MembershipStatusActive, member.Status)
 }
 
-func (s *RepositorySuite) TestCreateCompanyRejectsSecondManagedCompanyForSameUser() {
+func (s *RepositorySuite) TestCreateCompanyAllowsSecondManagedCompanyForSameUser() {
 	_, manager := s.createCompanyWithManager()
 
 	anotherCompany := testCompany(manager.ID)
 	anotherMember := testCompanyMember(anotherCompany.ID, manager.ID, models.CompanyMemberRoleManager)
 
-	_, err := s.repository.CreateCompany(s.ctx, anotherCompany, anotherMember)
+	created, err := s.repository.CreateCompany(s.ctx, anotherCompany, anotherMember)
 
-	s.Require().Error(err)
+	s.Require().NoError(err)
+	s.Require().Equal(anotherCompany.ID, created.ID)
 }
 
 func (s *RepositorySuite) TestGetManagedCompanyByUserUUIDNotFound() {

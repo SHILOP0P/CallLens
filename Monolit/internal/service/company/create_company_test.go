@@ -12,10 +12,6 @@ func (s *ServiceSuite) TestCreateCompanySuccess() {
 	userID := uuid.New()
 
 	s.repository.EXPECT().
-		GetManagedCompanyByUserUUID(mock.Anything, userID).
-		Return(models.Company{}, models.ErrCompanyNotFound).
-		Once()
-	s.repository.EXPECT().
 		CreateCompany(mock.Anything, mock.MatchedBy(func(company models.Company) bool {
 			return company.Name == "CallLens" &&
 				company.ManagerUserUUID == userID &&
@@ -52,47 +48,10 @@ func (s *ServiceSuite) TestCreateCompanyRejectsInvalidInput() {
 	s.Require().ErrorIs(err, models.ErrInvalidCompanyInput)
 }
 
-func (s *ServiceSuite) TestCreateCompanyRejectsAlreadyManagedCompany() {
-	userID := uuid.New()
-
-	s.repository.EXPECT().
-		GetManagedCompanyByUserUUID(mock.Anything, userID).
-		Return(models.Company{ManagerUserUUID: userID}, nil).
-		Once()
-
-	_, err := s.service.CreateCompany(s.ctx, models.CreateCompanyInput{
-		Name:          "CallLens",
-		ManagerUserID: userID,
-	})
-
-	s.Require().ErrorIs(err, models.ErrUserAlreadyManagesCompany)
-}
-
-func (s *ServiceSuite) TestCreateCompanyReturnsManagedCompanyLookupError() {
-	userID := uuid.New()
-	repoErr := errors.New("lookup failed")
-
-	s.repository.EXPECT().
-		GetManagedCompanyByUserUUID(mock.Anything, userID).
-		Return(models.Company{}, repoErr).
-		Once()
-
-	_, err := s.service.CreateCompany(s.ctx, models.CreateCompanyInput{
-		Name:          "CallLens",
-		ManagerUserID: userID,
-	})
-
-	s.Require().ErrorIs(err, repoErr)
-}
-
 func (s *ServiceSuite) TestCreateCompanyReturnsCreateError() {
 	userID := uuid.New()
 	repoErr := errors.New("create failed")
 
-	s.repository.EXPECT().
-		GetManagedCompanyByUserUUID(mock.Anything, userID).
-		Return(models.Company{}, models.ErrCompanyNotFound).
-		Once()
 	s.repository.EXPECT().
 		CreateCompany(mock.Anything, mock.Anything, mock.Anything).
 		Return(models.Company{}, repoErr).

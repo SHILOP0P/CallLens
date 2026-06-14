@@ -32,28 +32,28 @@ func (r *Repository) Enqueue(ctx context.Context, job model.ProcessingJob) (mode
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	ON CONFLICT (job_type, entity_uuid) DO UPDATE
 	SET status = CASE
-	        WHEN processing_jobs.status IN ($13, $14) THEN processing_jobs.status
+	        WHEN processing_jobs.status = $13 THEN processing_jobs.status
 	        ELSE EXCLUDED.status
 	    END,
 	    attempts = CASE
-	        WHEN processing_jobs.status IN ($13, $14) THEN processing_jobs.attempts
+	        WHEN processing_jobs.status = $13 THEN processing_jobs.attempts
 	        ELSE 0
 	    END,
 	    max_attempts = EXCLUDED.max_attempts,
 	    available_at = CASE
-	        WHEN processing_jobs.status IN ($13, $14) THEN processing_jobs.available_at
+	        WHEN processing_jobs.status = $13 THEN processing_jobs.available_at
 	        ELSE EXCLUDED.available_at
 	    END,
 	    locked_at = CASE
-	        WHEN processing_jobs.status = $14 THEN processing_jobs.locked_at
+	        WHEN processing_jobs.status = $13 THEN processing_jobs.locked_at
 	        ELSE NULL
 	    END,
 	    locked_by = CASE
-	        WHEN processing_jobs.status = $14 THEN processing_jobs.locked_by
+	        WHEN processing_jobs.status = $13 THEN processing_jobs.locked_by
 	        ELSE NULL
 	    END,
 	    last_error = CASE
-	        WHEN processing_jobs.status IN ($13, $14) THEN processing_jobs.last_error
+	        WHEN processing_jobs.status = $13 THEN processing_jobs.last_error
 	        ELSE NULL
 	    END,
 	    updated_at = now()
@@ -72,7 +72,6 @@ func (r *Repository) Enqueue(ctx context.Context, job model.ProcessingJob) (mode
 		repoJob.LastError,
 		repoJob.CreatedAt,
 		repoJob.UpdatedAt,
-		string(model.ProcessingJobStatusDone),
 		string(model.ProcessingJobStatusRunning),
 	)
 

@@ -25,13 +25,9 @@ func (s *Service) Create(ctx context.Context, input models.CreateAnalysisInstruc
 		return models.AnalysisInstruction{}, err
 	}
 
-	limit := instructionLimit(input.Scope)
-	count, err := s.repository.CountActive(ctx, ownerFilter)
+	count, err := s.checkBillingLimit(ctx, input, ownerFilter)
 	if err != nil {
-		return models.AnalysisInstruction{}, fmt.Errorf("count active analysis instructions: %w", err)
-	}
-	if count >= limit {
-		return models.AnalysisInstruction{}, models.ErrInstructionLimitExceeded
+		return models.AnalysisInstruction{}, err
 	}
 
 	instructionID, err := uuid.NewV7()

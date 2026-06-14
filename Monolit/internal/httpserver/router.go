@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
+func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, billingAPI API.BillingAPI, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	authGuard := authMiddleware.Auth(jwtSecret, refreshSessionRepository)
@@ -44,6 +44,9 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 			r.With(authGuard).Patch("/calls/{uuid}", callAPI.UpdateCallTitle)
 			//DELETE
 			r.With(authGuard).Delete("/calls/{uuid}", callAPI.DeleteCall)
+
+			//BILLING
+			r.Get("/plans", billingAPI.ListPlans)
 
 			//AUTH
 			r.Post("/auth/register", authAPI.Register)

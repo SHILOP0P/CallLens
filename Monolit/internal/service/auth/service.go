@@ -2,13 +2,20 @@ package auth
 
 import (
 	"calllens/monolit/internal/logger"
+	"calllens/monolit/internal/models"
 	repo "calllens/monolit/internal/repository"
+	"context"
 	"time"
 )
+
+type BillingRepository interface {
+	UpsertSubscription(ctx context.Context, input models.UpsertSubscriptionInput) (models.Subscription, error)
+}
 
 type Service struct {
 	userRepository           repo.UserRepository
 	refreshSessionRepository repo.RefreshSessionRepository
+	billingRepository        BillingRepository
 
 	passwordPepper     string
 	jwtSecret          string
@@ -16,6 +23,10 @@ type Service struct {
 	refreshTokenSecret string
 	refreshTokenTTL    time.Duration
 	log                logger.Logger
+}
+
+func (s *Service) SetBillingRepository(repository BillingRepository) {
+	s.billingRepository = repository
 }
 
 func NewService(

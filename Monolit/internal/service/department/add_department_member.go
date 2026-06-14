@@ -31,6 +31,12 @@ func (s *Service) AddDepartmentMember(ctx context.Context, input models.AddDepar
 		return models.DepartmentMember{}, err
 	}
 
+	if s.billingLimiter != nil {
+		if err := s.billingLimiter.CanAddCompanyMember(ctx, input.CompanyUUID); err != nil {
+			return models.DepartmentMember{}, err
+		}
+	}
+
 	member := models.DepartmentMember{
 		DepartmentUUID: input.DepartmentUUID,
 		UserUUID:       input.UserUUID,

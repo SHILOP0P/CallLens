@@ -4,6 +4,7 @@ import (
 	analysisAPI "calllens/monolit/internal/API/analysis"
 	instructionAPI "calllens/monolit/internal/API/analysis_instruction"
 	authAPI "calllens/monolit/internal/API/auth"
+	billingAPI "calllens/monolit/internal/API/billing"
 	"calllens/monolit/internal/API/call"
 	companyAPI "calllens/monolit/internal/API/company"
 	departmentAPI "calllens/monolit/internal/API/department"
@@ -14,6 +15,7 @@ import (
 	"calllens/monolit/internal/migrator"
 	analysisRepo "calllens/monolit/internal/repository/analysis"
 	analysisInstructionRepo "calllens/monolit/internal/repository/analysis_instruction"
+	billingRepo "calllens/monolit/internal/repository/billing"
 	callRepo "calllens/monolit/internal/repository/call"
 	companyRepo "calllens/monolit/internal/repository/company"
 	departmentRepo "calllens/monolit/internal/repository/department"
@@ -24,6 +26,7 @@ import (
 	analysisService "calllens/monolit/internal/service/analysis"
 	analysisInstructionService "calllens/monolit/internal/service/analysis_instruction"
 	authService "calllens/monolit/internal/service/auth"
+	billingService "calllens/monolit/internal/service/billing"
 	callService "calllens/monolit/internal/service/call"
 	companyService "calllens/monolit/internal/service/company"
 	departmentService "calllens/monolit/internal/service/department"
@@ -125,6 +128,7 @@ func main() {
 	departmentRepository := departmentRepo.NewRepository(sqlDB)
 	transcriptionRepository := transcriptionRepo.NewRepository(sqlDB)
 	processingJobRepository := processingJobRepo.NewRepository(sqlDB)
+	billingRepository := billingRepo.NewRepository(sqlDB)
 
 	transcriberProvider, err := transcriber.NewFromConfig(config.AppConfig().Transcriber)
 	if err != nil {
@@ -139,6 +143,8 @@ func main() {
 	}
 
 	analysisSvc := analysisService.NewService(callRepository, transcriptionRepository, analysisInstructionRepository, analysisRepository, instructionStorage, analyzerProvider, appLogger)
+	analysisSvc.SetProcessingJobRepository(processingJobRepository)
+	analysisSvc.SetProcessingJobMaxAttempts(config.AppConfig().Worker.MaxAttempts())
 	processingSvc := processingService.NewService(callRepository, transcriptionRepository, processingJobRepository, audioStorage, transcriberProvider, appLogger)
 	processingSvc.SetProcessingJobMaxAttempts(config.AppConfig().Worker.MaxAttempts())
 	processingSvc.SetAnalysisProcessor(analysisSvc)
@@ -177,9 +183,15 @@ func main() {
 		config.AppConfig().Auth.RefreshTokenTTL(),
 		appLogger,
 	)
+	authSvc.SetBillingRepository(billingRepository)
 	companySvc := companyService.NewService(companyRepository, appLogger)
 	departmentSvc := departmentService.NewService(companyRepository, departmentRepository, appLogger)
 	instructionSvc := analysisInstructionService.NewService(analysisInstructionRepository, companyRepository, departmentRepository, instructionStorage, appLogger)
+	billingSvc := billingService.NewService(billingRepository)
+	callSvc.SetBillingLimiter(billingSvc)
+	companySvc.SetBillingLimiter(billingSvc)
+	departmentSvc.SetBillingLimiter(billingSvc)
+	instructionSvc.SetBillingLimiter(billingSvc)
 
 	callHandler := call.NewCallHandler(callSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc, config.AppConfig().Auth.AccessTokenTTL(), config.AppConfig().Auth.RefreshTokenTTL())
@@ -187,8 +199,9 @@ func main() {
 	departmentHandler := departmentAPI.NewDepartmentHandler(departmentSvc)
 	instructionHandler := instructionAPI.NewHandler(instructionSvc)
 	analysisHandler := analysisAPI.NewHandler(analysisSvc)
+	billingHandler := billingAPI.NewHandler(billingSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, billingHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

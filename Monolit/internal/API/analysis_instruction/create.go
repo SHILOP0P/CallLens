@@ -136,6 +136,8 @@ func writeInstructionError(w http.ResponseWriter, err error, fallbackCode string
 		response.WriteError(w, http.StatusBadRequest, response.CodeUnsupportedInstructionType, "unsupported instruction type")
 	case errors.Is(err, models.ErrInstructionLimitExceeded):
 		response.WriteError(w, http.StatusBadRequest, response.CodeInstructionLimitExceeded, "instruction limit exceeded")
+	case errors.Is(err, models.ErrSubscriptionRequired):
+		response.WriteError(w, http.StatusPaymentRequired, response.CodeSubscriptionRequired, "subscription required")
 	case errors.Is(err, models.ErrAnalysisInstructionNotFound):
 		response.WriteError(w, http.StatusNotFound, response.CodeAnalysisInstructionNotFound, "analysis instruction not found")
 	case errors.Is(err, models.ErrCompanyNotFound):

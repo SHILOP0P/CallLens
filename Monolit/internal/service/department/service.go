@@ -3,11 +3,20 @@ package department
 import (
 	"calllens/monolit/internal/logger"
 	repo "calllens/monolit/internal/repository"
+	"context"
+
+	"github.com/google/uuid"
 )
+
+type BillingLimiter interface {
+	CanCreateDepartment(ctx context.Context, companyID uuid.UUID) error
+	CanAddCompanyMember(ctx context.Context, companyID uuid.UUID) error
+}
 
 type Service struct {
 	companyRepository    repo.CompanyRepository
 	departmentRepository repo.DepartmentRepository
+	billingLimiter       BillingLimiter
 	log                  logger.Logger
 }
 
@@ -21,4 +30,8 @@ func NewService(companyRepository repo.CompanyRepository, departmentRepository r
 		departmentRepository: departmentRepository,
 		log:                  log,
 	}
+}
+
+func (s *Service) SetBillingLimiter(limiter BillingLimiter) {
+	s.billingLimiter = limiter
 }

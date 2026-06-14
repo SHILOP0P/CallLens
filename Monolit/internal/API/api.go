@@ -58,3 +58,7 @@ type AnalysisAPI interface {
 	AnalyzeCall(w http.ResponseWriter, r *http.Request)
 	GetByCallUUID(w http.ResponseWriter, r *http.Request)
 }
+
+type BillingAPI interface {
+	ListPlans(w http.ResponseWriter, r *http.Request)
+}

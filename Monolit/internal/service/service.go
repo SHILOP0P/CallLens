@@ -63,3 +63,7 @@ type AnalysisService interface {
 	AnalyzeCall(ctx context.Context, input models.AnalyzeCallInput) (models.CallAnalysis, error)
 	GetByCallUUID(ctx context.Context, callUUID uuid.UUID, userID uuid.UUID) (models.CallAnalysis, error)
 }
+
+type BillingService interface {
+	ListPlans(ctx context.Context) ([]models.Plan, error)
+}
