@@ -25,6 +25,10 @@ func (s *Service) UpdateCompanyMemberRole(ctx context.Context, input models.Upda
 		return models.CompanyMember{}, err
 	}
 
+	if err := s.requireActiveCompanySubscription(ctx, input.CompanyUUID); err != nil {
+		return models.CompanyMember{}, err
+	}
+
 	member, err := s.companyRepository.UpdateCompanyMemberRole(ctx, input.CompanyUUID, input.UserUUID, input.Role)
 	if err != nil {
 		s.log.Error(ctx, "failed to update company member role", zap.String("company_id", input.CompanyUUID.String()), zap.String("request_user_id", input.RequestUser.String()), zap.String("user_id", input.UserUUID.String()), zap.Error(err))

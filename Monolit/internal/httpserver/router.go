@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, billingAPI API.BillingAPI, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
+func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, billingAPI API.BillingAPI, invitationAPI API.InvitationAPI, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	authGuard := authMiddleware.Auth(jwtSecret, refreshSessionRepository)
@@ -47,6 +47,16 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 
 			//BILLING
 			r.Get("/plans", billingAPI.ListPlans)
+			r.With(authGuard).Get("/subscription", billingAPI.GetPersonalSubscription)
+			r.With(authGuard).Post("/subscription/activate", billingAPI.ActivatePersonalSubscription)
+			r.With(authGuard).Get("/companies/{uuid}/subscription", billingAPI.GetCompanySubscription)
+			r.With(authGuard).Post("/companies/{uuid}/subscription/activate", billingAPI.ActivateCompanySubscription)
+			r.With(authGuard).Post("/companies/{uuid}/subscription/cancel", billingAPI.CancelCompanySubscription)
+
+			//INVITATIONS
+			r.With(authGuard).Get("/invitations", invitationAPI.ListUserInvitations)
+			r.With(authGuard).Post("/invitations/{invitation_uuid}/accept", invitationAPI.AcceptInvitation)
+			r.With(authGuard).Post("/invitations/{invitation_uuid}/decline", invitationAPI.DeclineInvitation)
 
 			//AUTH
 			r.Post("/auth/register", authAPI.Register)
@@ -62,12 +72,16 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 			r.With(authGuard).Get("/companies/{uuid}", companyAPI.GetByUUID)
 			r.With(authGuard).Get("/companies/{uuid}/members", companyAPI.GetCompanyMembersOverview)
 			r.With(authGuard).Post("/companies/{uuid}/members", companyAPI.AddCompanyMember)
+			r.With(authGuard).Post("/companies/{uuid}/invitations", invitationAPI.CreateCompanyInvitation)
+			r.With(authGuard).Post("/companies/{uuid}/invitations/{invitation_uuid}/cancel", invitationAPI.CancelCompanyInvitation)
 			r.With(authGuard).Patch("/companies/{uuid}/members/{user_uuid}/role", companyAPI.UpdateCompanyMemberRole)
 			r.With(authGuard).Patch("/companies/{uuid}/members/{user_uuid}/status", companyAPI.UpdateCompanyMemberStatus)
 			r.With(authGuard).Post("/companies/{uuid}/departments", departmentAPI.CreateDepartment)
 			r.With(authGuard).Get("/companies/{uuid}/departments", departmentAPI.ListDepartments)
 			r.With(authGuard).Get("/companies/{uuid}/departments/{department_uuid}/members", departmentAPI.ListDepartmentMembers)
 			r.With(authGuard).Post("/companies/{uuid}/departments/{department_uuid}/members", departmentAPI.AddDepartmentMember)
+			r.With(authGuard).Post("/companies/{uuid}/departments/{department_uuid}/invitations", invitationAPI.CreateDepartmentInvitation)
+			r.With(authGuard).Post("/companies/{uuid}/departments/{department_uuid}/invitations/{invitation_uuid}/cancel", invitationAPI.CancelDepartmentInvitation)
 			r.With(authGuard).Patch("/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/role", departmentAPI.UpdateDepartmentMemberRole)
 			r.With(authGuard).Patch("/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/status", departmentAPI.UpdateDepartmentMemberStatus)
 

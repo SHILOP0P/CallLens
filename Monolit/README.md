@@ -43,6 +43,7 @@ CallLens - backend-монолит на Go для будущего продукт
 - Создание компании.
 - Создание отдела.
 - Управление участниками компании и отдела.
+- Приглашения в компанию и отдел с подтверждением пользователем.
 - Ролевая модель доступа к загрузке и просмотру звонков.
 - Единый JSON-формат ошибок API.
 - Логирование запросов.
@@ -69,6 +70,7 @@ flowchart LR
     company_members["company_members<br/>company_uuid FK<br/>user_uuid FK<br/>role<br/>status<br/>created_at"]
     departments["departments<br/>department_uuid PK<br/>company_uuid FK<br/>name<br/>created_at"]
     department_members["department_members<br/>department_uuid FK<br/>user_uuid FK<br/>role<br/>status<br/>created_at"]
+    membership_invitations["membership_invitations<br/>invitation_uuid PK<br/>company_uuid FK<br/>department_uuid FK nullable<br/>invited_user_uuid FK<br/>invited_by_user_uuid FK<br/>company_role<br/>department_role nullable<br/>status<br/>expires_at<br/>responded_at nullable<br/>created_at<br/>updated_at"]
     calls["calls<br/>call_uuid PK<br/>title<br/>status<br/>audio_path<br/>original_filename<br/>mime_type<br/>size_bytes<br/>duration_seconds<br/>uploaded_by_user_uuid FK<br/>company_uuid FK nullable<br/>department_uuid FK nullable<br/>visibility_scope<br/>created_at"]
     processing_jobs["processing_jobs<br/>job_uuid PK<br/>type<br/>entity_uuid<br/>status<br/>attempts<br/>available_at<br/>created_at<br/>updated_at"]
     call_transcriptions["call_transcriptions<br/>transcription_uuid PK<br/>call_uuid FK unique<br/>status<br/>text<br/>language<br/>provider<br/>error_message<br/>created_at<br/>updated_at"]
@@ -78,13 +80,16 @@ flowchart LR
     users -->|"1:N"| refresh_sessions
     users -->|"1:N"| company_members
     users -->|"1:N"| department_members
+    users -->|"1:N invited"| membership_invitations
     users -->|"1:N uploads"| calls
 
     companies -->|"1:N"| company_members
     companies -->|"1:N"| departments
+    companies -->|"1:N"| membership_invitations
     companies -->|"1:N optional scope"| calls
 
     departments -->|"1:N"| department_members
+    departments -->|"1:N optional"| membership_invitations
     departments -->|"1:N optional scope"| calls
 
     calls -->|"1:1"| call_transcriptions
@@ -115,6 +120,14 @@ flowchart LR
 - `left`
 
 В проекте для участников используется изменение статуса, а не физическое удаление строки из БД. Это позволяет сохранить историю членства.
+
+Статусы приглашений:
+
+- `pending`
+- `accepted`
+- `declined`
+- `canceled`
+- `expired`
 
 ## Видимость звонков
 
@@ -221,6 +234,11 @@ sequenceDiagram
 
 - Добавить участника компании.
 - Добавить участника отдела.
+- Создать приглашение в компанию.
+- Создать приглашение в отдел.
+- Получить входящие приглашения текущего пользователя.
+- Принять или отклонить приглашение.
+- Отменить pending-приглашение.
 - Получить структурированный обзор участников компании.
 - Получить участников отдела.
 - Изменить роль участника компании.
@@ -254,6 +272,20 @@ sequenceDiagram
   ]
 }
 ```
+
+### Приглашения
+
+Новый flow приглашений не удаляет старые прямые ручки добавления участников. Pending-приглашение не создает `active` membership и не дает доступ к компании или отделу. Пользователь становится активным участником только после `accept`.
+
+Права:
+
+- `company_manager` может приглашать пользователя в компанию только как `employee`.
+- `company_manager` может приглашать активного участника компании в любой отдел как `employee` или `department_leader`.
+- `department_leader` может приглашать только в свой отдел и только как `employee`.
+
+Для MVP выбран консервативный вариант department-invite: лидер отдела может приглашать в отдел только уже активного участника компании. Такой accept не создает `company_members`, поэтому не расширяет права лидера отдела до ввода новых людей в компанию.
+
+Если пользователь был `left` или `suspended` в компании, принятие company-invite реактивирует запись в `company_members` со статусом `active`. Лимит участников компании проверяется на `accept`, а pending invitation не занимает место в лимите.
 
 ## API
 
@@ -303,6 +335,19 @@ Analysis instructions:
 | GET | `/api/v1/instructions/{uuid}/file` | Да | Скачать файл инструкции |
 | DELETE | `/api/v1/instructions/{uuid}` | Да | Деактивировать инструкцию |
 
+Billing:
+
+| Method | Path | Auth | Описание |
+| --- | --- | --- | --- |
+| GET | `/api/v1/plans` | Нет | Получить список тарифов |
+| GET | `/api/v1/subscription` | Да | Получить активную персональную подписку текущего пользователя |
+| POST | `/api/v1/subscription/activate` | Да | Активировать персональную подписку текущего пользователя |
+| GET | `/api/v1/companies/{uuid}/subscription` | Да | Получить активную бизнес-подписку компании |
+| POST | `/api/v1/companies/{uuid}/subscription/activate` | Да | Активировать бизнес-подписку компании |
+| POST | `/api/v1/companies/{uuid}/subscription/cancel` | Да | Отменить бизнес-подписку компании |
+
+Личные звонки и персональные инструкции проверяются по персональной подписке пользователя. Звонки, отделы, участники, приглашения и инструкции компании проверяются по активной бизнес-подписке компании. Бизнес-подписка компании дает персональный бонус только менеджеру этой компании: `business_start` и `business_plus` дают эффективный `personal_plus`, `business_pro` дает эффективный `personal_pro`.
+
 Companies and departments:
 
 | Method | Path | Auth | Описание |
@@ -312,14 +357,27 @@ Companies and departments:
 | GET | `/api/v1/companies/{uuid}` | Да | Получить компанию |
 | GET | `/api/v1/companies/{uuid}/members` | Да | Получить структурированный обзор участников |
 | POST | `/api/v1/companies/{uuid}/members` | Да | Добавить участника компании |
+| POST | `/api/v1/companies/{uuid}/invitations` | Да | Создать приглашение в компанию |
+| POST | `/api/v1/companies/{uuid}/invitations/{invitation_uuid}/cancel` | Да | Отменить приглашение в компанию |
 | PATCH | `/api/v1/companies/{uuid}/members/{user_uuid}/role` | Да | Изменить роль участника компании |
 | PATCH | `/api/v1/companies/{uuid}/members/{user_uuid}/status` | Да | Изменить статус участника компании |
 | POST | `/api/v1/companies/{uuid}/departments` | Да | Создать отдел |
 | GET | `/api/v1/companies/{uuid}/departments` | Да | Получить список видимых отделов |
 | GET | `/api/v1/companies/{uuid}/departments/{department_uuid}/members` | Да | Получить участников отдела |
 | POST | `/api/v1/companies/{uuid}/departments/{department_uuid}/members` | Да | Добавить участника отдела |
+| POST | `/api/v1/companies/{uuid}/departments/{department_uuid}/invitations` | Да | Создать приглашение в отдел |
+| POST | `/api/v1/companies/{uuid}/departments/{department_uuid}/invitations/{invitation_uuid}/cancel` | Да | Отменить приглашение в отдел |
 | PATCH | `/api/v1/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/role` | Да | Изменить роль участника отдела |
 | PATCH | `/api/v1/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/status` | Да | Изменить статус участника отдела |
+
+Invitations:
+
+| Method | Path | Auth | Описание |
+| --- | --- | --- | --- |
+| GET | `/api/v1/invitations` | Да | Получить входящие pending-приглашения текущего пользователя |
+| GET | `/api/v1/invitations?status=declined` | Да | Получить входящие приглашения с указанным статусом |
+| POST | `/api/v1/invitations/{invitation_uuid}/accept` | Да | Принять приглашение |
+| POST | `/api/v1/invitations/{invitation_uuid}/decline` | Да | Отклонить приглашение |
 
 ## Примеры запросов
 
@@ -376,6 +434,43 @@ Companies and departments:
 {
   "user_uuid": "...",
   "role": "department_leader"
+}
+```
+
+Создание приглашения в компанию:
+
+```json
+{
+  "user_uuid": "...",
+  "role": "employee"
+}
+```
+
+Создание приглашения в отдел:
+
+```json
+{
+  "user_uuid": "...",
+  "role": "department_leader"
+}
+```
+
+Ответ invitation:
+
+```json
+{
+  "id": "...",
+  "company_uuid": "...",
+  "department_uuid": null,
+  "invited_user_uuid": "...",
+  "invited_by_user_uuid": "...",
+  "company_role": "employee",
+  "department_role": null,
+  "status": "pending",
+  "expires_at": "...",
+  "responded_at": null,
+  "created_at": "...",
+  "updated_at": "..."
 }
 ```
 

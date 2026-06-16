@@ -38,6 +38,10 @@ func (h *Handler) GetCompanyMembersOverview(w http.ResponseWriter, r *http.Reque
 			response.WriteError(w, http.StatusForbidden, response.CodeForbidden, "forbidden")
 			return
 		}
+		if errors.Is(err, models.ErrSubscriptionRequired) {
+			response.WriteError(w, http.StatusPaymentRequired, response.CodeSubscriptionRequired, "subscription required")
+			return
+		}
 
 		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToGetCompanyMembers, "failed to get company members")
 		return

@@ -21,5 +21,9 @@ func (s *Service) GetCompanyMembersOverview(ctx context.Context, companyID uuid.
 		return models.CompanyMembersOverview{}, models.ErrForbidden
 	}
 
+	if err := s.requireActiveCompanySubscription(ctx, companyID); err != nil {
+		return models.CompanyMembersOverview{}, err
+	}
+
 	return s.companyRepository.GetCompanyMembersOverview(ctx, companyID)
 }

@@ -1,0 +1,110 @@
+package invitation
+
+import (
+	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/converter"
+	"calllens/monolit/internal/models"
+	"encoding/json"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
+)
+
+func (h *Handler) CreateCompanyInvitation(w http.ResponseWriter, r *http.Request) {
+	requestUserID, ok := userIDFromRequest(r)
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+
+	companyID, err := uuid.Parse(chi.URLParam(r, "uuid"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidInvitationInput, "invalid company uuid")
+		return
+	}
+
+	var req dto.CreateInvitationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidRequestBody, "invalid request body")
+		return
+	}
+
+	userID, err := uuid.Parse(req.UserUUID)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidInvitationInput, "invalid user uuid")
+		return
+	}
+
+	invitation, err := h.service.CreateCompanyInvitation(r.Context(), models.CreateCompanyInvitationInput{
+		CompanyUUID: companyID,
+		RequestUser: requestUserID,
+		UserUUID:    userID,
+		Role:        models.CompanyMemberRole(req.Role),
+	})
+	if err != nil {
+		writeInvitationError(w, err, response.CodeFailedToCreateInvitation, "failed to create invitation")
+		return
+	}
+
+	resp, err := converter.InvitationModelToAPI(invitation)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertInvitation, "failed to convert invitation")
+		return
+	}
+
+	_ = response.WriteJSON(w, http.StatusCreated, resp)
+}
+
+func (h *Handler) CreateDepartmentInvitation(w http.ResponseWriter, r *http.Request) {
+	requestUserID, ok := userIDFromRequest(r)
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+
+	companyID, err := uuid.Parse(chi.URLParam(r, "uuid"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidInvitationInput, "invalid company uuid")
+		return
+	}
+
+	departmentID, err := uuid.Parse(chi.URLParam(r, "department_uuid"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidInvitationInput, "invalid department uuid")
+		return
+	}
+
+	var req dto.CreateInvitationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidRequestBody, "invalid request body")
+		return
+	}
+
+	userID, err := uuid.Parse(req.UserUUID)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidInvitationInput, "invalid user uuid")
+		return
+	}
+
+	invitation, err := h.service.CreateDepartmentInvitation(r.Context(), models.CreateDepartmentInvitationInput{
+		CompanyUUID:    companyID,
+		DepartmentUUID: departmentID,
+		RequestUser:    requestUserID,
+		UserUUID:       userID,
+		Role:           models.DepartmentMemberRole(req.Role),
+	})
+	if err != nil {
+		writeInvitationError(w, err, response.CodeFailedToCreateInvitation, "failed to create invitation")
+		return
+	}
+
+	resp, err := converter.InvitationModelToAPI(invitation)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertInvitation, "failed to convert invitation")
+		return
+	}
+
+	_ = response.WriteJSON(w, http.StatusCreated, resp)
+}

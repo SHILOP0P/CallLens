@@ -66,4 +66,18 @@ type AnalysisService interface {
 
 type BillingService interface {
 	ListPlans(ctx context.Context) ([]models.Plan, error)
+	GetPersonalSubscription(ctx context.Context, userID uuid.UUID) (models.Subscription, error)
+	GetCompanySubscription(ctx context.Context, input models.GetCompanySubscriptionInput) (models.Subscription, error)
+	ActivatePersonalSubscription(ctx context.Context, input models.ActivatePersonalSubscriptionInput) (models.Subscription, error)
+	ActivateCompanySubscription(ctx context.Context, input models.ActivateCompanySubscriptionInput) (models.Subscription, error)
+	CancelCompanySubscription(ctx context.Context, input models.CancelCompanySubscriptionInput) (models.Subscription, error)
+}
+
+type InvitationService interface {
+	CreateCompanyInvitation(ctx context.Context, input models.CreateCompanyInvitationInput) (models.MembershipInvitation, error)
+	CreateDepartmentInvitation(ctx context.Context, input models.CreateDepartmentInvitationInput) (models.MembershipInvitation, error)
+	ListUserInvitations(ctx context.Context, input models.ListUserInvitationsInput) ([]models.MembershipInvitation, error)
+	AcceptInvitation(ctx context.Context, input models.AcceptInvitationInput) (models.MembershipInvitation, error)
+	DeclineInvitation(ctx context.Context, input models.DeclineInvitationInput) (models.MembershipInvitation, error)
+	CancelInvitation(ctx context.Context, input models.CancelInvitationInput) (models.MembershipInvitation, error)
 }

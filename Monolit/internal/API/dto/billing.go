@@ -1,5 +1,9 @@
 package dto
 
+type ActivateSubscriptionRequest struct {
+	PlanCode string `json:"plan_code"`
+}
+
 type PlanResponse struct {
 	ID                             string `json:"id"`
 	Code                           string `json:"code"`
@@ -20,4 +24,16 @@ type PlanResponse struct {
 
 type PlansResponse struct {
 	Plans []PlanResponse `json:"plans"`
+}
+
+type SubscriptionResponse struct {
+	ID          string       `json:"id"`
+	Plan        PlanResponse `json:"plan"`
+	UserUUID    *string      `json:"user_uuid"`
+	CompanyUUID *string      `json:"company_uuid"`
+	Status      string       `json:"status"`
+	StartsAt    string       `json:"starts_at"`
+	EndsAt      *string      `json:"ends_at"`
+	CreatedAt   string       `json:"created_at"`
+	UpdatedAt   string       `json:"updated_at"`
 }

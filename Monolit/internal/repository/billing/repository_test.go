@@ -23,26 +23,81 @@ func (s *RepositorySuite) TestListPlansIncludesDefaultPlans() {
 	s.Require().True(plans[5].APIAccessEnabled)
 }
 
-func (s *RepositorySuite) TestUpsertSubscriptionAndGetBusinessSubscriptionByCompanyOwner() {
-	ownerID := s.createUser("owner@example.com")
-	companyID := s.createCompany(ownerID)
+func (s *RepositorySuite) TestUserBusinessSubscriptionDoesNotCoverCompany() {
+	managerID := s.createUser("manager-business-user@example.com")
+	companyID := s.createCompany(managerID)
 
 	created, err := s.repository.UpsertSubscription(s.ctx, models.UpsertSubscriptionInput{
 		PlanCode: models.PlanCodeBusinessPro,
-		UserUUID: uuid.NullUUID{UUID: ownerID, Valid: true},
+		UserUUID: uuid.NullUUID{UUID: managerID, Valid: true},
 		Status:   models.SubscriptionStatusActive,
 		StartsAt: time.Now().UTC().Add(-time.Hour),
 	})
 	s.Require().NoError(err)
 	s.Require().Equal(models.PlanCodeBusinessPro, created.Plan.Code)
 
-	byOwner, err := s.repository.GetActiveBusinessSubscriptionForOwner(s.ctx, ownerID)
-	s.Require().NoError(err)
-	s.Require().Equal(created.ID, byOwner.ID)
+	_, err = s.repository.GetActiveBusinessSubscription(s.ctx, companyID)
+	s.Require().ErrorIs(err, models.ErrSubscriptionNotFound)
+}
 
-	byCompany, err := s.repository.GetActiveBusinessSubscription(s.ctx, companyID)
+func (s *RepositorySuite) TestGetBestActiveBusinessSubscriptionForManager() {
+	managerID := s.createUser("best-business-manager@example.com")
+	firstCompanyID := s.createCompany(managerID)
+	secondCompanyID := s.createCompany(managerID)
+
+	start, err := s.repository.ActivateCompanySubscription(s.ctx, models.ActivateCompanySubscriptionInput{
+		CompanyUUID: firstCompanyID,
+		PlanCode:    models.PlanCodeBusinessStart,
+	}, time.Now().UTC().Add(-time.Hour))
 	s.Require().NoError(err)
-	s.Require().Equal(created.ID, byCompany.ID)
+
+	pro, err := s.repository.ActivateCompanySubscription(s.ctx, models.ActivateCompanySubscriptionInput{
+		CompanyUUID: secondCompanyID,
+		PlanCode:    models.PlanCodeBusinessPro,
+	}, time.Now().UTC().Add(-time.Hour))
+	s.Require().NoError(err)
+
+	best, err := s.repository.GetBestActiveBusinessSubscriptionForManager(s.ctx, managerID)
+	s.Require().NoError(err)
+	s.Require().Equal(pro.ID, best.ID)
+	s.Require().NotEqual(start.ID, best.ID)
+}
+
+func (s *RepositorySuite) TestActivateAndCancelCompanySubscription() {
+	ownerID := s.createUser("company-subscription-owner@example.com")
+	companyID := s.createCompany(ownerID)
+
+	startsAt := time.Now().UTC().Add(-time.Hour)
+	created, err := s.repository.ActivateCompanySubscription(s.ctx, models.ActivateCompanySubscriptionInput{
+		CompanyUUID: companyID,
+		PlanCode:    models.PlanCodeBusinessPlus,
+	}, startsAt)
+	s.Require().NoError(err)
+	s.Require().Equal(models.PlanCodeBusinessPlus, created.Plan.Code)
+	s.Require().Equal(models.SubscriptionStatusActive, created.Status)
+	s.Require().True(created.CompanyUUID.Valid)
+	s.Require().Equal(companyID, created.CompanyUUID.UUID)
+
+	updated, err := s.repository.ActivateCompanySubscription(s.ctx, models.ActivateCompanySubscriptionInput{
+		CompanyUUID: companyID,
+		PlanCode:    models.PlanCodeBusinessPro,
+	}, startsAt.Add(time.Minute))
+	s.Require().NoError(err)
+	s.Require().Equal(created.ID, updated.ID)
+	s.Require().Equal(models.PlanCodeBusinessPro, updated.Plan.Code)
+
+	active, err := s.repository.GetActiveBusinessSubscription(s.ctx, companyID)
+	s.Require().NoError(err)
+	s.Require().Equal(updated.ID, active.ID)
+
+	canceled, err := s.repository.CancelCompanySubscription(s.ctx, companyID, time.Now().UTC())
+	s.Require().NoError(err)
+	s.Require().Equal(updated.ID, canceled.ID)
+	s.Require().Equal(models.SubscriptionStatusCanceled, canceled.Status)
+	s.Require().NotNil(canceled.EndsAt)
+
+	_, err = s.repository.GetActiveBusinessSubscription(s.ctx, companyID)
+	s.Require().ErrorIs(err, models.ErrSubscriptionNotFound)
 }
 
 func (s *RepositorySuite) TestAddUsageMinutesAccumulatesCurrentPeriod() {

@@ -1,0 +1,62 @@
+package billing
+
+import (
+	"calllens/monolit/internal/models"
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+
+	"github.com/google/uuid"
+)
+
+func (r *Repository) GetActivePersonalSubscription(ctx context.Context, userID uuid.UUID) (models.Subscription, error) {
+	query := activeSubscriptionQuery("s.type = 'personal' AND s.user_uuid = $1")
+	return r.getSubscription(ctx, query, userID)
+}
+
+func (r *Repository) GetActiveBusinessSubscription(ctx context.Context, companyID uuid.UUID) (models.Subscription, error) {
+	query := activeSubscriptionQuery("s.type = 'business' AND s.company_uuid = $1")
+	return r.getSubscription(ctx, query, companyID)
+}
+
+func (r *Repository) GetBestActiveBusinessSubscriptionForManager(ctx context.Context, managerID uuid.UUID) (models.Subscription, error) {
+	query := activeSubscriptionQuery(`s.type = 'business'
+	  AND s.company_uuid IN (
+	      SELECT company_uuid
+	      FROM companies
+	      WHERE manager_user_uuid = $1
+	  )
+	ORDER BY CASE p.code
+	    WHEN 'business_pro' THEN 3
+	    WHEN 'business_plus' THEN 2
+	    WHEN 'business_start' THEN 1
+	    ELSE 0
+	END DESC
+	LIMIT 1`)
+	return r.getSubscription(ctx, query, managerID)
+}
+
+func (r *Repository) getSubscription(ctx context.Context, query string, args ...any) (models.Subscription, error) {
+	subscription, err := scanSubscription(r.db.QueryRowContext(ctx, query, args...))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Subscription{}, models.ErrSubscriptionNotFound
+		}
+		return models.Subscription{}, fmt.Errorf("get subscription: %w", err)
+	}
+
+	return subscription, nil
+}
+
+func activeSubscriptionQuery(where string) string {
+	return `
+	SELECT ` + subscriptionColumns("s", "p") + `
+	FROM subscriptions s
+	JOIN plans p ON p.plan_uuid = s.plan_uuid
+	WHERE s.status = 'active'
+	  AND s.starts_at <= now()
+	  AND (s.ends_at IS NULL OR s.ends_at > now())
+	  AND ` + where + `
+	`
+}

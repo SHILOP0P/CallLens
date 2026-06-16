@@ -4,6 +4,8 @@ import (
 	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
+	"calllens/monolit/internal/models"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -26,6 +28,11 @@ func (h *Handler) ListDepartments(w http.ResponseWriter, r *http.Request) {
 
 	departments, err := h.service.ListCompanyDepartments(r.Context(), companyID, userID)
 	if err != nil {
+		if errors.Is(err, models.ErrSubscriptionRequired) {
+			response.WriteError(w, http.StatusPaymentRequired, response.CodeSubscriptionRequired, "subscription required")
+			return
+		}
+
 		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToListDepartments, "failed to list departments")
 		return
 	}

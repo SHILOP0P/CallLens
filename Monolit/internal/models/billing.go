@@ -89,3 +89,24 @@ type UpsertSubscriptionInput struct {
 	StartsAt    time.Time
 	EndsAt      *time.Time
 }
+
+type ActivateCompanySubscriptionInput struct {
+	CompanyUUID uuid.UUID
+	RequestUser uuid.UUID
+	PlanCode    PlanCode
+}
+
+type ActivatePersonalSubscriptionInput struct {
+	UserUUID uuid.UUID
+	PlanCode PlanCode
+}
+
+type CancelCompanySubscriptionInput struct {
+	CompanyUUID uuid.UUID
+	RequestUser uuid.UUID
+}
+
+type GetCompanySubscriptionInput struct {
+	CompanyUUID uuid.UUID
+	RequestUser uuid.UUID
+}

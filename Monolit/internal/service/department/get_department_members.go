@@ -12,6 +12,10 @@ func (s *Service) ListDepartmentMembers(ctx context.Context, companyID uuid.UUID
 		return nil, models.ErrInvalidDepartmentInput
 	}
 
+	if err := s.requireActiveCompanySubscription(ctx, companyID); err != nil {
+		return nil, err
+	}
+
 	companyMember, err := s.companyRepository.GetCompanyMember(ctx, companyID, userID)
 	if err == nil && companyMember.Role == models.CompanyMemberRoleManager {
 		return s.departmentRepository.ListDepartmentMembers(ctx, companyID, departmentID)

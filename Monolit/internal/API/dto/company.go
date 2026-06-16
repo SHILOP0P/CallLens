@@ -68,3 +68,23 @@ type DepartmentMembersOverviewResponse struct {
 	Department DepartmentResponse         `json:"department"`
 	Members    []DepartmentMemberResponse `json:"members"`
 }
+
+type CreateInvitationRequest struct {
+	UserUUID string `json:"user_uuid"`
+	Role     string `json:"role"`
+}
+
+type InvitationResponse struct {
+	ID                string  `json:"id"`
+	CompanyUUID       string  `json:"company_uuid"`
+	DepartmentUUID    *string `json:"department_uuid"`
+	InvitedUserUUID   string  `json:"invited_user_uuid"`
+	InvitedByUserUUID string  `json:"invited_by_user_uuid"`
+	CompanyRole       string  `json:"company_role"`
+	DepartmentRole    *string `json:"department_role"`
+	Status            string  `json:"status"`
+	ExpiresAt         string  `json:"expires_at"`
+	RespondedAt       *string `json:"responded_at"`
+	CreatedAt         string  `json:"created_at"`
+	UpdatedAt         string  `json:"updated_at"`
+}

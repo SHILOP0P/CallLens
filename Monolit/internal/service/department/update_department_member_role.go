@@ -21,6 +21,10 @@ func (s *Service) UpdateDepartmentMemberRole(ctx context.Context, input models.U
 		return models.DepartmentMember{}, err
 	}
 
+	if err := s.requireActiveCompanySubscription(ctx, input.CompanyUUID); err != nil {
+		return models.DepartmentMember{}, err
+	}
+
 	if _, err := s.companyRepository.GetCompanyMember(ctx, input.CompanyUUID, input.UserUUID); err != nil {
 		return models.DepartmentMember{}, err
 	}

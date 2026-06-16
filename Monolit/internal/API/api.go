@@ -61,4 +61,19 @@ type AnalysisAPI interface {
 
 type BillingAPI interface {
 	ListPlans(w http.ResponseWriter, r *http.Request)
+	GetPersonalSubscription(w http.ResponseWriter, r *http.Request)
+	GetCompanySubscription(w http.ResponseWriter, r *http.Request)
+	ActivatePersonalSubscription(w http.ResponseWriter, r *http.Request)
+	ActivateCompanySubscription(w http.ResponseWriter, r *http.Request)
+	CancelCompanySubscription(w http.ResponseWriter, r *http.Request)
+}
+
+type InvitationAPI interface {
+	CreateCompanyInvitation(w http.ResponseWriter, r *http.Request)
+	CreateDepartmentInvitation(w http.ResponseWriter, r *http.Request)
+	ListUserInvitations(w http.ResponseWriter, r *http.Request)
+	AcceptInvitation(w http.ResponseWriter, r *http.Request)
+	DeclineInvitation(w http.ResponseWriter, r *http.Request)
+	CancelCompanyInvitation(w http.ResponseWriter, r *http.Request)
+	CancelDepartmentInvitation(w http.ResponseWriter, r *http.Request)
 }

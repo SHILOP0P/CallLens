@@ -8,6 +8,7 @@ import (
 	"calllens/monolit/internal/API/call"
 	companyAPI "calllens/monolit/internal/API/company"
 	departmentAPI "calllens/monolit/internal/API/department"
+	invitationAPI "calllens/monolit/internal/API/invitation"
 	"calllens/monolit/internal/analyzer"
 	"calllens/monolit/internal/config"
 	"calllens/monolit/internal/httpserver"
@@ -19,6 +20,7 @@ import (
 	callRepo "calllens/monolit/internal/repository/call"
 	companyRepo "calllens/monolit/internal/repository/company"
 	departmentRepo "calllens/monolit/internal/repository/department"
+	invitationRepo "calllens/monolit/internal/repository/invitation"
 	processingJobRepo "calllens/monolit/internal/repository/processing_job"
 	refreshSessionRepo "calllens/monolit/internal/repository/refresh_session"
 	transcriptionRepo "calllens/monolit/internal/repository/transcription"
@@ -30,6 +32,7 @@ import (
 	callService "calllens/monolit/internal/service/call"
 	companyService "calllens/monolit/internal/service/company"
 	departmentService "calllens/monolit/internal/service/department"
+	invitationService "calllens/monolit/internal/service/invitation"
 	processingService "calllens/monolit/internal/service/processing"
 	"calllens/monolit/internal/storage/audio"
 	"calllens/monolit/internal/storage/instruction"
@@ -126,6 +129,7 @@ func main() {
 	refreshRepository := refreshSessionRepo.NewRepository(sqlDB)
 	companyRepository := companyRepo.NewRepository(sqlDB)
 	departmentRepository := departmentRepo.NewRepository(sqlDB)
+	invitationRepository := invitationRepo.NewRepository(sqlDB)
 	transcriptionRepository := transcriptionRepo.NewRepository(sqlDB)
 	processingJobRepository := processingJobRepo.NewRepository(sqlDB)
 	billingRepository := billingRepo.NewRepository(sqlDB)
@@ -186,22 +190,26 @@ func main() {
 	authSvc.SetBillingRepository(billingRepository)
 	companySvc := companyService.NewService(companyRepository, appLogger)
 	departmentSvc := departmentService.NewService(companyRepository, departmentRepository, appLogger)
+	invitationSvc := invitationService.NewService(invitationRepository, userRepository, companyRepository, departmentRepository, appLogger)
 	instructionSvc := analysisInstructionService.NewService(analysisInstructionRepository, companyRepository, departmentRepository, instructionStorage, appLogger)
 	billingSvc := billingService.NewService(billingRepository)
+	billingSvc.SetCompanyRepository(companyRepository)
 	callSvc.SetBillingLimiter(billingSvc)
 	companySvc.SetBillingLimiter(billingSvc)
 	departmentSvc.SetBillingLimiter(billingSvc)
+	invitationSvc.SetBillingLimiter(billingSvc)
 	instructionSvc.SetBillingLimiter(billingSvc)
 
 	callHandler := call.NewCallHandler(callSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc, config.AppConfig().Auth.AccessTokenTTL(), config.AppConfig().Auth.RefreshTokenTTL())
 	companyHandler := companyAPI.NewCompanyHandler(companySvc)
 	departmentHandler := departmentAPI.NewDepartmentHandler(departmentSvc)
+	invitationHandler := invitationAPI.NewHandler(invitationSvc)
 	instructionHandler := instructionAPI.NewHandler(instructionSvc)
 	analysisHandler := analysisAPI.NewHandler(analysisSvc)
 	billingHandler := billingAPI.NewHandler(billingSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, billingHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, billingHandler, invitationHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

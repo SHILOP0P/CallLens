@@ -68,6 +68,7 @@ func TruncateTables(t *testing.T, db *sql.DB) {
 	TRUNCATE TABLE
 	    usage_counters,
 	    subscriptions,
+	    membership_invitations,
 	    processing_jobs,
 	    call_transcriptions,
 	    refresh_sessions,

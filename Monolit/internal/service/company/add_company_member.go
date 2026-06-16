@@ -31,6 +31,10 @@ func (s *Service) AddCompanyMember(ctx context.Context, input models.AddCompanyM
 		return models.CompanyMember{}, models.ErrForbidden
 	}
 
+	if err := s.requireActiveCompanySubscription(ctx, input.CompanyUUID); err != nil {
+		return models.CompanyMember{}, err
+	}
+
 	if s.billingLimiter != nil {
 		if err := s.billingLimiter.CanAddCompanyMember(ctx, input.CompanyUUID); err != nil {
 			return models.CompanyMember{}, err

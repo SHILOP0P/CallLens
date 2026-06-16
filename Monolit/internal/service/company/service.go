@@ -9,7 +9,7 @@ import (
 )
 
 type BillingLimiter interface {
-	CanCreateCompany(ctx context.Context, ownerID uuid.UUID) error
+	CanUseCompany(ctx context.Context, companyID uuid.UUID) error
 	CanAddCompanyMember(ctx context.Context, companyID uuid.UUID) error
 }
 

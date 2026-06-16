@@ -3,6 +3,7 @@ package converter
 import (
 	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/models"
+	"time"
 )
 
 func PlanModelToAPI(plan models.Plan) (dto.PlanResponse, error) {
@@ -23,4 +24,45 @@ func PlanModelToAPI(plan models.Plan) (dto.PlanResponse, error) {
 		TeamAnalyticsEnabled:           plan.TeamAnalyticsEnabled,
 		APIAccessEnabled:               plan.APIAccessEnabled,
 	}, nil
+}
+
+func SubscriptionModelToAPI(subscription models.Subscription) (dto.SubscriptionResponse, error) {
+	plan, err := PlanModelToAPI(subscription.Plan)
+	if err != nil {
+		return dto.SubscriptionResponse{}, err
+	}
+
+	var userUUID *string
+	if subscription.UserUUID.Valid {
+		value := subscription.UserUUID.UUID.String()
+		userUUID = &value
+	}
+
+	var companyUUID *string
+	if subscription.CompanyUUID.Valid {
+		value := subscription.CompanyUUID.UUID.String()
+		companyUUID = &value
+	}
+
+	var endsAt *string
+	if subscription.EndsAt != nil {
+		value := formatBillingTime(*subscription.EndsAt)
+		endsAt = &value
+	}
+
+	return dto.SubscriptionResponse{
+		ID:          subscription.ID.String(),
+		Plan:        plan,
+		UserUUID:    userUUID,
+		CompanyUUID: companyUUID,
+		Status:      string(subscription.Status),
+		StartsAt:    formatBillingTime(subscription.StartsAt),
+		EndsAt:      endsAt,
+		CreatedAt:   formatBillingTime(subscription.CreatedAt),
+		UpdatedAt:   formatBillingTime(subscription.UpdatedAt),
+	}, nil
+}
+
+func formatBillingTime(value time.Time) string {
+	return value.UTC().Format(time.RFC3339Nano)
 }

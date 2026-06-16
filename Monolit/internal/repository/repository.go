@@ -55,6 +55,16 @@ type DepartmentRepository interface {
 	GetDepartmentMember(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID, userID uuid.UUID) (models.DepartmentMember, error)
 }
 
+type InvitationRepository interface {
+	CreateInvitation(ctx context.Context, invitation models.MembershipInvitation) (models.MembershipInvitation, error)
+	GetInvitationByUUID(ctx context.Context, id uuid.UUID) (models.MembershipInvitation, error)
+	ListUserInvitations(ctx context.Context, input models.ListUserInvitationsInput) ([]models.MembershipInvitation, error)
+	ListCompanyInvitations(ctx context.Context, companyID uuid.UUID, status models.InvitationStatus) ([]models.MembershipInvitation, error)
+	AcceptInvitation(ctx context.Context, id uuid.UUID, now time.Time) (models.MembershipInvitation, error)
+	DeclineInvitation(ctx context.Context, id uuid.UUID, now time.Time) (models.MembershipInvitation, error)
+	CancelInvitation(ctx context.Context, id uuid.UUID, now time.Time) (models.MembershipInvitation, error)
+}
+
 type RefreshSessionRepository interface {
 	CreateRefreshSession(ctx context.Context, session models.RefreshSession) (models.RefreshSession, error)
 	GetRefreshSessionByHash(ctx context.Context, refreshTokenHash string) (models.RefreshSession, error)
@@ -101,8 +111,11 @@ type BillingRepository interface {
 	ListPlans(ctx context.Context) ([]models.Plan, error)
 	GetActivePersonalSubscription(ctx context.Context, userID uuid.UUID) (models.Subscription, error)
 	GetActiveBusinessSubscription(ctx context.Context, companyID uuid.UUID) (models.Subscription, error)
-	GetActiveBusinessSubscriptionForOwner(ctx context.Context, ownerID uuid.UUID) (models.Subscription, error)
+	GetBestActiveBusinessSubscriptionForManager(ctx context.Context, managerID uuid.UUID) (models.Subscription, error)
 	UpsertSubscription(ctx context.Context, input models.UpsertSubscriptionInput) (models.Subscription, error)
+	ActivatePersonalSubscription(ctx context.Context, input models.ActivatePersonalSubscriptionInput, startsAt time.Time) (models.Subscription, error)
+	ActivateCompanySubscription(ctx context.Context, input models.ActivateCompanySubscriptionInput, startsAt time.Time) (models.Subscription, error)
+	CancelCompanySubscription(ctx context.Context, companyID uuid.UUID, canceledAt time.Time) (models.Subscription, error)
 	CountUsedMinutes(ctx context.Context, subscriptionID uuid.UUID, periodStart time.Time) (int, error)
 	AddUsageMinutes(ctx context.Context, subscriptionID uuid.UUID, periodStart time.Time, minutes int) (models.UsageCounter, error)
 	CountOwnerCompanies(ctx context.Context, ownerID uuid.UUID) (int, error)

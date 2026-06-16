@@ -82,6 +82,10 @@ func writeCompanyMemberError(w http.ResponseWriter, err error, fallbackCode stri
 		response.WriteError(w, http.StatusForbidden, response.CodeForbidden, "forbidden")
 		return
 	}
+	if errors.Is(err, models.ErrSubscriptionRequired) {
+		response.WriteError(w, http.StatusPaymentRequired, response.CodeSubscriptionRequired, "subscription required")
+		return
+	}
 
 	response.WriteError(w, http.StatusInternalServerError, fallbackCode, fallbackMessage)
 }

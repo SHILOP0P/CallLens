@@ -70,6 +70,7 @@ var ErrInstructionLimitExceeded = errors.New("instruction limit exceeded")
 
 // BILLING
 var ErrPlanNotFound = errors.New("plan not found")
+var ErrInvalidBillingInput = errors.New("invalid billing input")
 var ErrSubscriptionNotFound = errors.New("subscription not found")
 var ErrSubscriptionRequired = errors.New("subscription required")
 var ErrPlanLimitExceeded = errors.New("plan limit exceeded")
@@ -80,3 +81,11 @@ var ErrMemberLimitExceeded = errors.New("member limit exceeded")
 var ErrExportAccessDenied = errors.New("export access denied")
 var ErrTeamAnalyticsAccessDenied = errors.New("team analytics access denied")
 var ErrAPIAccessDenied = errors.New("api access denied")
+
+// INVITATION
+var ErrInvitationNotFound = errors.New("invitation not found")
+var ErrInvalidInvitationInput = errors.New("invalid invitation input")
+var ErrInvitationAlreadyExists = errors.New("invitation already exists")
+var ErrInvitationNotPending = errors.New("invitation not pending")
+var ErrInvitationExpired = errors.New("invitation expired")
+var ErrInvitationConvert = errors.New("invitation convert error")

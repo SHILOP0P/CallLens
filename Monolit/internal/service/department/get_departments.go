@@ -12,5 +12,9 @@ func (s *Service) ListCompanyDepartments(ctx context.Context, companyID uuid.UUI
 		return nil, models.ErrInvalidDepartmentInput
 	}
 
+	if err := s.requireActiveCompanySubscription(ctx, companyID); err != nil {
+		return nil, err
+	}
+
 	return s.departmentRepository.ListVisibleCompanyDepartments(ctx, companyID, userID)
 }

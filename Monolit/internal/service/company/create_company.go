@@ -18,12 +18,6 @@ func (s *Service) CreateCompany(ctx context.Context, input models.CreateCompanyI
 		return models.Company{}, models.ErrInvalidCompanyInput
 	}
 
-	if s.billingLimiter != nil {
-		if err := s.billingLimiter.CanCreateCompany(ctx, input.ManagerUserID); err != nil {
-			return models.Company{}, err
-		}
-	}
-
 	companyID, err := uuid.NewV7()
 	if err != nil {
 		return models.Company{}, err

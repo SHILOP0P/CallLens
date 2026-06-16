@@ -49,6 +49,10 @@ func (h *Handler) ListDepartmentMembers(w http.ResponseWriter, r *http.Request) 
 			response.WriteError(w, http.StatusForbidden, response.CodeForbidden, "forbidden")
 			return
 		}
+		if errors.Is(err, models.ErrSubscriptionRequired) {
+			response.WriteError(w, http.StatusPaymentRequired, response.CodeSubscriptionRequired, "subscription required")
+			return
+		}
 
 		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToListDepartmentMembers, "failed to list department members")
 		return

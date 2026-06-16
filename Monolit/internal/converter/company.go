@@ -92,3 +92,51 @@ func CompanyMembersOverviewModelToAPI(overview models.CompanyMembersOverview) (d
 
 	return resp, nil
 }
+
+func InvitationModelToAPI(invitation models.MembershipInvitation) (dto.InvitationResponse, error) {
+	var departmentUUID *string
+	if invitation.DepartmentUUID.Valid {
+		value := invitation.DepartmentUUID.UUID.String()
+		departmentUUID = &value
+	}
+
+	var departmentRole *string
+	if invitation.DepartmentRole != nil {
+		value := string(*invitation.DepartmentRole)
+		departmentRole = &value
+	}
+
+	var respondedAt *string
+	if invitation.RespondedAt != nil {
+		value := invitation.RespondedAt.Format(time.RFC3339)
+		respondedAt = &value
+	}
+
+	return dto.InvitationResponse{
+		ID:                invitation.ID.String(),
+		CompanyUUID:       invitation.CompanyUUID.String(),
+		DepartmentUUID:    departmentUUID,
+		InvitedUserUUID:   invitation.InvitedUserUUID.String(),
+		InvitedByUserUUID: invitation.InvitedByUserUUID.String(),
+		CompanyRole:       string(invitation.CompanyRole),
+		DepartmentRole:    departmentRole,
+		Status:            string(invitation.Status),
+		ExpiresAt:         invitation.ExpiresAt.Format(time.RFC3339),
+		RespondedAt:       respondedAt,
+		CreatedAt:         invitation.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:         invitation.UpdatedAt.Format(time.RFC3339),
+	}, nil
+}
+
+func InvitationsModelToAPI(invitations []models.MembershipInvitation) ([]dto.InvitationResponse, error) {
+	result := make([]dto.InvitationResponse, 0, len(invitations))
+	for _, invitation := range invitations {
+		item, err := InvitationModelToAPI(invitation)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, item)
+	}
+
+	return result, nil
+}
