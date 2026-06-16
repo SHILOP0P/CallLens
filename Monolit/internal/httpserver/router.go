@@ -67,6 +67,8 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 			r.Post("/auth/login", authAPI.Login)
 			r.Post("/auth/refresh", authAPI.Refresh)
 			r.With(authGuard).Get("/auth/me", authAPI.Me)
+			r.With(authGuard).Patch("/auth/me/username", authAPI.UpdateUsername)
+			r.With(authGuard).Get("/users/lookup", authAPI.LookupUser)
 			r.With(authGuard).Post("/auth/logout", authAPI.Logout)
 			r.With(authGuard).Post("/auth/logout-all", authAPI.LogoutAll)
 

@@ -22,7 +22,7 @@ func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.Use
 					password_hash,
 					full_name,
 					full_surname,
-					nick_name,
+					username,
 					role,
 					post,
 					created_at             
@@ -33,7 +33,7 @@ func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.Use
 	          password_hash,
 	          full_name,
 	          full_surname,
-	          nick_name,
+	          username,
 	          role,
 	          post,
 	          created_at
@@ -46,7 +46,7 @@ func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.Use
 		repoUser.PasswordHash,
 		repoUser.FullName,
 		repoUser.FullSurname,
-		repoUser.NickName,
+		repoUser.Username,
 		repoUser.Role,
 		repoUser.Post,
 		repoUser.CreatedAt,
@@ -54,7 +54,7 @@ func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.Use
 
 	createdRepoUser, err = scaner.ScanUser(row)
 	if err != nil {
-		return model.User{}, fmt.Errorf("create user: %w", err)
+		return model.User{}, fmt.Errorf("create user: %w", normalizeUserError(err))
 	}
 
 	return converter.RepoUserToModel(createdRepoUser)

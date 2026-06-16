@@ -17,6 +17,9 @@ type Company struct {
 type CompanyMember struct {
 	CompanyUUID uuid.UUID
 	UserUUID    uuid.UUID
+	Username    string
+	FullName    string
+	FullSurname string
 	Role        CompanyMemberRole
 	Status      MembershipStatus
 	CreatedAt   time.Time

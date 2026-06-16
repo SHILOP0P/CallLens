@@ -31,9 +31,8 @@ func (h *Handler) CreateCompanyInvitation(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	userID, err := uuid.Parse(req.UserUUID)
-	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidInvitationInput, "invalid user uuid")
+	userID, ok := parseOptionalUserUUID(w, req.UserUUID)
+	if !ok {
 		return
 	}
 
@@ -41,6 +40,7 @@ func (h *Handler) CreateCompanyInvitation(w http.ResponseWriter, r *http.Request
 		CompanyUUID: companyID,
 		RequestUser: requestUserID,
 		UserUUID:    userID,
+		Username:    req.Username,
 		Role:        models.CompanyMemberRole(req.Role),
 	})
 	if err != nil {
@@ -82,9 +82,8 @@ func (h *Handler) CreateDepartmentInvitation(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	userID, err := uuid.Parse(req.UserUUID)
-	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidInvitationInput, "invalid user uuid")
+	userID, ok := parseOptionalUserUUID(w, req.UserUUID)
+	if !ok {
 		return
 	}
 
@@ -93,6 +92,7 @@ func (h *Handler) CreateDepartmentInvitation(w http.ResponseWriter, r *http.Requ
 		DepartmentUUID: departmentID,
 		RequestUser:    requestUserID,
 		UserUUID:       userID,
+		Username:       req.Username,
 		Role:           models.DepartmentMemberRole(req.Role),
 	})
 	if err != nil {
@@ -107,4 +107,18 @@ func (h *Handler) CreateDepartmentInvitation(w http.ResponseWriter, r *http.Requ
 	}
 
 	_ = response.WriteJSON(w, http.StatusCreated, resp)
+}
+
+func parseOptionalUserUUID(w http.ResponseWriter, raw string) (uuid.UUID, bool) {
+	if raw == "" {
+		return uuid.Nil, true
+	}
+
+	userID, err := uuid.Parse(raw)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidInvitationInput, "invalid user uuid")
+		return uuid.Nil, false
+	}
+
+	return userID, true
 }

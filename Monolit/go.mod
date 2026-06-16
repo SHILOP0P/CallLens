@@ -22,6 +22,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jung-kurt/gofpdf v1.16.2 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
+	github.com/mozillazg/go-unidecode v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.4 // indirect

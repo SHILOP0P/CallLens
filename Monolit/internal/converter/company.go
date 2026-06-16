@@ -29,6 +29,9 @@ func CompanyMemberModelToAPI(member models.CompanyMember) (dto.CompanyMemberResp
 	return dto.CompanyMemberResponse{
 		CompanyUUID: member.CompanyUUID.String(),
 		UserUUID:    member.UserUUID.String(),
+		Username:    member.Username,
+		FullName:    member.FullName,
+		FullSurname: member.FullSurname,
 		Role:        string(member.Role),
 		Status:      string(member.Status),
 		CreatedAt:   member.CreatedAt.Format(time.RFC3339),
@@ -39,6 +42,9 @@ func DepartmentMemberModelToAPI(member models.DepartmentMember) (dto.DepartmentM
 	return dto.DepartmentMemberResponse{
 		DepartmentUUID: member.DepartmentUUID.String(),
 		UserUUID:       member.UserUUID.String(),
+		Username:       member.Username,
+		FullName:       member.FullName,
+		FullSurname:    member.FullSurname,
 		Role:           string(member.Role),
 		Status:         string(member.Status),
 		CreatedAt:      member.CreatedAt.Format(time.RFC3339),

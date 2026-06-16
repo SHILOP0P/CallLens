@@ -16,6 +16,9 @@ type Department struct {
 type DepartmentMember struct {
 	DepartmentUUID uuid.UUID
 	UserUUID       uuid.UUID
+	Username       string
+	FullName       string
+	FullSurname    string
 	Role           DepartmentMemberRole
 	Status         MembershipStatus
 	CreatedAt      time.Time

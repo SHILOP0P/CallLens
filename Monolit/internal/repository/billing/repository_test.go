@@ -125,7 +125,7 @@ func (s *RepositorySuite) createUser(email string) uuid.UUID {
 	id := uuid.New()
 	_, err := s.db.ExecContext(
 		s.ctx,
-		`INSERT INTO users (user_uuid, email, password_hash, full_name, full_surname, nick_name, role, created_at)
+		`INSERT INTO users (user_uuid, email, password_hash, full_name, full_surname, username, role, created_at)
 		 VALUES ($1, $2, 'hash', 'Dmitry', 'Mukhachev', 'muxa', 'user', $3)`,
 		id,
 		email,

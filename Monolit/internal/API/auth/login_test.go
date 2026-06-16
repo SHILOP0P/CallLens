@@ -21,7 +21,7 @@ func (s *APISuite) TestLoginSuccess() {
 			input.Password == "password123" &&
 			input.IPAddress != nil
 	})).
-		Return(models.User{ID: userID, Email: "user@example.com", FullName: "Dmitry", FullSurname: "Mukhachev", NickName: "muxa", Role: models.UserRoleUser, CreatedAt: time.Now().UTC()}, "access", "refresh", nil).
+		Return(models.User{ID: userID, Email: "user@example.com", FullName: "Dmitry", FullSurname: "Mukhachev", Username: "muxa", Role: models.UserRoleUser, CreatedAt: time.Now().UTC()}, "access", "refresh", nil).
 		Once()
 
 	rec, req := s.request(http.MethodPost, "/api/v1/auth/login", body)

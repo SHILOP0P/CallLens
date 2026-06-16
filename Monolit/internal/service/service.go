@@ -31,6 +31,8 @@ type AuthService interface {
 	Logout(ctx context.Context, sessionID uuid.UUID) error
 	LogoutAll(ctx context.Context, userID uuid.UUID) error
 	Me(ctx context.Context, userID uuid.UUID) (models.User, error)
+	UpdateUsername(ctx context.Context, input models.UpdateUsernameInput) (models.User, error)
+	GetUserByUsername(ctx context.Context, username string) (models.User, error)
 }
 
 type CompanyService interface {

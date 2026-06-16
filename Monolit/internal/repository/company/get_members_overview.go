@@ -58,15 +58,19 @@ func (r *Repository) GetCompanyMembersOverview(ctx context.Context, companyID uu
 
 func (r *Repository) listActiveCompanyMembers(ctx context.Context, companyID uuid.UUID) ([]model.CompanyMember, error) {
 	query := `
-	SELECT company_uuid,
-	       user_uuid,
-	       role,
-	       status,
-	       created_at
-	FROM company_members
-	WHERE company_uuid = $1
-	  AND status = 'active'
-	ORDER BY created_at ASC
+	SELECT cm.company_uuid,
+	       cm.user_uuid,
+	       u.username,
+	       u.full_name,
+	       u.full_surname,
+	       cm.role,
+	       cm.status,
+	       cm.created_at
+	FROM company_members cm
+	JOIN users u ON u.user_uuid = cm.user_uuid
+	WHERE cm.company_uuid = $1
+	  AND cm.status = 'active'
+	ORDER BY cm.created_at ASC
 	`
 
 	rows, err := r.db.QueryContext(ctx, query, companyID)
@@ -77,19 +81,21 @@ func (r *Repository) listActiveCompanyMembers(ctx context.Context, companyID uui
 
 	var members []model.CompanyMember
 	for rows.Next() {
-		var repoMember repoModel.CompanyMember
-		repoMember, err = scaner.ScanCompanyMember(rows)
-		if err != nil {
+		var member model.CompanyMember
+		if err = rows.Scan(
+			&member.CompanyUUID,
+			&member.UserUUID,
+			&member.Username,
+			&member.FullName,
+			&member.FullSurname,
+			&member.Role,
+			&member.Status,
+			&member.CreatedAt,
+		); err != nil {
 			return nil, fmt.Errorf("list active company members: %w", err)
 		}
 
-		members = append(members, model.CompanyMember{
-			CompanyUUID: repoMember.CompanyUUID,
-			UserUUID:    repoMember.UserUUID,
-			Role:        model.CompanyMemberRole(repoMember.Role),
-			Status:      model.MembershipStatus(repoMember.Status),
-			CreatedAt:   repoMember.CreatedAt,
-		})
+		members = append(members, member)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -143,11 +149,15 @@ func (r *Repository) listActiveDepartmentMembers(ctx context.Context, companyID 
 	query := `
 	SELECT dm.department_uuid,
 	       dm.user_uuid,
+	       u.username,
+	       u.full_name,
+	       u.full_surname,
 	       dm.role,
 	       dm.status,
 	       dm.created_at
 	FROM department_members dm
 	JOIN departments d ON d.department_uuid = dm.department_uuid
+	JOIN users u ON u.user_uuid = dm.user_uuid
 	WHERE d.company_uuid = $1
 	  AND dm.status = 'active'
 	ORDER BY dm.created_at ASC
@@ -161,19 +171,21 @@ func (r *Repository) listActiveDepartmentMembers(ctx context.Context, companyID 
 
 	var members []model.DepartmentMember
 	for rows.Next() {
-		var repoMember repoModel.DepartmentMember
-		repoMember, err = scaner.ScanDepartmentMember(rows)
-		if err != nil {
+		var member model.DepartmentMember
+		if err = rows.Scan(
+			&member.DepartmentUUID,
+			&member.UserUUID,
+			&member.Username,
+			&member.FullName,
+			&member.FullSurname,
+			&member.Role,
+			&member.Status,
+			&member.CreatedAt,
+		); err != nil {
 			return nil, fmt.Errorf("list active department members: %w", err)
 		}
 
-		members = append(members, model.DepartmentMember{
-			DepartmentUUID: repoMember.DepartmentUUID,
-			UserUUID:       repoMember.UserUUID,
-			Role:           model.DepartmentMemberRole(repoMember.Role),
-			Status:         model.MembershipStatus(repoMember.Status),
-			CreatedAt:      repoMember.CreatedAt,
-		})
+		members = append(members, member)
 	}
 
 	if err := rows.Err(); err != nil {

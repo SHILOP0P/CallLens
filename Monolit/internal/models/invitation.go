@@ -35,6 +35,7 @@ type CreateCompanyInvitationInput struct {
 	CompanyUUID uuid.UUID
 	RequestUser uuid.UUID
 	UserUUID    uuid.UUID
+	Username    string
 	Role        CompanyMemberRole
 }
 
@@ -43,6 +44,7 @@ type CreateDepartmentInvitationInput struct {
 	DepartmentUUID uuid.UUID
 	RequestUser    uuid.UUID
 	UserUUID       uuid.UUID
+	Username       string
 	Role           DepartmentMemberRole
 }
 

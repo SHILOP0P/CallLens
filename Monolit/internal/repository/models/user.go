@@ -13,7 +13,7 @@ type User struct {
 	PasswordHash string
 	FullName     string
 	FullSurname  string
-	NickName     string
+	Username     string
 	Role         string
 	Post         sql.NullString
 	CreatedAt    time.Time

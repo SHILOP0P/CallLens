@@ -12,7 +12,7 @@ type User struct {
 	PasswordHash string
 	FullName     string
 	FullSurname  string
-	NickName     string
+	Username     string
 	Role         UserRole
 	Post         *string
 	CreatedAt    time.Time
@@ -32,8 +32,13 @@ type CreateUserInput struct {
 	Password    string
 	FullName    string
 	FullSurname string
-	NickName    string
+	Username    string
 	Post        *string
+}
+
+type UpdateUsernameInput struct {
+	UserUUID uuid.UUID
+	Username string
 }
 
 type LoginInput struct {

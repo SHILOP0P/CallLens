@@ -5,7 +5,7 @@ CREATE TABLE users (
                        password_hash TEXT NOT NULL,
                        full_name TEXT NOT NULL,
                        full_surname TEXT NOT NULL,
-                       nick_name TEXT NOT NULL,
+                       username TEXT NOT NULL,
                        role TEXT NOT NULL,
                        post TEXT NULL,
                        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -13,6 +13,9 @@ CREATE TABLE users (
 
 CREATE UNIQUE INDEX idx_users_email_lower
     ON users (lower(email));
+
+CREATE UNIQUE INDEX idx_users_username_lower
+    ON users (lower(username));
 
 CREATE TABLE companies (
                            company_uuid UUID PRIMARY KEY,

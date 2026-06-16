@@ -4,6 +4,7 @@ import (
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/models"
 	repo "calllens/monolit/internal/repository"
+	"calllens/monolit/internal/username"
 	"context"
 	"errors"
 	"time"
@@ -69,6 +70,33 @@ func (s *Service) ensureTargetUser(ctx context.Context, requestUser uuid.UUID, t
 
 	_, err := s.userRepository.GetUserByUUID(ctx, targetUser)
 	return err
+}
+
+func (s *Service) resolveTargetUser(ctx context.Context, requestUser uuid.UUID, userID uuid.UUID, rawUsername string) (uuid.UUID, error) {
+	if userID != uuid.Nil && rawUsername != "" {
+		return uuid.Nil, models.ErrInvalidInvitationInput
+	}
+	if userID != uuid.Nil {
+		if err := s.ensureTargetUser(ctx, requestUser, userID); err != nil {
+			return uuid.Nil, err
+		}
+		return userID, nil
+	}
+
+	normalized, ok := username.Normalize(rawUsername)
+	if !ok {
+		return uuid.Nil, models.ErrInvalidInvitationInput
+	}
+
+	user, err := s.userRepository.GetUserByUsername(ctx, normalized)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if user.ID == requestUser {
+		return uuid.Nil, models.ErrInvalidInvitationInput
+	}
+
+	return user.ID, nil
 }
 
 func (s *Service) isActiveCompanyMember(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (bool, error) {

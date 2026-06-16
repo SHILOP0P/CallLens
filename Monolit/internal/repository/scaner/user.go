@@ -11,7 +11,7 @@ func ScanUser(row rowScanner) (repoModel.User, error) {
 		&user.PasswordHash,
 		&user.FullName,
 		&user.FullSurname,
-		&user.NickName,
+		&user.Username,
 		&user.Role,
 		&user.Post,
 		&user.CreatedAt,

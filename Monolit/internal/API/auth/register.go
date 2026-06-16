@@ -23,7 +23,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Password:    req.Password,
 		FullName:    req.FullName,
 		FullSurname: req.FullSurname,
-		NickName:    req.NickName,
+		Username:    firstNonEmpty(req.Username, req.NickName),
 		Post:        req.Post,
 	})
 	if err != nil {
@@ -53,4 +53,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err := response.WriteJSON(w, http.StatusCreated, resp); err != nil {
 		return
 	}
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+
+	return ""
 }

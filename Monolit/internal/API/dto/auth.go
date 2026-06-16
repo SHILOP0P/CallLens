@@ -5,7 +5,8 @@ type RegisterRequest struct {
 	Password    string  `json:"password"`
 	FullName    string  `json:"full_name"`
 	FullSurname string  `json:"full_surname"`
-	NickName    string  `json:"nick_name"`
+	Username    string  `json:"username"`
+	NickName    string  `json:"nick_name,omitempty"`
 	Post        *string `json:"post,omitempty"`
 }
 
@@ -27,7 +28,7 @@ type UserResponse struct {
 	Email       string  `json:"email"`
 	FullName    string  `json:"full_name"`
 	FullSurname string  `json:"full_surname"`
-	NickName    string  `json:"nick_name"`
+	Username    string  `json:"username"`
 	Role        string  `json:"role"`
 	Post        *string `json:"post,omitempty"`
 	CreatedAt   string  `json:"created_at"`
@@ -35,4 +36,8 @@ type UserResponse struct {
 
 type RegisterResponse struct {
 	User UserResponse `json:"user"`
+}
+
+type UpdateUsernameRequest struct {
+	Username string `json:"username"`
 }

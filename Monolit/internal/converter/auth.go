@@ -12,7 +12,7 @@ func UserModelToAPI(user models.User) (dto.UserResponse, error) {
 		Email:       user.Email,
 		FullName:    user.FullName,
 		FullSurname: user.FullSurname,
-		NickName:    user.NickName,
+		Username:    user.Username,
 		Role:        string(user.Role),
 		Post:        user.Post,
 		CreatedAt:   user.CreatedAt.Format(time.RFC3339),

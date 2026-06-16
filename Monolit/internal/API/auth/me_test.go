@@ -14,7 +14,7 @@ func (s *APISuite) TestMeSuccess() {
 	userID := uuid.New()
 
 	s.service.On("Me", mock.Anything, userID).
-		Return(models.User{ID: userID, Email: "user@example.com", FullName: "Dmitry", FullSurname: "Mukhachev", NickName: "muxa", Role: models.UserRoleUser, CreatedAt: time.Now().UTC()}, nil).
+		Return(models.User{ID: userID, Email: "user@example.com", FullName: "Dmitry", FullSurname: "Mukhachev", Username: "muxa", Role: models.UserRoleUser, CreatedAt: time.Now().UTC()}, nil).
 		Once()
 
 	rec, req := s.requestWithUser(http.MethodGet, "/api/v1/auth/me", "", userID)

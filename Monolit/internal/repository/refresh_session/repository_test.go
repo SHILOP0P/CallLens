@@ -14,7 +14,7 @@ func (s *RepositorySuite) createUser() models.User {
 		PasswordHash: "hash",
 		FullName:     "Dmitry",
 		FullSurname:  "Mukhachev",
-		NickName:     "muxa",
+		Username:     "muxa",
 		Role:         models.UserRoleUser,
 		CreatedAt:    time.Now().UTC().Truncate(time.Microsecond),
 	}

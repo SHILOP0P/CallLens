@@ -8,13 +8,14 @@ import (
 )
 
 func (s *RepositorySuite) createUser(email string) models.User {
+	userID := uuid.New()
 	user := models.User{
-		ID:           uuid.New(),
+		ID:           userID,
 		Email:        email,
 		PasswordHash: "hash",
 		FullName:     "Dmitry",
 		FullSurname:  "Mukhachev",
-		NickName:     "muxa",
+		Username:     "@user_" + userID.String()[:6],
 		Role:         models.UserRoleUser,
 		CreatedAt:    time.Now().UTC().Truncate(time.Microsecond),
 	}
@@ -286,9 +287,26 @@ func (s *RepositorySuite) TestGetCompanyMembersOverview() {
 	s.Require().Equal(company.ID, overview.CompanyUUID)
 	s.Require().NotNil(overview.Manager)
 	s.Require().Equal(manager.ID, overview.Manager.UserUUID)
+	s.Require().Equal(manager.Username, overview.Manager.Username)
+	s.Require().Equal(manager.FullName, overview.Manager.FullName)
+	s.Require().Equal(manager.FullSurname, overview.Manager.FullSurname)
 	s.Require().Len(overview.CompanyEmployees, 2)
+	var employeeOverview *models.CompanyMember
+	for i := range overview.CompanyEmployees {
+		if overview.CompanyEmployees[i].UserUUID == employee.ID {
+			employeeOverview = &overview.CompanyEmployees[i]
+			break
+		}
+	}
+	s.Require().NotNil(employeeOverview)
+	s.Require().Equal(employee.Username, employeeOverview.Username)
+	s.Require().Equal(employee.FullName, employeeOverview.FullName)
+	s.Require().Equal(employee.FullSurname, employeeOverview.FullSurname)
 	s.Require().Len(overview.Departments, 1)
 	s.Require().Equal(departmentID, overview.Departments[0].Department.ID)
 	s.Require().Len(overview.Departments[0].Members, 1)
 	s.Require().Equal(departmentEmployee.ID, overview.Departments[0].Members[0].UserUUID)
+	s.Require().Equal(departmentEmployee.Username, overview.Departments[0].Members[0].Username)
+	s.Require().Equal(departmentEmployee.FullName, overview.Departments[0].Members[0].FullName)
+	s.Require().Equal(departmentEmployee.FullSurname, overview.Departments[0].Members[0].FullSurname)
 }

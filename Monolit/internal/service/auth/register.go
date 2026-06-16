@@ -3,6 +3,7 @@ package auth
 import (
 	"calllens/monolit/internal/auth/password"
 	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/username"
 	"context"
 	"errors"
 	"strings"
@@ -17,14 +18,13 @@ func (s *Service) Register(ctx context.Context, input model.CreateUserInput) (mo
 	input.Email = strings.TrimSpace(strings.ToLower(input.Email))
 	input.FullName = strings.TrimSpace(input.FullName)
 	input.FullSurname = strings.TrimSpace(input.FullSurname)
-	input.NickName = strings.TrimSpace(input.NickName)
+	input.Username = strings.TrimSpace(input.Username)
 	input.Post = normalizeOptionalString(input.Post)
 
 	if input.Email == "" ||
 		input.Password == "" ||
 		input.FullName == "" ||
-		input.FullSurname == "" ||
-		input.NickName == "" {
+		input.FullSurname == "" {
 		return model.User{}, model.ErrInvalidUserInput
 	}
 
@@ -37,6 +37,11 @@ func (s *Service) Register(ctx context.Context, input model.CreateUserInput) (mo
 		return model.User{}, model.ErrUserAlreadyExists
 	}
 	if !errors.Is(err, model.ErrUserNotFound) {
+		return model.User{}, err
+	}
+
+	normalizedUsername, err := s.usernameForNewUser(ctx, input)
+	if err != nil {
 		return model.User{}, err
 	}
 
@@ -56,7 +61,7 @@ func (s *Service) Register(ctx context.Context, input model.CreateUserInput) (mo
 		PasswordHash: passwordHash,
 		FullName:     input.FullName,
 		FullSurname:  input.FullSurname,
-		NickName:     input.NickName,
+		Username:     normalizedUsername,
 		Role:         defaultUserRole,
 		Post:         input.Post,
 		CreatedAt:    time.Now().UTC(),
@@ -83,6 +88,42 @@ func (s *Service) Register(ctx context.Context, input model.CreateUserInput) (mo
 	}
 
 	return createUser, nil
+}
+
+func (s *Service) usernameForNewUser(ctx context.Context, input model.CreateUserInput) (string, error) {
+	if input.Username != "" {
+		normalized, ok := username.Normalize(input.Username)
+		if !ok {
+			return "", model.ErrInvalidUserInput
+		}
+
+		_, err := s.userRepository.GetUserByUsername(ctx, normalized)
+		if err == nil {
+			return "", model.ErrUserAlreadyExists
+		}
+		if !errors.Is(err, model.ErrUserNotFound) {
+			return "", err
+		}
+
+		return normalized, nil
+	}
+
+	for range 10 {
+		generated, err := username.Generate(input.FullName, input.FullSurname, input.Email)
+		if err != nil {
+			return "", err
+		}
+
+		_, err = s.userRepository.GetUserByUsername(ctx, generated)
+		if errors.Is(err, model.ErrUserNotFound) {
+			return generated, nil
+		}
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return "", model.ErrUserAlreadyExists
 }
 
 func normalizeOptionalString(value *string) *string {

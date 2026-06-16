@@ -29,8 +29,10 @@ type UserRepository interface {
 	//GET
 	GetUserByUUID(ctx context.Context, id uuid.UUID) (models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (models.User, error)
+	GetUserByUsername(ctx context.Context, username string) (models.User, error)
 	//POST
 	CreateUser(ctx context.Context, user models.User) (models.User, error)
+	UpdateUsername(ctx context.Context, input models.UpdateUsernameInput) (models.User, error)
 }
 
 type CompanyRepository interface {

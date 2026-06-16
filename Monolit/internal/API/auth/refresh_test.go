@@ -16,7 +16,7 @@ func (s *APISuite) TestRefreshSuccess() {
 	userID := uuid.New()
 
 	s.service.On("Refresh", mock.Anything, models.RefreshTokenInput{RefreshToken: "refresh"}).
-		Return(models.User{ID: userID, Email: "user@example.com", FullName: "Dmitry", FullSurname: "Mukhachev", NickName: "muxa", Role: models.UserRoleUser, CreatedAt: time.Now().UTC()}, "access", "new-refresh", nil).
+		Return(models.User{ID: userID, Email: "user@example.com", FullName: "Dmitry", FullSurname: "Mukhachev", Username: "muxa", Role: models.UserRoleUser, CreatedAt: time.Now().UTC()}, "access", "new-refresh", nil).
 		Once()
 
 	rec, req := s.request(http.MethodPost, "/api/v1/auth/refresh", "")

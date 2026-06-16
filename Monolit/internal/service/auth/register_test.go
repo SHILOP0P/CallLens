@@ -13,17 +13,20 @@ func (s *ServiceSuite) TestRegisterSuccess() {
 		Password:    "password123",
 		FullName:    " Dmitry ",
 		FullSurname: " Mukhachev ",
-		NickName:    " muxa ",
+		Username:    " muxa ",
 	}
 
 	s.userRepository.On("GetUserByEmail", s.ctx, "user@example.com").
+		Return(models.User{}, models.ErrUserNotFound).
+		Once()
+	s.userRepository.On("GetUserByUsername", s.ctx, "@muxa").
 		Return(models.User{}, models.ErrUserNotFound).
 		Once()
 	s.userRepository.On("CreateUser", s.ctx, mock.MatchedBy(func(user models.User) bool {
 		return user.Email == "user@example.com" &&
 			user.FullName == "Dmitry" &&
 			user.FullSurname == "Mukhachev" &&
-			user.NickName == "muxa" &&
+			user.Username == "@muxa" &&
 			user.Role == models.UserRoleUser &&
 			user.PasswordHash != ""
 	})).
@@ -45,7 +48,7 @@ func (s *ServiceSuite) TestRegisterRejectsInvalidInput() {
 		Password:    "short",
 		FullName:    "Dmitry",
 		FullSurname: "Mukhachev",
-		NickName:    "muxa",
+		Username:    "muxa",
 	})
 
 	s.Require().ErrorIs(err, models.ErrInvalidUserInput)
@@ -57,7 +60,7 @@ func (s *ServiceSuite) TestRegisterRejectsExistingUser() {
 		Password:    "password123",
 		FullName:    "Dmitry",
 		FullSurname: "Mukhachev",
-		NickName:    "muxa",
+		Username:    "muxa",
 	}
 
 	s.userRepository.On("GetUserByEmail", s.ctx, "user@example.com").

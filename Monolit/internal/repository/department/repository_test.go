@@ -8,13 +8,14 @@ import (
 )
 
 func (s *RepositorySuite) createUser(email string) models.User {
+	userID := uuid.New()
 	user := models.User{
-		ID:           uuid.New(),
+		ID:           userID,
 		Email:        email,
 		PasswordHash: "hash",
 		FullName:     "Dmitry",
 		FullSurname:  "Mukhachev",
-		NickName:     "muxa",
+		Username:     "@user_" + userID.String()[:6],
 		Role:         models.UserRoleUser,
 		CreatedAt:    time.Now().UTC().Truncate(time.Microsecond),
 	}
@@ -177,6 +178,9 @@ func (s *RepositorySuite) TestListDepartmentMembersReturnsOnlyActiveMembers() {
 	s.Require().NoError(err)
 	s.Require().Len(members, 1)
 	s.Require().Equal(active.ID, members[0].UserUUID)
+	s.Require().Equal(active.Username, members[0].Username)
+	s.Require().Equal(active.FullName, members[0].FullName)
+	s.Require().Equal(active.FullSurname, members[0].FullSurname)
 }
 
 func (s *RepositorySuite) TestListDepartmentMembersRejectsMissingDepartment() {

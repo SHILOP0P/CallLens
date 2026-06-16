@@ -2,9 +2,6 @@ package department
 
 import (
 	model "calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/converter"
-	repoModel "calllens/monolit/internal/repository/models"
-	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"fmt"
 
@@ -23,11 +20,15 @@ func (r *Repository) ListDepartmentMembers(ctx context.Context, companyID uuid.U
 	query := `
 	SELECT dm.department_uuid,
 	       dm.user_uuid,
+	       u.username,
+	       u.full_name,
+	       u.full_surname,
 	       dm.role,
 	       dm.status,
 	       dm.created_at
 	FROM department_members dm
 	JOIN departments d ON d.department_uuid = dm.department_uuid
+	JOIN users u ON u.user_uuid = dm.user_uuid
 	WHERE d.company_uuid = $1
 	  AND dm.department_uuid = $2
 	  AND dm.status = 'active'
@@ -40,26 +41,30 @@ func (r *Repository) ListDepartmentMembers(ctx context.Context, companyID uuid.U
 	}
 	defer rows.Close()
 
-	var repoMembers []repoModel.DepartmentMember
+	var members []model.DepartmentMember
 	for rows.Next() {
-		member, err := scaner.ScanDepartmentMember(rows)
-		if err != nil {
+		var member model.DepartmentMember
+		if err := rows.Scan(
+			&member.DepartmentUUID,
+			&member.UserUUID,
+			&member.Username,
+			&member.FullName,
+			&member.FullSurname,
+			&member.Role,
+			&member.Status,
+			&member.CreatedAt,
+		); err != nil {
 			return nil, fmt.Errorf("list department members: %w", err)
 		}
 
-		repoMembers = append(repoMembers, member)
+		members = append(members, member)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("list department members: %w", err)
 	}
 
-	result := make([]model.DepartmentMember, len(repoMembers))
-	for i, member := range repoMembers {
-		result[i], _ = converter.RepoDepartmentMemberToModel(member)
-	}
-
-	return result, nil
+	return members, nil
 }
 
 func (r *Repository) departmentExists(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID) (bool, error) {

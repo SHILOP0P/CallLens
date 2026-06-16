@@ -195,6 +195,120 @@ func (_c *UserRepository_GetUserByUUID_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
+// GetUserByUsername provides a mock function with given fields: ctx, username
+func (_m *UserRepository) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
+	ret := _m.Called(ctx, username)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUserByUsername")
+	}
+
+	var r0 models.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (models.User, error)); ok {
+		return rf(ctx, username)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) models.User); ok {
+		r0 = rf(ctx, username)
+	} else {
+		r0 = ret.Get(0).(models.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, username)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UserRepository_GetUserByUsername_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserByUsername'
+type UserRepository_GetUserByUsername_Call struct {
+	*mock.Call
+}
+
+// GetUserByUsername is a helper method to define mock.On call
+//   - ctx context.Context
+//   - username string
+func (_e *UserRepository_Expecter) GetUserByUsername(ctx interface{}, username interface{}) *UserRepository_GetUserByUsername_Call {
+	return &UserRepository_GetUserByUsername_Call{Call: _e.mock.On("GetUserByUsername", ctx, username)}
+}
+
+func (_c *UserRepository_GetUserByUsername_Call) Run(run func(ctx context.Context, username string)) *UserRepository_GetUserByUsername_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *UserRepository_GetUserByUsername_Call) Return(_a0 models.User, _a1 error) *UserRepository_GetUserByUsername_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *UserRepository_GetUserByUsername_Call) RunAndReturn(run func(context.Context, string) (models.User, error)) *UserRepository_GetUserByUsername_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateUsername provides a mock function with given fields: ctx, input
+func (_m *UserRepository) UpdateUsername(ctx context.Context, input models.UpdateUsernameInput) (models.User, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateUsername")
+	}
+
+	var r0 models.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateUsernameInput) (models.User, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateUsernameInput) models.User); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateUsernameInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UserRepository_UpdateUsername_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUsername'
+type UserRepository_UpdateUsername_Call struct {
+	*mock.Call
+}
+
+// UpdateUsername is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UpdateUsernameInput
+func (_e *UserRepository_Expecter) UpdateUsername(ctx interface{}, input interface{}) *UserRepository_UpdateUsername_Call {
+	return &UserRepository_UpdateUsername_Call{Call: _e.mock.On("UpdateUsername", ctx, input)}
+}
+
+func (_c *UserRepository_UpdateUsername_Call) Run(run func(ctx context.Context, input models.UpdateUsernameInput)) *UserRepository_UpdateUsername_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UpdateUsernameInput))
+	})
+	return _c
+}
+
+func (_c *UserRepository_UpdateUsername_Call) Return(_a0 models.User, _a1 error) *UserRepository_UpdateUsername_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *UserRepository_UpdateUsername_Call) RunAndReturn(run func(context.Context, models.UpdateUsernameInput) (models.User, error)) *UserRepository_UpdateUsername_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewUserRepository creates a new instance of UserRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewUserRepository(t interface {

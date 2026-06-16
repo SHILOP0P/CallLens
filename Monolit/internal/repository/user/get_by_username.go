@@ -10,7 +10,7 @@ import (
 	"fmt"
 )
 
-func (r *Repository) GetUserByEmail(ctx context.Context, email string) (model.User, error) {
+func (r *Repository) GetUserByUsername(ctx context.Context, username string) (model.User, error) {
 	query := `SELECT user_uuid,
 	       email,
 	       password_hash,
@@ -21,16 +21,16 @@ func (r *Repository) GetUserByEmail(ctx context.Context, email string) (model.Us
 	       post,
 	       created_at
 	FROM users
-	WHERE lower(email) = lower($1)`
+	WHERE lower(username) = lower($1)`
 
-	row := r.db.QueryRowContext(ctx, query, email)
+	row := r.db.QueryRowContext(ctx, query, username)
 
 	repoUser, err := scaner.ScanUser(row)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return model.User{}, model.ErrUserNotFound
 		}
-		return model.User{}, fmt.Errorf("get user by email: %w", err)
+		return model.User{}, fmt.Errorf("get user by username: %w", err)
 	}
 	return converter.RepoUserToModel(repoUser)
 }

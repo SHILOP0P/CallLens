@@ -26,6 +26,8 @@ type AuthAPI interface {
 	Logout(w http.ResponseWriter, r *http.Request)
 	LogoutAll(w http.ResponseWriter, r *http.Request)
 	Me(w http.ResponseWriter, r *http.Request)
+	UpdateUsername(w http.ResponseWriter, r *http.Request)
+	LookupUser(w http.ResponseWriter, r *http.Request)
 }
 
 type CompanyAPI interface {

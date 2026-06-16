@@ -176,8 +176,27 @@ func (f *serviceFixture) GetUserByEmail(ctx context.Context, email string) (mode
 	return models.User{}, models.ErrUserNotFound
 }
 
+func (f *serviceFixture) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
+	for _, user := range f.users {
+		if user.Username == username {
+			return user, nil
+		}
+	}
+	return models.User{}, models.ErrUserNotFound
+}
+
 func (f *serviceFixture) CreateUser(ctx context.Context, user models.User) (models.User, error) {
 	f.users[user.ID] = user
+	return user, nil
+}
+
+func (f *serviceFixture) UpdateUsername(ctx context.Context, input models.UpdateUsernameInput) (models.User, error) {
+	user, ok := f.users[input.UserUUID]
+	if !ok {
+		return models.User{}, models.ErrUserNotFound
+	}
+	user.Username = input.Username
+	f.users[input.UserUUID] = user
 	return user, nil
 }
 

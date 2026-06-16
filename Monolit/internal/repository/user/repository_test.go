@@ -17,7 +17,7 @@ func testUser() models.User {
 		PasswordHash: "hash",
 		FullName:     "Dmitry",
 		FullSurname:  "Mukhachev",
-		NickName:     "muxa",
+		Username:     "muxa",
 		Role:         models.UserRoleUser,
 		Post:         &post,
 		CreatedAt:    time.Now().UTC().Truncate(time.Microsecond),
@@ -34,7 +34,7 @@ func (s *RepositorySuite) TestCreateUserAndGetByUUID() {
 	s.Require().Equal(input.PasswordHash, created.PasswordHash)
 	s.Require().Equal(input.FullName, created.FullName)
 	s.Require().Equal(input.FullSurname, created.FullSurname)
-	s.Require().Equal(input.NickName, created.NickName)
+	s.Require().Equal(input.Username, created.Username)
 	s.Require().Equal(input.Role, created.Role)
 	s.Require().NotNil(created.Post)
 	s.Require().Equal(*input.Post, *created.Post)

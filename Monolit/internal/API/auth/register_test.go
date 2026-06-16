@@ -12,17 +12,17 @@ import (
 
 func (s *APISuite) TestRegisterSuccess() {
 	userID := uuid.New()
-	body := `{"email":"user@example.com","password":"password123","full_name":"Dmitry","full_surname":"Mukhachev","nick_name":"muxa"}`
+	body := `{"email":"user@example.com","password":"password123","full_name":"Dmitry","full_surname":"Mukhachev","username":"muxa"}`
 	input := models.CreateUserInput{
 		Email:       "user@example.com",
 		Password:    "password123",
 		FullName:    "Dmitry",
 		FullSurname: "Mukhachev",
-		NickName:    "muxa",
+		Username:    "muxa",
 	}
 
 	s.service.On("Register", mock.Anything, input).
-		Return(models.User{ID: userID, Email: input.Email, FullName: input.FullName, FullSurname: input.FullSurname, NickName: input.NickName, Role: models.UserRoleUser, CreatedAt: time.Now().UTC()}, nil).
+		Return(models.User{ID: userID, Email: input.Email, FullName: input.FullName, FullSurname: input.FullSurname, Username: input.Username, Role: models.UserRoleUser, CreatedAt: time.Now().UTC()}, nil).
 		Once()
 
 	rec, req := s.request(http.MethodPost, "/api/v1/auth/register", body)
@@ -42,13 +42,13 @@ func (s *APISuite) TestRegisterRejectsInvalidBody() {
 }
 
 func (s *APISuite) TestRegisterMapsAlreadyExists() {
-	body := `{"email":"user@example.com","password":"password123","full_name":"Dmitry","full_surname":"Mukhachev","nick_name":"muxa"}`
+	body := `{"email":"user@example.com","password":"password123","full_name":"Dmitry","full_surname":"Mukhachev","username":"muxa"}`
 	input := models.CreateUserInput{
 		Email:       "user@example.com",
 		Password:    "password123",
 		FullName:    "Dmitry",
 		FullSurname: "Mukhachev",
-		NickName:    "muxa",
+		Username:    "muxa",
 	}
 
 	s.service.On("Register", mock.Anything, input).

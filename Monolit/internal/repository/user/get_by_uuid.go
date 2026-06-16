@@ -19,7 +19,7 @@ func (r *Repository) GetUserByUUID(ctx context.Context, id uuid.UUID) (model.Use
 	       password_hash,
 	       full_name,
 	       full_surname,
-	       nick_name,
+	       username,
 	       role,
 	       post,
 	       created_at
