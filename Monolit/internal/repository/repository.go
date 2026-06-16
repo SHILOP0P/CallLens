@@ -89,6 +89,16 @@ type AnalysisRepository interface {
 	MarkFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.CallAnalysis, error)
 }
 
+type ReportRepository interface {
+	Create(ctx context.Context, report models.ReportExport) (models.ReportExport, error)
+	MarkReady(ctx context.Context, input models.MarkReportReadyInput) (models.ReportExport, error)
+	MarkFailed(ctx context.Context, input models.MarkReportFailedInput) (models.ReportExport, error)
+	GetByUUID(ctx context.Context, id uuid.UUID) (models.ReportExport, error)
+	ListByCallUUID(ctx context.Context, callID uuid.UUID, now time.Time) ([]models.ReportExport, error)
+	ListExpiredReady(ctx context.Context, now time.Time, limit int) ([]models.ReportExport, error)
+	Delete(ctx context.Context, id uuid.UUID) error
+}
+
 type ProcessingJobRepository interface {
 	Create(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error)
 	Enqueue(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error)

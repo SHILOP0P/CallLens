@@ -82,6 +82,15 @@ var ErrExportAccessDenied = errors.New("export access denied")
 var ErrTeamAnalyticsAccessDenied = errors.New("team analytics access denied")
 var ErrAPIAccessDenied = errors.New("api access denied")
 
+// REPORT
+var ErrReportNotFound = errors.New("report not found")
+var ErrInvalidReportInput = errors.New("invalid report input")
+var ErrUnsupportedReportFormat = errors.New("unsupported report format")
+var ErrReportFileNotFound = errors.New("report file not found")
+var ErrInvalidReportPath = errors.New("invalid report path")
+var ErrReportNotReady = errors.New("report not ready")
+var ErrReportExpired = errors.New("report expired")
+
 // INVITATION
 var ErrInvitationNotFound = errors.New("invitation not found")
 var ErrInvalidInvitationInput = errors.New("invalid invitation input")

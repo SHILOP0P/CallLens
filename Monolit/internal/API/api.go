@@ -59,6 +59,13 @@ type AnalysisAPI interface {
 	GetByCallUUID(w http.ResponseWriter, r *http.Request)
 }
 
+type ReportAPI interface {
+	Create(w http.ResponseWriter, r *http.Request)
+	ListByCallUUID(w http.ResponseWriter, r *http.Request)
+	Download(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+}
+
 type BillingAPI interface {
 	ListPlans(w http.ResponseWriter, r *http.Request)
 	GetPersonalSubscription(w http.ResponseWriter, r *http.Request)

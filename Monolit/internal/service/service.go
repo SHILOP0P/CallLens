@@ -64,6 +64,13 @@ type AnalysisService interface {
 	GetByCallUUID(ctx context.Context, callUUID uuid.UUID, userID uuid.UUID) (models.CallAnalysis, error)
 }
 
+type ReportService interface {
+	Create(ctx context.Context, input models.CreateReportInput) (models.ReportExport, error)
+	ListByCallUUID(ctx context.Context, callID uuid.UUID, userID uuid.UUID) ([]models.ReportExport, error)
+	GetFile(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) (models.ReportFile, error)
+	Delete(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) error
+}
+
 type BillingService interface {
 	ListPlans(ctx context.Context) ([]models.Plan, error)
 	GetPersonalSubscription(ctx context.Context, userID uuid.UUID) (models.Subscription, error)

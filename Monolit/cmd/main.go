@@ -9,6 +9,7 @@ import (
 	companyAPI "calllens/monolit/internal/API/company"
 	departmentAPI "calllens/monolit/internal/API/department"
 	invitationAPI "calllens/monolit/internal/API/invitation"
+	reportAPI "calllens/monolit/internal/API/report"
 	"calllens/monolit/internal/analyzer"
 	"calllens/monolit/internal/config"
 	"calllens/monolit/internal/httpserver"
@@ -23,6 +24,7 @@ import (
 	invitationRepo "calllens/monolit/internal/repository/invitation"
 	processingJobRepo "calllens/monolit/internal/repository/processing_job"
 	refreshSessionRepo "calllens/monolit/internal/repository/refresh_session"
+	reportRepo "calllens/monolit/internal/repository/report"
 	transcriptionRepo "calllens/monolit/internal/repository/transcription"
 	userRepo "calllens/monolit/internal/repository/user"
 	analysisService "calllens/monolit/internal/service/analysis"
@@ -34,8 +36,10 @@ import (
 	departmentService "calllens/monolit/internal/service/department"
 	invitationService "calllens/monolit/internal/service/invitation"
 	processingService "calllens/monolit/internal/service/processing"
+	reportService "calllens/monolit/internal/service/report"
 	"calllens/monolit/internal/storage/audio"
 	"calllens/monolit/internal/storage/instruction"
+	reportStorage "calllens/monolit/internal/storage/report"
 	"calllens/monolit/internal/transcriber"
 	"context"
 	"net/http"
@@ -56,6 +60,7 @@ const (
 
 	audioUploadDirName       = "audio"
 	instructionUploadDirName = "instructions"
+	reportUploadDirName      = "reports"
 )
 
 func main() {
@@ -111,8 +116,9 @@ func main() {
 	uploadPath := config.AppConfig().Upload.Path()
 	audioUploadPath := filepath.Join(uploadPath, audioUploadDirName)
 	instructionUploadPath := filepath.Join(uploadPath, instructionUploadDirName)
+	reportUploadPath := filepath.Join(uploadPath, reportUploadDirName)
 
-	for _, dir := range []string{audioUploadPath, instructionUploadPath} {
+	for _, dir := range []string{audioUploadPath, instructionUploadPath, reportUploadPath} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			appLogger.Error(ctx, "failed to create upload directory", zap.String("path", dir), zap.Error(err))
 			return
@@ -121,6 +127,7 @@ func main() {
 
 	audioStorage := audio.NewLocalStorage(audioUploadPath)
 	instructionStorage := instruction.NewLocalStorage(instructionUploadPath)
+	reportsStorage := reportStorage.NewLocalStorage(reportUploadPath)
 
 	analysisInstructionRepository := analysisInstructionRepo.NewRepository(sqlDB)
 	analysisRepository := analysisRepo.NewRepository(sqlDB)
@@ -133,6 +140,7 @@ func main() {
 	transcriptionRepository := transcriptionRepo.NewRepository(sqlDB)
 	processingJobRepository := processingJobRepo.NewRepository(sqlDB)
 	billingRepository := billingRepo.NewRepository(sqlDB)
+	reportRepository := reportRepo.NewRepository(sqlDB)
 
 	transcriberProvider, err := transcriber.NewFromConfig(config.AppConfig().Transcriber)
 	if err != nil {
@@ -193,12 +201,14 @@ func main() {
 	invitationSvc := invitationService.NewService(invitationRepository, userRepository, companyRepository, departmentRepository, appLogger)
 	instructionSvc := analysisInstructionService.NewService(analysisInstructionRepository, companyRepository, departmentRepository, instructionStorage, appLogger)
 	billingSvc := billingService.NewService(billingRepository)
+	reportSvc := reportService.NewService(callRepository, analysisRepository, transcriptionRepository, reportRepository, reportsStorage)
 	billingSvc.SetCompanyRepository(companyRepository)
 	callSvc.SetBillingLimiter(billingSvc)
 	companySvc.SetBillingLimiter(billingSvc)
 	departmentSvc.SetBillingLimiter(billingSvc)
 	invitationSvc.SetBillingLimiter(billingSvc)
 	instructionSvc.SetBillingLimiter(billingSvc)
+	reportSvc.SetBillingLimiter(billingSvc)
 
 	callHandler := call.NewCallHandler(callSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc, config.AppConfig().Auth.AccessTokenTTL(), config.AppConfig().Auth.RefreshTokenTTL())
@@ -207,9 +217,10 @@ func main() {
 	invitationHandler := invitationAPI.NewHandler(invitationSvc)
 	instructionHandler := instructionAPI.NewHandler(instructionSvc)
 	analysisHandler := analysisAPI.NewHandler(analysisSvc)
+	reportHandler := reportAPI.NewHandler(reportSvc)
 	billingHandler := billingAPI.NewHandler(billingSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, billingHandler, invitationHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

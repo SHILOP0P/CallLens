@@ -17,3 +17,9 @@ type InstructionStorage interface {
 	Open(ctx context.Context, path string) (io.ReadCloser, error)
 	Delete(ctx context.Context, path string) error
 }
+
+type ReportStorage interface {
+	Save(ctx context.Context, input models.SaveReportInput) (models.SavedReportFile, error)
+	Open(ctx context.Context, path string) (io.ReadCloser, error)
+	Delete(ctx context.Context, path string) error
+}
