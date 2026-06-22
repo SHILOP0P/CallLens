@@ -2,6 +2,8 @@ package report
 
 import (
 	"calllens/monolit/internal/models"
+	repositoryMocks "calllens/monolit/internal/repository/mocks"
+	storageMocks "calllens/monolit/internal/storage/mocks"
 	"context"
 	"io"
 	"strings"
@@ -9,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -101,6 +104,97 @@ func TestDeleteRemovesStorageFileAndRepositoryRow(t *testing.T) {
 	require.Empty(t, reports.items)
 }
 
+func TestReadOperations(t *testing.T) {
+	ctx := context.Background()
+	now := time.Now().UTC()
+	callID := uuid.New()
+	userID := uuid.New()
+	reportID := uuid.New()
+	path := "report.md"
+	report := models.ReportExport{
+		ID: reportID, CallUUID: callID, Status: models.ReportStatusReady,
+		StoragePath: &path, ExpiresAt: now.Add(time.Hour),
+	}
+	callRepo := repositoryMocks.NewCallRepository(t)
+	reports := repositoryMocks.NewReportRepository(t)
+	storage := storageMocks.NewReportStorage(t)
+	callRepo.EXPECT().GetByUUID(mock.Anything, callID, userID).Return(testCall(callID), nil).Twice()
+	reports.EXPECT().ListByCallUUID(mock.Anything, callID, now).Return([]models.ReportExport{report}, nil).Once()
+	reports.EXPECT().GetByUUID(mock.Anything, reportID).Return(report, nil).Once()
+	storage.EXPECT().Open(mock.Anything, path).Return(io.NopCloser(strings.NewReader("content")), nil).Once()
+	svc := NewService(callRepo, nil, nil, reports, storage)
+	svc.now = func() time.Time { return now }
+	svc.SetRetention(time.Hour)
+	require.Equal(t, time.Hour, svc.retention)
+	svc.SetRetention(0)
+	require.Equal(t, time.Hour, svc.retention)
+
+	list, err := svc.ListByCallUUID(ctx, callID, userID)
+	require.NoError(t, err)
+	require.Len(t, list, 1)
+
+	file, err := svc.GetFile(ctx, reportID, userID)
+	require.NoError(t, err)
+	require.NotNil(t, file.Content)
+	_ = file.Content.Close()
+
+	require.ErrorIs(t, func() error {
+		_, err := svc.ListByCallUUID(ctx, uuid.Nil, userID)
+		return err
+	}(), models.ErrInvalidReportInput)
+	require.ErrorIs(t, func() error {
+		_, err := svc.GetFile(ctx, uuid.Nil, userID)
+		return err
+	}(), models.ErrInvalidReportInput)
+}
+
+func TestGetFileStateValidationAndDeleteExpired(t *testing.T) {
+	ctx := context.Background()
+	now := time.Now().UTC()
+	callID := uuid.New()
+	userID := uuid.New()
+	path := "report.md"
+
+	for _, tt := range []struct {
+		name   string
+		report models.ReportExport
+		err    error
+	}{
+		{name: "expired", report: models.ReportExport{CallUUID: callID, Status: models.ReportStatusReady, StoragePath: &path, ExpiresAt: now}, err: models.ErrReportExpired},
+		{name: "pending", report: models.ReportExport{CallUUID: callID, Status: models.ReportStatusPending, StoragePath: &path, ExpiresAt: now.Add(time.Hour)}, err: models.ErrReportNotReady},
+		{name: "no path", report: models.ReportExport{CallUUID: callID, Status: models.ReportStatusReady, ExpiresAt: now.Add(time.Hour)}, err: models.ErrReportFileNotFound},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			id := uuid.New()
+			tt.report.ID = id
+			callRepo := repositoryMocks.NewCallRepository(t)
+			reports := repositoryMocks.NewReportRepository(t)
+			storage := storageMocks.NewReportStorage(t)
+			reports.EXPECT().GetByUUID(mock.Anything, id).Return(tt.report, nil).Once()
+			callRepo.EXPECT().GetByUUID(mock.Anything, callID, userID).Return(testCall(callID), nil).Once()
+			svc := NewService(callRepo, nil, nil, reports, storage)
+			svc.now = func() time.Time { return now }
+			_, err := svc.GetFile(ctx, id, userID)
+			require.ErrorIs(t, err, tt.err)
+		})
+	}
+
+	firstID, secondID := uuid.New(), uuid.New()
+	reports := repositoryMocks.NewReportRepository(t)
+	storage := storageMocks.NewReportStorage(t)
+	reports.EXPECT().ListExpiredReady(mock.Anything, mock.Anything, 10).Return([]models.ReportExport{
+		{ID: firstID, StoragePath: &path},
+		{ID: secondID},
+	}, nil).Once()
+	storage.EXPECT().Delete(mock.Anything, path).Return(nil).Once()
+	reports.EXPECT().Delete(mock.Anything, firstID).Return(nil).Once()
+	reports.EXPECT().Delete(mock.Anything, secondID).Return(nil).Once()
+	svc := NewService(nil, nil, nil, reports, storage)
+	deleted, err := svc.DeleteExpired(ctx, 10)
+	require.NoError(t, err)
+	require.Equal(t, 2, deleted)
+}
+
 func testCall(id uuid.UUID) models.Call {
 	return models.Call{
 		ID:              id,
@@ -189,7 +283,9 @@ func (f *fakeTranscriptionRepository) MarkFailed(context.Context, uuid.UUID, str
 }
 
 type fakeReportRepository struct {
-	items map[uuid.UUID]models.ReportExport
+	items   map[uuid.UUID]models.ReportExport
+	list    []models.ReportExport
+	expired []models.ReportExport
 }
 
 func (f *fakeReportRepository) Create(_ context.Context, report models.ReportExport) (models.ReportExport, error) {
@@ -220,10 +316,10 @@ func (f *fakeReportRepository) GetByUUID(_ context.Context, id uuid.UUID) (model
 	return f.items[id], nil
 }
 func (f *fakeReportRepository) ListByCallUUID(context.Context, uuid.UUID, time.Time) ([]models.ReportExport, error) {
-	return nil, nil
+	return f.list, nil
 }
 func (f *fakeReportRepository) ListExpiredReady(context.Context, time.Time, int) ([]models.ReportExport, error) {
-	return nil, nil
+	return f.expired, nil
 }
 func (f *fakeReportRepository) Delete(_ context.Context, id uuid.UUID) error {
 	delete(f.items, id)
@@ -234,6 +330,7 @@ type fakeReportStorage struct {
 	saved       models.SaveReportInput
 	content     string
 	deletedPath string
+	openContent string
 }
 
 func (f *fakeReportStorage) Save(_ context.Context, input models.SaveReportInput) (models.SavedReportFile, error) {
@@ -246,7 +343,9 @@ func (f *fakeReportStorage) Save(_ context.Context, input models.SaveReportInput
 		SizeBytes: int64(len(content)),
 	}, nil
 }
-func (f *fakeReportStorage) Open(context.Context, string) (io.ReadCloser, error) { return nil, nil }
+func (f *fakeReportStorage) Open(context.Context, string) (io.ReadCloser, error) {
+	return io.NopCloser(strings.NewReader(f.openContent)), nil
+}
 func (f *fakeReportStorage) Delete(_ context.Context, path string) error {
 	f.deletedPath = path
 	return nil

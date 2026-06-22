@@ -81,3 +81,51 @@ func (s *RepositorySuite) TestCreateUserRejectsDuplicateEmailCaseInsensitive() {
 
 	s.Require().Error(err)
 }
+
+func (s *RepositorySuite) TestGetByUsernameAndUpdateUsername() {
+	input := testUser()
+	created, err := s.repository.CreateUser(s.ctx, input)
+	s.Require().NoError(err)
+
+	got, err := s.repository.GetUserByUsername(s.ctx, strings.ToUpper(created.Username))
+	s.Require().NoError(err)
+	s.Require().Equal(created.ID, got.ID)
+
+	updated, err := s.repository.UpdateUsername(s.ctx, models.UpdateUsernameInput{
+		UserUUID: created.ID,
+		Username: "updated_username",
+	})
+	s.Require().NoError(err)
+	s.Require().Equal("updated_username", updated.Username)
+
+	got, err = s.repository.GetUserByUsername(s.ctx, "UPDATED_USERNAME")
+	s.Require().NoError(err)
+	s.Require().Equal(created.ID, got.ID)
+
+	_, err = s.repository.GetUserByUsername(s.ctx, "missing")
+	s.Require().ErrorIs(err, models.ErrUserNotFound)
+	_, err = s.repository.UpdateUsername(s.ctx, models.UpdateUsernameInput{
+		UserUUID: uuid.New(),
+		Username: "missing_user",
+	})
+	s.Require().ErrorIs(err, models.ErrUserNotFound)
+}
+
+func (s *RepositorySuite) TestUpdateUsernameRejectsDuplicateCaseInsensitive() {
+	first := testUser()
+	_, err := s.repository.CreateUser(s.ctx, first)
+	s.Require().NoError(err)
+
+	second := testUser()
+	second.ID = uuid.New()
+	second.Email = "second@example.com"
+	second.Username = "second_user"
+	_, err = s.repository.CreateUser(s.ctx, second)
+	s.Require().NoError(err)
+
+	_, err = s.repository.UpdateUsername(s.ctx, models.UpdateUsernameInput{
+		UserUUID: second.ID,
+		Username: strings.ToUpper(first.Username),
+	})
+	s.Require().ErrorIs(err, models.ErrUserAlreadyExists)
+}

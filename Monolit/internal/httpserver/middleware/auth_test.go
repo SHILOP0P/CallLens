@@ -57,6 +57,7 @@ func TestAuthAcceptsAccessTokenCookie(t *testing.T) {
 
 type authRefreshSessionRepository struct {
 	session models.RefreshSession
+	err     error
 }
 
 func (r *authRefreshSessionRepository) CreateRefreshSession(ctx context.Context, session models.RefreshSession) (models.RefreshSession, error) {
@@ -68,6 +69,9 @@ func (r *authRefreshSessionRepository) GetRefreshSessionByHash(ctx context.Conte
 }
 
 func (r *authRefreshSessionRepository) GetRefreshSessionByUUID(ctx context.Context, sessionID uuid.UUID) (models.RefreshSession, error) {
+	if r.err != nil {
+		return models.RefreshSession{}, r.err
+	}
 	if r.session.ID != sessionID {
 		return models.RefreshSession{}, models.ErrRefreshSessionNotFound
 	}

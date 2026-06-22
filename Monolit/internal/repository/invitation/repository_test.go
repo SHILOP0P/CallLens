@@ -196,3 +196,71 @@ func (s *RepositorySuite) TestAcceptExpiredInvitationMarksExpired() {
 	s.Require().NoError(err)
 	s.Require().Equal(models.InvitationStatusExpired, got.Status)
 }
+
+func (s *RepositorySuite) TestListCompanyDeclineAndCancelInvitations() {
+	company, manager := s.createCompanyWithManager()
+	firstUser := s.createUser(uuid.NewString() + "@example.com")
+	secondUser := s.createUser(uuid.NewString() + "@example.com")
+	first, err := s.repository.CreateInvitation(s.ctx, testInvitation(company.ID, firstUser.ID, manager.ID))
+	s.Require().NoError(err)
+	second, err := s.repository.CreateInvitation(s.ctx, testInvitation(company.ID, secondUser.ID, manager.ID))
+	s.Require().NoError(err)
+
+	list, err := s.repository.ListCompanyInvitations(s.ctx, company.ID, "")
+	s.Require().NoError(err)
+	s.Require().Len(list, 2)
+
+	now := time.Now().UTC()
+	declined, err := s.repository.DeclineInvitation(s.ctx, first.ID, now)
+	s.Require().NoError(err)
+	s.Require().Equal(models.InvitationStatusDeclined, declined.Status)
+	s.Require().NotNil(declined.RespondedAt)
+
+	canceled, err := s.repository.CancelInvitation(s.ctx, second.ID, now)
+	s.Require().NoError(err)
+	s.Require().Equal(models.InvitationStatusCanceled, canceled.Status)
+
+	declinedList, err := s.repository.ListCompanyInvitations(
+		s.ctx, company.ID, models.InvitationStatusDeclined,
+	)
+	s.Require().NoError(err)
+	s.Require().Len(declinedList, 1)
+	s.Require().Equal(first.ID, declinedList[0].ID)
+
+	_, err = s.repository.DeclineInvitation(s.ctx, first.ID, now)
+	s.Require().ErrorIs(err, models.ErrInvitationNotPending)
+	_, err = s.repository.CancelInvitation(s.ctx, uuid.New(), now)
+	s.Require().ErrorIs(err, models.ErrInvitationNotFound)
+}
+
+func (s *RepositorySuite) TestGetAndAcceptMissingInvitation() {
+	_, err := s.repository.GetInvitationByUUID(s.ctx, uuid.New())
+	s.Require().ErrorIs(err, models.ErrInvitationNotFound)
+
+	_, err = s.repository.AcceptInvitation(s.ctx, uuid.New(), time.Now().UTC())
+	s.Require().ErrorIs(err, models.ErrInvitationNotFound)
+}
+
+func (s *RepositorySuite) TestAcceptRejectsNonPendingAndDepartmentUserOutsideCompany() {
+	company, manager := s.createCompanyWithManager()
+	department := s.createDepartment(company.ID)
+	invited := s.createUser(uuid.NewString() + "@example.com")
+
+	declinedInvitation, err := s.repository.CreateInvitation(
+		s.ctx, testInvitation(company.ID, invited.ID, manager.ID),
+	)
+	s.Require().NoError(err)
+	_, err = s.repository.DeclineInvitation(s.ctx, declinedInvitation.ID, time.Now().UTC())
+	s.Require().NoError(err)
+	_, err = s.repository.AcceptInvitation(s.ctx, declinedInvitation.ID, time.Now().UTC())
+	s.Require().ErrorIs(err, models.ErrInvitationNotPending)
+
+	role := models.DepartmentMemberRoleEmployee
+	departmentInvitation := testInvitation(company.ID, invited.ID, manager.ID)
+	departmentInvitation.DepartmentUUID = uuid.NullUUID{UUID: department.ID, Valid: true}
+	departmentInvitation.DepartmentRole = &role
+	created, err := s.repository.CreateInvitation(s.ctx, departmentInvitation)
+	s.Require().NoError(err)
+	_, err = s.repository.AcceptInvitation(s.ctx, created.ID, time.Now().UTC())
+	s.Require().ErrorIs(err, models.ErrForbidden)
+}

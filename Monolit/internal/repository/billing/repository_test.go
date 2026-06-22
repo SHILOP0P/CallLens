@@ -121,6 +121,105 @@ func (s *RepositorySuite) TestAddUsageMinutesAccumulatesCurrentPeriod() {
 	s.Require().Equal(7, usedMinutes)
 }
 
+func (s *RepositorySuite) TestPersonalSubscriptionPlanAndUsageLifecycle() {
+	userID := s.createUser("personal-subscription@example.com")
+	plan, err := s.repository.GetPlanByCode(s.ctx, models.PlanCodePersonalPlus)
+	s.Require().NoError(err)
+	s.Require().Equal(models.PlanTypePersonal, plan.Type)
+
+	created, err := s.repository.ActivatePersonalSubscription(s.ctx, models.ActivatePersonalSubscriptionInput{
+		UserUUID: userID,
+		PlanCode: models.PlanCodePersonalStart,
+	}, time.Time{})
+	s.Require().NoError(err)
+	s.Require().Equal(models.PlanCodePersonalStart, created.Plan.Code)
+
+	updated, err := s.repository.ActivatePersonalSubscription(s.ctx, models.ActivatePersonalSubscriptionInput{
+		UserUUID: userID,
+		PlanCode: models.PlanCodePersonalPro,
+	}, time.Now().UTC().Add(-time.Hour))
+	s.Require().NoError(err)
+	s.Require().Equal(created.ID, updated.ID)
+	s.Require().Equal(models.PlanCodePersonalPro, updated.Plan.Code)
+
+	active, err := s.repository.GetActivePersonalSubscription(s.ctx, userID)
+	s.Require().NoError(err)
+	s.Require().Equal(updated.ID, active.ID)
+
+	period := time.Date(2026, 6, 22, 12, 0, 0, 0, time.FixedZone("MSK", 3*60*60))
+	counter, err := s.repository.AddUsageMinutes(s.ctx, active.ID, period, 0)
+	s.Require().NoError(err)
+	s.Require().Zero(counter.UsedMinutes)
+	counter, err = s.repository.GetUsageCounter(s.ctx, active.ID, period)
+	s.Require().NoError(err)
+	s.Require().Equal(time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC), counter.PeriodStart)
+
+	used, err := s.repository.CountUsedMinutes(s.ctx, active.ID, period.AddDate(0, 1, 0))
+	s.Require().NoError(err)
+	s.Require().Zero(used)
+
+	_, err = s.repository.GetPlanByCode(s.ctx, "missing")
+	s.Require().ErrorIs(err, models.ErrPlanNotFound)
+	_, err = s.repository.ActivatePersonalSubscription(s.ctx, models.ActivatePersonalSubscriptionInput{
+		UserUUID: userID, PlanCode: "missing",
+	}, time.Now())
+	s.Require().ErrorIs(err, models.ErrPlanNotFound)
+	_, err = s.repository.GetUsageCounter(s.ctx, uuid.New(), period)
+	s.Require().ErrorIs(err, models.ErrSubscriptionNotFound)
+}
+
+func (s *RepositorySuite) TestResourceCountsAndMissingCompanySubscription() {
+	ownerID := s.createUser("counts-owner@example.com")
+	companyID := s.createCompany(ownerID)
+	memberID := uuid.New()
+	_, err := s.db.ExecContext(s.ctx, `
+		INSERT INTO users (user_uuid, email, password_hash, full_name, full_surname, username, role, created_at)
+		VALUES ($1, $2, 'hash', 'Member', 'User', $3, 'user', now())`,
+		memberID, memberID.String()+"@example.com", "member_"+memberID.String()[:8])
+	s.Require().NoError(err)
+	departmentID := uuid.New()
+	_, err = s.db.ExecContext(s.ctx,
+		`INSERT INTO departments (department_uuid, company_uuid, name, created_at) VALUES ($1, $2, 'Sales', now())`,
+		departmentID, companyID)
+	s.Require().NoError(err)
+	_, err = s.db.ExecContext(s.ctx, `
+		INSERT INTO company_members (company_uuid, user_uuid, role, status, created_at)
+		VALUES ($1, $2, 'employee', 'active', now())`, companyID, memberID)
+	s.Require().NoError(err)
+	instructionID := uuid.New()
+	_, err = s.db.ExecContext(s.ctx, `
+		INSERT INTO analysis_instructions (
+			instruction_uuid, scope, user_uuid, title, original_filename, file_path,
+			mime_type, size_bytes, content_sha256, sort_order, is_active,
+			created_by_user_uuid, created_at, updated_at
+		) VALUES ($1, 'personal', $2, 'Rubric', 'rubric.txt', 'instructions/rubric.txt',
+			'text/plain', 10, 'hash', 0, true, $2, now(), now())`,
+		instructionID, ownerID)
+	s.Require().NoError(err)
+
+	count, err := s.repository.CountOwnerCompanies(s.ctx, ownerID)
+	s.Require().NoError(err)
+	s.Require().Equal(1, count)
+	count, err = s.repository.CountCompanyDepartments(s.ctx, companyID)
+	s.Require().NoError(err)
+	s.Require().Equal(1, count)
+	count, err = s.repository.CountCompanyMembers(s.ctx, companyID)
+	s.Require().NoError(err)
+	s.Require().Equal(1, count)
+	count, err = s.repository.CountActiveInstructions(s.ctx, models.ListAnalysisInstructionsInput{
+		Scope: models.AnalysisInstructionScopePersonal, UserUUID: ownerID,
+	})
+	s.Require().NoError(err)
+	s.Require().Equal(1, count)
+
+	_, err = s.repository.CancelCompanySubscription(s.ctx, companyID, time.Time{})
+	s.Require().ErrorIs(err, models.ErrSubscriptionNotFound)
+	_, err = s.repository.ActivateCompanySubscription(s.ctx, models.ActivateCompanySubscriptionInput{
+		CompanyUUID: companyID, PlanCode: models.PlanCodePersonalStart,
+	}, time.Time{})
+	s.Require().ErrorIs(err, models.ErrPlanNotFound)
+}
+
 func (s *RepositorySuite) createUser(email string) uuid.UUID {
 	id := uuid.New()
 	_, err := s.db.ExecContext(

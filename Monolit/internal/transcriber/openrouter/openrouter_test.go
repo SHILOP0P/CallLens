@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -146,3 +147,137 @@ func TestTranscribeRejectsUnsupportedFormat(t *testing.T) {
 		t.Fatalf("error = %v, want unsupported audio type", err)
 	}
 }
+
+func TestProviderEndpointAndAudioFormats(t *testing.T) {
+	transcriber, err := New(" key ", " model ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if transcriber.Provider() != providerName || transcriber.endpoint() != defaultBaseURL+transcribePath {
+		t.Fatalf("provider=%q endpoint=%q", transcriber.Provider(), transcriber.endpoint())
+	}
+	transcriber.baseURL = "https://example.com/"
+	if transcriber.endpoint() != "https://example.com"+transcribePath {
+		t.Fatalf("endpoint = %q", transcriber.endpoint())
+	}
+
+	cases := []struct {
+		file models.File
+		want string
+	}{
+		{file: models.File{MimeType: "audio/mpeg; codecs=test"}, want: "mp3"},
+		{file: models.File{MimeType: "audio/x-wav"}, want: "wav"},
+		{file: models.File{MimeType: "audio/mp4"}, want: "m4a"},
+		{file: models.File{MimeType: "audio/flac"}, want: "flac"},
+		{file: models.File{MimeType: "audio/ogg"}, want: "ogg"},
+		{file: models.File{MimeType: "audio/webm"}, want: "webm"},
+		{file: models.File{MimeType: "audio/aac"}, want: "aac"},
+		{file: models.File{OriginalFilename: "call.MP3"}, want: "mp3"},
+		{file: models.File{Path: "stored/call.m4a"}, want: "m4a"},
+	}
+	for _, tt := range cases {
+		got, err := audioFormat(tt.file)
+		if err != nil || got != tt.want {
+			t.Fatalf("audioFormat(%+v) = %q, %v; want %q", tt.file, got, err, tt.want)
+		}
+	}
+	if got := supportedFormatFromExt("call.txt"); got != "" {
+		t.Fatalf("unsupported extension = %q", got)
+	}
+}
+
+func TestNormalizeSegmentsAndText(t *testing.T) {
+	start, end := 1.0, 2.0
+	segments := normalizeSegments([]transcriptionSegment{
+		{Speaker: " A ", Start: &start, End: &end, Text: " Hello!!! "},
+		{Speaker: "B", Text: "[music]"},
+	})
+	if len(segments) != 1 || segments[0].Speaker != "A" || segments[0].StartSeconds != &start {
+		t.Fatalf("segments = %+v", segments)
+	}
+	text := textFromSegments([]models.TranscriptionSegment{
+		{Speaker: " A ", Text: "hello"},
+		{Text: "world"},
+		{Speaker: "B", Text: " "},
+	})
+	if text != "A: hello\nworld" {
+		t.Fatalf("text = %q", text)
+	}
+}
+
+func TestTranscribeValidationAndResponseErrors(t *testing.T) {
+	transcriber, _ := New("key", "model")
+	if _, err := transcriber.Transcribe(context.Background(), models.File{}); !errors.Is(err, models.ErrUnsupportedAudioType) {
+		t.Fatalf("nil content error = %v", err)
+	}
+	if _, err := transcriber.Transcribe(context.Background(), models.File{
+		Content: io.NopCloser(strings.NewReader("")), OriginalFilename: "call.mp3",
+	}); !errors.Is(err, models.ErrUnsupportedAudioType) {
+		t.Fatalf("empty content error = %v", err)
+	}
+	if _, err := transcriber.Transcribe(context.Background(), models.File{
+		Content: errReadCloser{}, OriginalFilename: "call.mp3",
+	}); err == nil || !strings.Contains(err.Error(), "read audio content") {
+		t.Fatalf("read error = %v", err)
+	}
+
+	for _, responseBody := range []string{"{", `{"text":"[music]"}`} {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write([]byte(responseBody))
+		}))
+		transcriber.baseURL = server.URL
+		transcriber.client = server.Client()
+		_, err := transcriber.Transcribe(context.Background(), models.File{
+			Content: io.NopCloser(strings.NewReader("audio")), OriginalFilename: "call.mp3",
+		})
+		server.Close()
+		if err == nil {
+			t.Fatalf("response %q unexpectedly succeeded", responseBody)
+		}
+	}
+}
+
+func TestTranscribeBuildsTextFromSegments(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"segments":[{"speaker":"A","text":"hello"},{"text":"world"}]}`))
+	}))
+	defer server.Close()
+
+	transcriber, _ := New("key", "model")
+	transcriber.baseURL = server.URL
+	transcriber.client = server.Client()
+	result, err := transcriber.Transcribe(context.Background(), models.File{
+		Content: io.NopCloser(strings.NewReader("audio")), OriginalFilename: "call.mp3",
+	})
+	if err != nil || result.Text != "A: hello\nworld" {
+		t.Fatalf("result = %+v, err=%v", result, err)
+	}
+}
+
+func TestDecodeErrorFallbacks(t *testing.T) {
+	err := decodeError(&http.Response{
+		StatusCode: http.StatusBadGateway,
+		Body:       io.NopCloser(strings.NewReader("plain error")),
+	})
+	if !strings.Contains(err.Error(), "plain error") {
+		t.Fatalf("plain error = %v", err)
+	}
+
+	err = decodeError(&http.Response{
+		StatusCode: http.StatusServiceUnavailable,
+		Body:       io.NopCloser(strings.NewReader("")),
+	})
+	if !strings.Contains(err.Error(), http.StatusText(http.StatusServiceUnavailable)) {
+		t.Fatalf("empty error = %v", err)
+	}
+
+	err = decodeError(&http.Response{StatusCode: http.StatusBadGateway, Body: errReadCloser{}})
+	if !strings.Contains(err.Error(), "read error response") {
+		t.Fatalf("read error = %v", err)
+	}
+}
+
+type errReadCloser struct{}
+
+func (errReadCloser) Read([]byte) (int, error) { return 0, fmt.Errorf("read failed") }
+func (errReadCloser) Close() error             { return nil }

@@ -117,6 +117,79 @@ func (s *RepositorySuite) TestCreateCallAndGetForProcessing() {
 	s.Require().Equal(created, processingCall)
 }
 
+func (s *RepositorySuite) TestCreateCallWithProcessingJob() {
+	user := s.createUser(uuid.NewString() + "@example.com")
+	input := testCall(user.ID)
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	job := models.ProcessingJob{
+		ID:          uuid.New(),
+		Type:        models.ProcessingJobTypeTranscribeCall,
+		EntityUUID:  input.ID,
+		Status:      models.ProcessingJobStatusPending,
+		MaxAttempts: models.DefaultProcessingJobMaxAttempts,
+		AvailableAt: now,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+
+	created, err := s.repository.CreateCallWithProcessingJob(s.ctx, input, job)
+	s.Require().NoError(err)
+	s.Require().Equal(input.ID, created.ID)
+
+	var count int
+	err = s.db.QueryRowContext(s.ctx,
+		`SELECT COUNT(*) FROM processing_jobs WHERE job_uuid = $1 AND entity_uuid = $2`,
+		job.ID, input.ID,
+	).Scan(&count)
+	s.Require().NoError(err)
+	s.Require().Equal(1, count)
+}
+
+func (s *RepositorySuite) TestCreateCallWithProcessingJobRollsBackInvalidJob() {
+	user := s.createUser(uuid.NewString() + "@example.com")
+	input := testCall(user.ID)
+	now := time.Now().UTC().Truncate(time.Microsecond)
+	job := models.ProcessingJob{
+		ID:          uuid.New(),
+		Type:        "invalid",
+		EntityUUID:  input.ID,
+		Status:      models.ProcessingJobStatusPending,
+		MaxAttempts: 3,
+		AvailableAt: now,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+
+	_, err := s.repository.CreateCallWithProcessingJob(s.ctx, input, job)
+	s.Require().Error(err)
+
+	_, err = s.repository.GetByUUIDForProcessing(s.ctx, input.ID)
+	s.Require().ErrorIs(err, models.ErrCallNotFound)
+}
+
+func (s *RepositorySuite) TestTakeNextForProcessing() {
+	user := s.createUser(uuid.NewString() + "@example.com")
+	first := testCall(user.ID)
+	second := testCall(user.ID)
+	second.CreatedAt = first.CreatedAt.Add(time.Second)
+	_, err := s.repository.CreateCall(s.ctx, first)
+	s.Require().NoError(err)
+	_, err = s.repository.CreateCall(s.ctx, second)
+	s.Require().NoError(err)
+
+	taken, err := s.repository.TakeNextForProcessing(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(first.ID, taken.ID)
+	s.Require().Equal(models.CallStatusProcessing, taken.Status)
+
+	taken, err = s.repository.TakeNextForProcessing(s.ctx)
+	s.Require().NoError(err)
+	s.Require().Equal(second.ID, taken.ID)
+
+	_, err = s.repository.TakeNextForProcessing(s.ctx)
+	s.Require().ErrorIs(err, models.ErrNoCallsForProcessing)
+}
+
 func (s *RepositorySuite) TestCreateCallRejectsInvalidPlacementConstraint() {
 	user := s.createUser(uuid.NewString() + "@example.com")
 	input := testCall(user.ID)
