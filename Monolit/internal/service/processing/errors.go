@@ -1,8 +1,9 @@
 package processing
 
 import (
-	"calllens/monolit/internal/models"
 	"errors"
+
+	"calllens/monolit/internal/models"
 )
 
 func isPermanentProcessingError(err error) bool {

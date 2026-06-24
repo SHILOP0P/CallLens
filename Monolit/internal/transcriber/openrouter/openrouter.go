@@ -2,8 +2,6 @@ package openrouter
 
 import (
 	"bytes"
-	"calllens/monolit/internal/models"
-	"calllens/monolit/internal/transcriber/cleaner"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -14,6 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"calllens/monolit/internal/models"
+	"calllens/monolit/internal/transcriber/cleaner"
 )
 
 const (
@@ -135,7 +136,7 @@ func (t *Transcriber) Transcribe(ctx context.Context, file models.File) (models.
 	if err != nil {
 		return models.TranscriptionResult{}, fmt.Errorf("send openrouter transcription request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return models.TranscriptionResult{}, decodeError(resp)

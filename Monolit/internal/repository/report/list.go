@@ -1,10 +1,11 @@
 package report
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"fmt"
 	"time"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -22,7 +23,7 @@ func (r *Repository) ListByCallUUID(ctx context.Context, callID uuid.UUID, now t
 	if err != nil {
 		return nil, fmt.Errorf("list report exports by call uuid: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	reports := make([]models.ReportExport, 0)
 	for rows.Next() {
@@ -57,7 +58,7 @@ func (r *Repository) ListExpiredReady(ctx context.Context, now time.Time, limit 
 	if err != nil {
 		return nil, fmt.Errorf("list expired report exports: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	reports := make([]models.ReportExport, 0)
 	for rows.Next() {

@@ -1,8 +1,9 @@
 package scaner
 
 import (
-	repoModel "calllens/monolit/internal/repository/models"
 	"encoding/json"
+
+	repoModel "calllens/monolit/internal/repository/models"
 )
 
 func ScanCallAnalysis(row rowScanner) (repoModel.CallAnalysis, error) {

@@ -1,9 +1,10 @@
 package refresh_session
 
 import (
-	model "calllens/monolit/internal/models"
 	"context"
 	"fmt"
+
+	model "calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )

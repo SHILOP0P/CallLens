@@ -1,0 +1,121 @@
+name: Backend checks
+
+on:
+  pull_request:
+    paths:
+      - "Monolit/**"
+      - ".github/workflows/backend.yml"
+  push:
+    branches:
+      - "**"
+    paths:
+      - "Monolit/**"
+      - ".github/workflows/backend.yml"
+
+jobs:
+  unit:
+    name: Unit checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Monolit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: Monolit/go.mod
+          cache-dependency-path: Monolit/go.sum
+
+      - name: Install Task
+        run: |
+          go install github.com/go-task/task/v3/cmd/task@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+
+      - name: Check formatting
+        run: task fmt:check
+
+      - name: Run linter
+        run: task lint
+
+      - name: Run unit tests
+        run: task test
+
+      - name: Run go vet
+        run: task vet
+
+  integration:
+    name: Integration checks
+    runs-on: ubuntu-latest
+    needs: unit
+    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: Monolit
+    env:
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: 8080
+      HTTP_READ_TIMEOUT: 5s
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: calllens
+      POSTGRES_TEST_DB: calllens_test
+      POSTGRES_USER: calllens
+      POSTGRES_PASSWORD: change-me
+      POSTGRES_SSL_MODE: disable
+      MIGRATION_DIRECTORY: ./migrations
+      UPLOAD_PATH: ./uploads
+      FFPROBE_PATH: ffprobe
+      LOG_LEVEL: info
+      LOG_AS_JSON: "true"
+      WORKER_ENABLED: "true"
+      WORKER_POLL_INTERVAL: 2s
+      WORKER_LIMIT: 10
+      WORKER_RETRY_DELAY: 1m
+      WORKER_STALE_AFTER: 10m
+      WORKER_MAX_ATTEMPTS: 3
+      TRANSCRIBER_PROVIDER: mock
+      ANALYZER_PROVIDER: mock
+      ANALYZER_MODEL: mistralai/mistral-nemo
+      PASSWORD_PEPPER: change-me
+      JWT_SECRET: change-me
+      JWT_ACCESS_TOKEN_TTL: 1h
+      REFRESH_TOKEN_SECRET: change-me
+      REFRESH_TOKEN_TTL: 720h
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: Monolit/go.mod
+          cache-dependency-path: Monolit/go.sum
+
+      - name: Install ffprobe
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install Task
+        run: |
+          go install github.com/go-task/task/v3/cmd/task@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+
+      - name: Check formatting
+        run: task fmt:check
+
+      - name: Run linter
+        run: task lint
+
+      - name: Run integration tests
+        run: task test:int
+
+      - name: Build Docker image
+        run: task image

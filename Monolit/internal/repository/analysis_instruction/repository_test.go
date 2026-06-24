@@ -1,12 +1,15 @@
+//go:build integration
+
 package analysis_instruction
 
 import (
-	"calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/repositorytest"
-	userRepo "calllens/monolit/internal/repository/user"
 	"context"
 	"testing"
 	"time"
+
+	"calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/repositorytest"
+	userRepo "calllens/monolit/internal/repository/user"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"

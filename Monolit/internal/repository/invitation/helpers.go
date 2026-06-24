@@ -1,8 +1,9 @@
 package invitation
 
 import (
-	"calllens/monolit/internal/models"
 	"errors"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )

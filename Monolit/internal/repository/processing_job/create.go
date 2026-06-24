@@ -1,11 +1,12 @@
 package processing_job
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 )
 
 func (r *Repository) Create(ctx context.Context, job model.ProcessingJob) (model.ProcessingJob, error) {

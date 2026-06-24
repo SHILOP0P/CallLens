@@ -1,0 +1,73 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    container_name: call-api
+    restart: unless-stopped
+    environment:
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: ${HTTP_PORT:-8080}
+      HTTP_READ_TIMEOUT: ${HTTP_READ_TIMEOUT:-5s}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB:-calllens}
+      POSTGRES_USER: ${POSTGRES_USER:-calllens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_SSL_MODE: ${POSTGRES_SSL_MODE:-disable}
+      MIGRATION_DIRECTORY: /app/migrations
+      UPLOAD_PATH: /app/uploads
+      FFPROBE_PATH: ffprobe
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_AS_JSON: "true"
+      WORKER_ENABLED: ${WORKER_ENABLED:-true}
+      WORKER_POLL_INTERVAL: ${WORKER_POLL_INTERVAL:-2s}
+      WORKER_LIMIT: ${WORKER_LIMIT:-10}
+      WORKER_RETRY_DELAY: ${WORKER_RETRY_DELAY:-1m}
+      WORKER_STALE_AFTER: ${WORKER_STALE_AFTER:-10m}
+      WORKER_MAX_ATTEMPTS: ${WORKER_MAX_ATTEMPTS:-3}
+      TRANSCRIBER_PROVIDER: ${TRANSCRIBER_PROVIDER:-mock}
+      TRANSCRIBER_API_KEY: ${TRANSCRIBER_API_KEY:-}
+      TRANSCRIBER_MODEL: ${TRANSCRIBER_MODEL:-}
+      ANALYZER_PROVIDER: ${ANALYZER_PROVIDER:-mock}
+      ANALYZER_API_KEY: ${ANALYZER_API_KEY:-}
+      ANALYZER_MODEL: ${ANALYZER_MODEL:-mistralai/mistral-nemo}
+      PASSWORD_PEPPER: ${PASSWORD_PEPPER:-change-me}
+      JWT_SECRET: ${JWT_SECRET:-change-me}
+      JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-1h}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:-change-me}
+      REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL:-720h}
+    ports:
+      - "${HTTP_PORT:-8080}:${HTTP_PORT:-8080}"
+    volumes:
+      - call_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:$${HTTP_PORT}/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  db:
+    image: postgres:16-alpine
+    container_name: call-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-calllens}
+      POSTGRES_USER: ${POSTGRES_USER:-calllens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_call_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_call_data:
+  call_uploads:

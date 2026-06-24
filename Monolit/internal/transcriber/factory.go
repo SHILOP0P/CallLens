@@ -1,10 +1,11 @@
 package transcriber
 
 import (
-	mockTranscriber "calllens/monolit/internal/transcriber/mock"
-	openrouterTranscriber "calllens/monolit/internal/transcriber/openrouter"
 	"fmt"
 	"strings"
+
+	mockTranscriber "calllens/monolit/internal/transcriber/mock"
+	openrouterTranscriber "calllens/monolit/internal/transcriber/openrouter"
 )
 
 type Config interface {

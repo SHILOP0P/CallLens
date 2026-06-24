@@ -1,9 +1,10 @@
 package mock
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"fmt"
+
+	"calllens/monolit/internal/models"
 )
 
 type Transcriber struct{}

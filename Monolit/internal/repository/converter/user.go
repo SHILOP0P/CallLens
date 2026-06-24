@@ -1,9 +1,10 @@
 package converter
 
 import (
+	"database/sql"
+
 	model "calllens/monolit/internal/models"
 	repoModel "calllens/monolit/internal/repository/models"
-	"database/sql"
 )
 
 func RepoUserToModel(repoUser repoModel.User) (model.User, error) {

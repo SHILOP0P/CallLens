@@ -1,10 +1,11 @@
 package company
 
 import (
-	"calllens/monolit/internal/logger"
-	repositoryMocks "calllens/monolit/internal/repository/mocks"
 	"context"
 	"testing"
+
+	"calllens/monolit/internal/logger"
+	repositoryMocks "calllens/monolit/internal/repository/mocks"
 
 	"github.com/stretchr/testify/suite"
 )

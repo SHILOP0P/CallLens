@@ -1,11 +1,12 @@
 package auth
 
 import (
+	"context"
+	"time"
+
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/models"
 	repo "calllens/monolit/internal/repository"
-	"context"
-	"time"
 )
 
 type BillingRepository interface {

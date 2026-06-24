@@ -1,12 +1,13 @@
 package refresh_session
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 )
 
 func (r *Repository) CreateRefreshSession(ctx context.Context, session model.RefreshSession) (model.RefreshSession, error) {

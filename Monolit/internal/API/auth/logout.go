@@ -1,11 +1,12 @@
 package auth
 
 import (
+	"errors"
+	"net/http"
+
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/httpserver/middleware"
 	model "calllens/monolit/internal/models"
-	"errors"
-	"net/http"
 )
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {

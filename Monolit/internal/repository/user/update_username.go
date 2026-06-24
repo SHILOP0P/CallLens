@@ -1,13 +1,14 @@
 package user
 
 import (
-	model "calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/converter"
-	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	"calllens/monolit/internal/repository/scaner"
 )
 
 func (r *Repository) UpdateUsername(ctx context.Context, input model.UpdateUsernameInput) (model.User, error) {

@@ -1,8 +1,11 @@
+//go:build integration
+
 package billing
 
 import (
-	"calllens/monolit/internal/models"
 	"time"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )

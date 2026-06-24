@@ -1,13 +1,14 @@
 package auth
 
 import (
-	"calllens/monolit/internal/auth/refresh"
-	"calllens/monolit/internal/auth/token"
-	model "calllens/monolit/internal/models"
 	"context"
 	"errors"
 	"strings"
 	"time"
+
+	"calllens/monolit/internal/auth/refresh"
+	"calllens/monolit/internal/auth/token"
+	model "calllens/monolit/internal/models"
 
 	"go.uber.org/zap"
 )

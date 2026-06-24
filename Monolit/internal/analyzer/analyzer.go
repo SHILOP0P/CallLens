@@ -1,8 +1,9 @@
 package analyzer
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
+
+	"calllens/monolit/internal/models"
 )
 
 type Analyzer interface {

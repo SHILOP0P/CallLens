@@ -1,14 +1,15 @@
 package analysis_instruction
 
 import (
-	model "calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/converter"
-	repoModel "calllens/monolit/internal/repository/models"
-	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	repoModel "calllens/monolit/internal/repository/models"
+	"calllens/monolit/internal/repository/scaner"
 
 	"github.com/google/uuid"
 )

@@ -1,12 +1,13 @@
 package company
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 )
 
 func (r *Repository) CreateCompany(ctx context.Context, company model.Company, member model.CompanyMember) (model.Company, error) {
@@ -24,7 +25,7 @@ func (r *Repository) CreateCompany(ctx context.Context, company model.Company, m
 	if err != nil {
 		return model.Company{}, fmt.Errorf("begin create company transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	createCompanyQuery := `
 	INSERT INTO companies (

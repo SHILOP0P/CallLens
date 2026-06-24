@@ -1,9 +1,10 @@
 package auth
 
 import (
+	"net/http"
+
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/models"
-	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

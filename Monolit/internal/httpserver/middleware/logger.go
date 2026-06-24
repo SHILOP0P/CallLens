@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"calllens/monolit/internal/logger"
 	"net/http"
 	"time"
+
+	"calllens/monolit/internal/logger"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"

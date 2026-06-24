@@ -1,10 +1,11 @@
 package auth
 
 import (
-	"calllens/monolit/internal/models"
-	"calllens/monolit/internal/username"
 	"context"
 	"errors"
+
+	"calllens/monolit/internal/models"
+	"calllens/monolit/internal/username"
 
 	"github.com/google/uuid"
 )

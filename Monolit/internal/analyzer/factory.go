@@ -1,10 +1,11 @@
 package analyzer
 
 import (
-	mockAnalyzer "calllens/monolit/internal/analyzer/mock"
-	openrouterAnalyzer "calllens/monolit/internal/analyzer/openrouter"
 	"fmt"
 	"strings"
+
+	mockAnalyzer "calllens/monolit/internal/analyzer/mock"
+	openrouterAnalyzer "calllens/monolit/internal/analyzer/openrouter"
 )
 
 type Config interface {

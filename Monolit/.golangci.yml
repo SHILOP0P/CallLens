@@ -1,0 +1,26 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  exclusions:
+    generated: strict
+    paths:
+      - internal/.*/mocks/.*\.go
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+    goimports:
+      local-prefixes:
+        - calllens/monolit
+  exclusions:
+    generated: strict
+    paths:
+      - internal/.*/mocks/.*\.go

@@ -1,11 +1,12 @@
 package report
 
 import (
-	"calllens/monolit/internal/API/response"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+
+	"calllens/monolit/internal/API/response"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -29,7 +30,7 @@ func (h *Handler) Download(w http.ResponseWriter, r *http.Request) {
 		writeReportError(w, err, response.CodeFailedToDownloadReport)
 		return
 	}
-	defer file.Content.Close()
+	defer func() { _ = file.Content.Close() }()
 
 	w.Header().Set("Content-Type", file.Report.ContentType)
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", file.Report.SizeBytes))

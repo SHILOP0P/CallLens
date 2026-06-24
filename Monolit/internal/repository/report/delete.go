@@ -1,11 +1,10 @@
 package report
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -30,12 +29,4 @@ func (r *Repository) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return nil
-}
-
-func reportNotFound(err error) error {
-	if errors.Is(err, sql.ErrNoRows) {
-		return models.ErrReportNotFound
-	}
-
-	return err
 }

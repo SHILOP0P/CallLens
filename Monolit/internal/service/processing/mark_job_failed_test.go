@@ -1,11 +1,12 @@
 package processing
 
 import (
-	"calllens/monolit/internal/logger"
-	"calllens/monolit/internal/models"
 	"context"
 	"errors"
 	"testing"
+
+	"calllens/monolit/internal/logger"
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )

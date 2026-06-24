@@ -1,15 +1,16 @@
 package company
 
 import (
-	"calllens/monolit/internal/API/response"
-	"calllens/monolit/internal/httpserver/middleware"
-	serviceMocks "calllens/monolit/internal/service/mocks"
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/httpserver/middleware"
+	serviceMocks "calllens/monolit/internal/service/mocks"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"

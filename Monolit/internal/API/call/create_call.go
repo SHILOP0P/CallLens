@@ -2,15 +2,16 @@ package call
 
 import (
 	"bytes"
-	"calllens/monolit/internal/API/dto"
-	"calllens/monolit/internal/API/response"
-	"calllens/monolit/internal/converter"
-	model "calllens/monolit/internal/models"
 	"errors"
 	"io"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/converter"
+	model "calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -40,7 +41,7 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		response.WriteError(w, http.StatusBadRequest, response.CodeAudioFileRequired, "audio file is required")
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	buffer := make([]byte, 512)
 	n, err := file.Read(buffer)

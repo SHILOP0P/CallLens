@@ -172,10 +172,20 @@ func TestListReadDeleteAuthorizationWithMockery(t *testing.T) {
 		CompanyUUID: uuid.NullUUID{UUID: companyID, Valid: true},
 	}
 	companyRepo.EXPECT().GetCompanyMember(mock.Anything, companyID, userID).
-		Return(models.CompanyMember{}, nil).Once()
+		Return(models.CompanyMember{Role: models.CompanyMemberRoleEmployee}, nil).Once()
+	departmentRepo.EXPECT().ListVisibleCompanyDepartments(mock.Anything, companyID, userID).
+		Return([]models.Department{{ID: departmentID, CompanyUUID: companyID}}, nil).Once()
 	repo.EXPECT().List(mock.Anything, companyInput).Return(nil, nil).Once()
 	if _, err := service.List(ctx, companyInput); err != nil {
 		t.Fatal(err)
+	}
+
+	companyRepo.EXPECT().GetCompanyMember(mock.Anything, companyID, userID).
+		Return(models.CompanyMember{Role: models.CompanyMemberRoleEmployee}, nil).Once()
+	departmentRepo.EXPECT().ListVisibleCompanyDepartments(mock.Anything, companyID, userID).
+		Return(nil, nil).Once()
+	if _, err := service.List(ctx, companyInput); !errors.Is(err, models.ErrForbidden) {
+		t.Fatalf("unassigned company member list authorization error = %v", err)
 	}
 
 	departmentInput := models.ListAnalysisInstructionsInput{
@@ -196,9 +206,11 @@ func TestListReadDeleteAuthorizationWithMockery(t *testing.T) {
 		ID: uuid.New(), Scope: models.AnalysisInstructionScopeCompany,
 		CompanyUUID: uuid.NullUUID{UUID: companyID, Valid: true}, FilePath: "company.md",
 	}
-	repo.EXPECT().GetByUUID(mock.Anything, companyInstruction.ID).Return(companyInstruction, nil).Twice()
+	repo.EXPECT().GetByUUID(mock.Anything, companyInstruction.ID).Return(companyInstruction, nil).Times(3)
 	companyRepo.EXPECT().GetCompanyMember(mock.Anything, companyID, userID).
-		Return(models.CompanyMember{}, nil).Once()
+		Return(models.CompanyMember{Role: models.CompanyMemberRoleEmployee}, nil).Once()
+	departmentRepo.EXPECT().ListVisibleCompanyDepartments(mock.Anything, companyID, userID).
+		Return([]models.Department{{ID: departmentID, CompanyUUID: companyID}}, nil).Once()
 	storage.EXPECT().Open(mock.Anything, "company.md").
 		Return(io.NopCloser(strings.NewReader("company")), nil).Once()
 	file, err := service.GetFile(ctx, companyInstruction.ID, userID)
@@ -206,6 +218,13 @@ func TestListReadDeleteAuthorizationWithMockery(t *testing.T) {
 		t.Fatal(err)
 	}
 	_ = file.Content.Close()
+	companyRepo.EXPECT().GetCompanyMember(mock.Anything, companyID, userID).
+		Return(models.CompanyMember{Role: models.CompanyMemberRoleEmployee}, nil).Once()
+	departmentRepo.EXPECT().ListVisibleCompanyDepartments(mock.Anything, companyID, userID).
+		Return(nil, nil).Once()
+	if _, err := service.GetFile(ctx, companyInstruction.ID, userID); !errors.Is(err, models.ErrForbidden) {
+		t.Fatalf("unassigned company member read authorization error = %v", err)
+	}
 	companyRepo.EXPECT().GetCompanyMember(mock.Anything, companyID, userID).
 		Return(models.CompanyMember{Role: models.CompanyMemberRoleManager}, nil).Once()
 	repo.EXPECT().Deactivate(mock.Anything, companyInstruction.ID).Return(nil).Once()

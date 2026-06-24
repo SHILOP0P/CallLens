@@ -1,9 +1,10 @@
 package department
 
 import (
+	"net/http"
+
 	"calllens/monolit/internal/httpserver/middleware"
 	"calllens/monolit/internal/service"
-	"net/http"
 
 	"github.com/google/uuid"
 )

@@ -91,12 +91,7 @@ func xmlEscape(value string) string {
 }
 
 func splitParagraphs(value string) []string {
-	lines := strings.Split(strings.ReplaceAll(value, "\r\n", "\n"), "\n")
-	out := make([]string, 0, len(lines))
-	for _, line := range lines {
-		out = append(out, line)
-	}
-	return out
+	return strings.Split(strings.ReplaceAll(value, "\r\n", "\n"), "\n")
 }
 
 const contentTypesXML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

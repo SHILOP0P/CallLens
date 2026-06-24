@@ -1,7 +1,6 @@
 package openrouter
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -12,6 +11,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"calllens/monolit/internal/models"
 )
 
 func TestNewRequiresAPIKey(t *testing.T) {

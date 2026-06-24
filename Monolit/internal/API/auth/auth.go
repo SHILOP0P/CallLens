@@ -1,8 +1,9 @@
 package auth
 
 import (
-	"calllens/monolit/internal/service"
 	"time"
+
+	"calllens/monolit/internal/service"
 )
 
 type AuthHandler struct {

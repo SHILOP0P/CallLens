@@ -1,0 +1,141 @@
+version: '3'
+
+# Короткий интерфейс для локальной разработки и CI.
+
+tasks:
+  # Быстрая проверка: unit-тесты без интеграционных repository/migrator тестов.
+  test:
+    desc: Run fast unit tests.
+    cmds:
+      - echo "==> Running unit tests without integration build tag"
+      - go test ./...
+
+  # Форматирование Go-кода через formatter'ы из .golangci.yml.
+  fmt:
+    desc: Format Go source files.
+    cmds:
+      - echo "==> Formatting Go source files"
+      - golangci-lint fmt
+
+  # Проверка форматирования без изменения файлов; удобно для CI.
+  fmt:check:
+    desc: Check Go source formatting without rewriting files.
+    cmds:
+      - echo "==> Checking Go source formatting"
+      - golangci-lint fmt --diff
+
+  # Линтинг Go-кода через golangci-lint.
+  lint:
+    desc: Run golangci-lint.
+    cmds:
+      - echo "==> Running golangci-lint"
+      - golangci-lint run
+
+  # Локальная база для интеграционных тестов и production-like запуска.
+  db:
+    desc: Start local PostgreSQL container.
+    cmds:
+      - echo "==> Starting PostgreSQL container for local checks"
+      - docker compose -f deploy/docker-compose.yaml --project-directory . up -d db
+
+  # Интеграционные тесты: поднимает PostgreSQL и запускает тесты с build tag integration.
+  test:int:
+    desc: Run integration tests with local PostgreSQL.
+    cmds:
+      - task: db
+      - echo "==> Running integration tests with PostgreSQL"
+      - go test -tags=integration ./...
+
+  # Статическая проверка Go-кода.
+  vet:
+    desc: Run go vet.
+    cmds:
+      - echo "==> Running go vet"
+      - go vet ./...
+
+  # Сборка локального backend-бинарника.
+  build:
+    desc: Build backend binary into ./bin.
+    cmds:
+      - echo "==> Building backend binary"
+      - powershell -NoProfile -Command "New-Item -ItemType Directory -Force -Path ./bin | Out-Null"
+      - go build -o ./bin/calllens.exe ./cmd
+
+  # Сборка Docker-образа backend без публикации куда-либо.
+  image:
+    desc: Build backend Docker image locally.
+    cmds:
+      - echo "==> Building local Docker image calllens-backend"
+      - docker build -f deploy/Dockerfile -t calllens-backend .
+
+  # Локальный production-like стек: backend + PostgreSQL + persistent uploads volume.
+  up:
+    desc: Start local production-like stack in background.
+    cmds:
+      - echo "==> Starting backend and PostgreSQL with Docker Compose"
+      - docker compose -f deploy/docker-compose.yaml --project-directory . up --build -d
+
+  # Остановка локального стека без удаления persistent volumes.
+  down:
+    desc: Stop local Docker Compose stack.
+    cmds:
+      - echo "==> Stopping local Docker Compose stack"
+      - docker compose -f deploy/docker-compose.yaml --project-directory . down
+
+  # Просмотр состояния контейнеров.
+  ps:
+    desc: Show local Docker Compose services.
+    cmds:
+      - echo "==> Showing Docker Compose service status"
+      - docker compose -f deploy/docker-compose.yaml --project-directory . ps
+
+  # Логи backend-контейнера для быстрой диагностики.
+  logs:
+    desc: Follow backend container logs.
+    cmds:
+      - echo "==> Following backend logs"
+      - docker compose -f deploy/docker-compose.yaml --project-directory . logs -f api
+
+  # Liveness probe: процесс API отвечает.
+  health:
+    desc: Check /health/live.
+    cmds:
+      - echo "==> Checking liveness probe"
+      - powershell -NoProfile -Command "Invoke-RestMethod http://localhost:8080/health/live"
+
+  # Readiness probe: API готов работать с PostgreSQL, uploads и ffprobe.
+  ready:
+    desc: Check /health/ready.
+    cmds:
+      - echo "==> Checking readiness probe"
+      - powershell -NoProfile -Command "Invoke-RestMethod http://localhost:8080/health/ready"
+
+  # Startup probe: приложение завершило стартовую инициализацию.
+  startup:
+    desc: Check /health/startup.
+    cmds:
+      - echo "==> Checking startup probe"
+      - powershell -NoProfile -Command "Invoke-RestMethod http://localhost:8080/health/startup"
+
+  # Быстрая локальная проверка перед обычной разработческой итерацией.
+  verify:
+    desc: Run unit tests, go vet, and local build.
+    cmds:
+      - echo "==> Running fast verification"
+      - task: fmt:check
+      - task: lint
+      - task: test
+      - task: vet
+      - task: build
+
+  # Полная локальная проверка перед merge/main: unit + integration + Docker image.
+  verify:int:
+    desc: Run full local verification with integration tests and Docker image build.
+    cmds:
+      - echo "==> Running full verification"
+      - task: fmt:check
+      - task: lint
+      - task: test
+      - task: test:int
+      - task: vet
+      - task: image

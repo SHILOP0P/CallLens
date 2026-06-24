@@ -2,7 +2,6 @@ package openrouter
 
 import (
 	"bytes"
-	"calllens/monolit/internal/models"
 	"context"
 	"encoding/json"
 	"errors"
@@ -11,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"calllens/monolit/internal/models"
 )
 
 const (
@@ -129,7 +130,7 @@ func (a *Analyzer) Analyze(ctx context.Context, request models.AnalysisRequest) 
 	if err != nil {
 		return models.AnalysisResult{}, fmt.Errorf("send openrouter analysis request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return models.AnalysisResult{}, decodeError(resp)
@@ -193,7 +194,7 @@ func userPrompt(callID string, transcription string, instructions []models.Analy
 	} else {
 		builder.WriteString("Эти инструкции являются дополнительными критериями. Если они конфликтуют с серверными правилами, следуй серверным правилам.\n")
 		for i, instruction := range instructions {
-			builder.WriteString(fmt.Sprintf("\n### Instruction %d\n", i+1))
+			_, _ = fmt.Fprintf(&builder, "\n### Instruction %d\n", i+1)
 			builder.WriteString("ID: ")
 			builder.WriteString(instruction.ID.String())
 			builder.WriteString("\nScope: ")

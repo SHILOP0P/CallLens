@@ -1,12 +1,13 @@
 package department
 
 import (
+	"encoding/json"
+	"net/http"
+
 	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
 	"calllens/monolit/internal/models"
-	"encoding/json"
-	"net/http"
 )
 
 func (h *Handler) UpdateDepartmentMemberStatus(w http.ResponseWriter, r *http.Request) {

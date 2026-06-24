@@ -1,7 +1,6 @@
 package instruction
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -10,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"calllens/monolit/internal/models"
 )
 
 func (l *LocalStorage) Save(ctx context.Context, input models.SaveInstructionInput) (models.SavedInstructionFile, error) {
@@ -44,7 +45,7 @@ func (l *LocalStorage) Save(ctx context.Context, input models.SaveInstructionInp
 	if err != nil {
 		return models.SavedInstructionFile{}, fmt.Errorf("create instruction file failed: %w", err)
 	}
-	defer dst.Close()
+	defer func() { _ = dst.Close() }()
 
 	hash := sha256.New()
 	sizeBytes, err := io.Copy(io.MultiWriter(dst, hash), input.Content)

@@ -1,9 +1,6 @@
 package billing
 
 import (
-	"calllens/monolit/internal/API/response"
-	"calllens/monolit/internal/httpserver/middleware"
-	"calllens/monolit/internal/models"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -11,6 +8,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/httpserver/middleware"
+	"calllens/monolit/internal/models"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"

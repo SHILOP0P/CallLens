@@ -1,11 +1,14 @@
+//go:build integration
+
 package migrator
 
 import (
-	"calllens/monolit/internal/repository/repositorytest"
 	"context"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"calllens/monolit/internal/repository/repositorytest"
 
 	"github.com/pressly/goose/v3"
 	"github.com/stretchr/testify/require"

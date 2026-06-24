@@ -1,13 +1,14 @@
 package refresh_session
 
 import (
-	model "calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/converter"
-	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	"calllens/monolit/internal/repository/scaner"
 )
 
 func (r *Repository) GetRefreshSessionByHash(ctx context.Context, refreshTokenHash string) (model.RefreshSession, error) {

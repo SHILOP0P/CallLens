@@ -1,11 +1,12 @@
 package billing
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -67,7 +68,7 @@ func (r *Repository) ListPlans(ctx context.Context) ([]models.Plan, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list plans: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	plans := make([]models.Plan, 0)
 	for rows.Next() {

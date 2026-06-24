@@ -2,10 +2,11 @@ package report
 
 import (
 	"bytes"
-	"calllens/monolit/internal/models"
 	"encoding/json"
 	"strings"
 	"time"
+
+	"calllens/monolit/internal/models"
 )
 
 type ReportData struct {

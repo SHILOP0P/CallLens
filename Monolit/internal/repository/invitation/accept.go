@@ -1,15 +1,16 @@
 package invitation
 
 import (
-	model "calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/converter"
-	repoModel "calllens/monolit/internal/repository/models"
-	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"time"
+
+	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	repoModel "calllens/monolit/internal/repository/models"
+	"calllens/monolit/internal/repository/scaner"
 
 	"github.com/google/uuid"
 )
@@ -19,7 +20,7 @@ func (r *Repository) AcceptInvitation(ctx context.Context, id uuid.UUID, now tim
 	if err != nil {
 		return model.MembershipInvitation{}, fmt.Errorf("begin accept invitation transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	invitation, err := getInvitationForUpdate(ctx, tx, id)
 	if err != nil {

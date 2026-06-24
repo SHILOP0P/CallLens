@@ -1,9 +1,10 @@
 package analysis_instruction
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"errors"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -36,8 +37,7 @@ func (s *Service) authorizeList(ctx context.Context, input models.ListAnalysisIn
 	case models.AnalysisInstructionScopePersonal:
 		return nil
 	case models.AnalysisInstructionScopeCompany:
-		_, err := s.companyRepository.GetCompanyMember(ctx, input.CompanyUUID.UUID, input.UserUUID)
-		return err
+		return s.authorizeCompanyInstructionRead(ctx, input.CompanyUUID.UUID, input.UserUUID)
 	case models.AnalysisInstructionScopeDepartment:
 		companyMember, err := s.companyRepository.GetCompanyMember(ctx, input.CompanyUUID.UUID, input.UserUUID)
 		if err == nil && companyMember.Role == models.CompanyMemberRoleManager {
@@ -85,8 +85,7 @@ func (s *Service) authorizeRead(ctx context.Context, instruction models.Analysis
 		}
 		return nil
 	case models.AnalysisInstructionScopeCompany:
-		_, err := s.companyRepository.GetCompanyMember(ctx, instruction.CompanyUUID.UUID, userID)
-		return err
+		return s.authorizeCompanyInstructionRead(ctx, instruction.CompanyUUID.UUID, userID)
 	case models.AnalysisInstructionScopeDepartment:
 		companyMember, err := s.companyRepository.GetCompanyMember(ctx, instruction.CompanyUUID.UUID, userID)
 		if err == nil && companyMember.Role == models.CompanyMemberRoleManager {
@@ -101,6 +100,26 @@ func (s *Service) authorizeRead(ctx context.Context, instruction models.Analysis
 	default:
 		return models.ErrInvalidAnalysisInstructionInput
 	}
+}
+
+func (s *Service) authorizeCompanyInstructionRead(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) error {
+	member, err := s.companyRepository.GetCompanyMember(ctx, companyID, userID)
+	if err != nil {
+		return err
+	}
+	if member.Role == models.CompanyMemberRoleManager {
+		return nil
+	}
+
+	departments, err := s.departmentRepository.ListVisibleCompanyDepartments(ctx, companyID, userID)
+	if err != nil {
+		return err
+	}
+	if len(departments) == 0 {
+		return models.ErrForbidden
+	}
+
+	return nil
 }
 
 func (s *Service) authorizeDepartmentManage(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID, userID uuid.UUID) error {

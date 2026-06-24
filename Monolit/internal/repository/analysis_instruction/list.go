@@ -1,12 +1,13 @@
 package analysis_instruction
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 )
 
 func (r *Repository) List(ctx context.Context, input model.ListAnalysisInstructionsInput) ([]model.AnalysisInstruction, error) {
@@ -36,7 +37,7 @@ func (r *Repository) List(ctx context.Context, input model.ListAnalysisInstructi
 	if err != nil {
 		return nil, fmt.Errorf("list analysis instructions: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	instructions := make([]repoModel.AnalysisInstruction, 0)
 	for rows.Next() {

@@ -1,14 +1,15 @@
 package report
 
 import (
-	"calllens/monolit/internal/models"
-	repositoryMocks "calllens/monolit/internal/repository/mocks"
-	storageMocks "calllens/monolit/internal/storage/mocks"
 	"context"
 	"io"
 	"strings"
 	"testing"
 	"time"
+
+	"calllens/monolit/internal/models"
+	repositoryMocks "calllens/monolit/internal/repository/mocks"
+	storageMocks "calllens/monolit/internal/storage/mocks"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

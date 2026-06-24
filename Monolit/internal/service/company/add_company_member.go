@@ -1,9 +1,10 @@
 package company
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"time"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"

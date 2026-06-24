@@ -10,11 +10,13 @@ import (
 
 func generateXLSXReport(data ReportData) ([]byte, error) {
 	file := excelize.NewFile()
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	analysis := data.StructuredAnalysis()
 
 	metaSheet := "Метаданные"
-	file.SetSheetName("Sheet1", metaSheet)
+	if err := file.SetSheetName("Sheet1", metaSheet); err != nil {
+		return nil, fmt.Errorf("rename metadata sheet: %w", err)
+	}
 	setRows(file, metaSheet, [][]any{
 		{"Поле", "Значение"},
 		{"ID звонка", data.Call.ID.String()},

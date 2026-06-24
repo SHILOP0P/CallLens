@@ -1,9 +1,6 @@
 package auth
 
 import (
-	"calllens/monolit/internal/API/response"
-	"calllens/monolit/internal/httpserver/middleware"
-	serviceMocks "calllens/monolit/internal/service/mocks"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -11,6 +8,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/httpserver/middleware"
+	serviceMocks "calllens/monolit/internal/service/mocks"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"

@@ -1,11 +1,12 @@
 package converter
 
 import (
-	model "calllens/monolit/internal/models"
-	repoModel "calllens/monolit/internal/repository/models"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+
+	model "calllens/monolit/internal/models"
+	repoModel "calllens/monolit/internal/repository/models"
 )
 
 func RepoTranscriptionToModel(repoTranscription repoModel.Transcription) (model.Transcription, error) {

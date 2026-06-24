@@ -1,12 +1,13 @@
 package invitation
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -25,7 +26,7 @@ func (r *Repository) ListUserInvitations(ctx context.Context, input model.ListUs
 	if err != nil {
 		return nil, fmt.Errorf("list user invitations: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	invitations, err := scanInvitations(rows)
 	if err != nil {
@@ -48,7 +49,7 @@ func (r *Repository) ListCompanyInvitations(ctx context.Context, companyID uuid.
 	if err != nil {
 		return nil, fmt.Errorf("list company invitations: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	invitations, err := scanInvitations(rows)
 	if err != nil {

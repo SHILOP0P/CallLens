@@ -1,11 +1,14 @@
+//go:build integration
+
 package processing_job
 
 import (
-	"calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/repositorytest"
 	"context"
 	"testing"
 	"time"
+
+	"calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/repositorytest"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"

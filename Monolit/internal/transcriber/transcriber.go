@@ -1,8 +1,9 @@
 package transcriber
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
+
+	"calllens/monolit/internal/models"
 )
 
 type Transcriber interface {

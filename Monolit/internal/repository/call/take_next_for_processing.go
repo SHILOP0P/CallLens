@@ -1,14 +1,15 @@
 package call
 
 import (
-	"calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/converter"
-	repoModel "calllens/monolit/internal/repository/models"
-	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	repoModel "calllens/monolit/internal/repository/models"
+	"calllens/monolit/internal/repository/scaner"
 )
 
 func (r *Repository) TakeNextForProcessing(ctx context.Context) (models.Call, error) {

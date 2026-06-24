@@ -1,8 +1,9 @@
 package department
 
 import (
-	"calllens/monolit/internal/models"
 	"errors"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -45,6 +46,47 @@ func (s *ServiceSuite) TestAddDepartmentMemberSuccess() {
 	s.Require().Equal(models.DepartmentMemberRoleEmployee, got.Role)
 }
 
+func (s *ServiceSuite) TestAddDepartmentMemberAllowsDepartmentLeaderForOwnDepartmentEmployee() {
+	companyID := uuid.New()
+	departmentID := uuid.New()
+	leaderID := uuid.New()
+	userID := uuid.New()
+
+	s.companyRepository.EXPECT().
+		GetCompanyMember(mock.Anything, companyID, leaderID).
+		Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: leaderID, Role: models.CompanyMemberRoleEmployee}, nil).
+		Once()
+	s.departmentRepository.EXPECT().
+		GetDepartmentMember(mock.Anything, companyID, departmentID, leaderID).
+		Return(models.DepartmentMember{DepartmentUUID: departmentID, UserUUID: leaderID, Role: models.DepartmentMemberRoleLeader, Status: models.MembershipStatusActive}, nil).
+		Once()
+	s.companyRepository.EXPECT().
+		GetCompanyMember(mock.Anything, companyID, userID).
+		Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: userID, Role: models.CompanyMemberRoleEmployee, Status: models.MembershipStatusActive}, nil).
+		Once()
+	s.departmentRepository.EXPECT().
+		AddDepartmentMember(mock.Anything, companyID, mock.MatchedBy(func(member models.DepartmentMember) bool {
+			return member.DepartmentUUID == departmentID &&
+				member.UserUUID == userID &&
+				member.Role == models.DepartmentMemberRoleEmployee &&
+				member.Status == models.MembershipStatusActive
+		})).
+		Return(models.DepartmentMember{DepartmentUUID: departmentID, UserUUID: userID, Role: models.DepartmentMemberRoleEmployee, Status: models.MembershipStatusActive}, nil).
+		Once()
+
+	got, err := s.service.AddDepartmentMember(s.ctx, models.AddDepartmentMemberInput{
+		CompanyUUID:    companyID,
+		DepartmentUUID: departmentID,
+		RequestUser:    leaderID,
+		UserUUID:       userID,
+		Role:           models.DepartmentMemberRoleEmployee,
+	})
+
+	s.Require().NoError(err)
+	s.Require().Equal(userID, got.UserUUID)
+	s.Require().Equal(models.DepartmentMemberRoleEmployee, got.Role)
+}
+
 func (s *ServiceSuite) TestAddDepartmentMemberRejectsInvalidRole() {
 	_, err := s.service.AddDepartmentMember(s.ctx, models.AddDepartmentMemberInput{
 		CompanyUUID:    uuid.New(),
@@ -57,21 +99,47 @@ func (s *ServiceSuite) TestAddDepartmentMemberRejectsInvalidRole() {
 	s.Require().ErrorIs(err, models.ErrInvalidDepartmentInput)
 }
 
-func (s *ServiceSuite) TestAddDepartmentMemberRejectsNonManager() {
+func (s *ServiceSuite) TestAddDepartmentMemberRejectsNonManagerNonLeader() {
 	companyID := uuid.New()
+	departmentID := uuid.New()
 	requestUserID := uuid.New()
 
 	s.companyRepository.EXPECT().
 		GetCompanyMember(mock.Anything, companyID, requestUserID).
 		Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: requestUserID, Role: models.CompanyMemberRoleEmployee}, nil).
 		Once()
+	s.departmentRepository.EXPECT().
+		GetDepartmentMember(mock.Anything, companyID, departmentID, requestUserID).
+		Return(models.DepartmentMember{DepartmentUUID: departmentID, UserUUID: requestUserID, Role: models.DepartmentMemberRoleEmployee}, nil).
+		Once()
 
 	_, err := s.service.AddDepartmentMember(s.ctx, models.AddDepartmentMemberInput{
 		CompanyUUID:    companyID,
-		DepartmentUUID: uuid.New(),
+		DepartmentUUID: departmentID,
 		RequestUser:    requestUserID,
 		UserUUID:       uuid.New(),
 		Role:           models.DepartmentMemberRoleEmployee,
+	})
+
+	s.Require().ErrorIs(err, models.ErrForbidden)
+}
+
+func (s *ServiceSuite) TestAddDepartmentMemberRejectsLeaderAssigningLeaderRole() {
+	companyID := uuid.New()
+	departmentID := uuid.New()
+	leaderID := uuid.New()
+
+	s.companyRepository.EXPECT().
+		GetCompanyMember(mock.Anything, companyID, leaderID).
+		Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: leaderID, Role: models.CompanyMemberRoleEmployee}, nil).
+		Once()
+
+	_, err := s.service.AddDepartmentMember(s.ctx, models.AddDepartmentMemberInput{
+		CompanyUUID:    companyID,
+		DepartmentUUID: departmentID,
+		RequestUser:    leaderID,
+		UserUUID:       uuid.New(),
+		Role:           models.DepartmentMemberRoleLeader,
 	})
 
 	s.Require().ErrorIs(err, models.ErrForbidden)

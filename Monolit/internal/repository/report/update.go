@@ -1,11 +1,12 @@
 package report
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	"calllens/monolit/internal/models"
 )
 
 func (r *Repository) MarkReady(ctx context.Context, input models.MarkReportReadyInput) (models.ReportExport, error) {

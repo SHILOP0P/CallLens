@@ -1,13 +1,16 @@
+//go:build integration
+
 package transcription
 
 import (
+	"context"
+	"testing"
+	"time"
+
 	"calllens/monolit/internal/models"
 	callRepo "calllens/monolit/internal/repository/call"
 	"calllens/monolit/internal/repository/repositorytest"
 	userRepo "calllens/monolit/internal/repository/user"
-	"context"
-	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"

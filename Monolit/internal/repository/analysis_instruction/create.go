@@ -1,12 +1,13 @@
 package analysis_instruction
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 )
 
 func (r *Repository) Create(ctx context.Context, instruction model.AnalysisInstruction) (model.AnalysisInstruction, error) {

@@ -1,6 +1,14 @@
 package main
 
 import (
+	"context"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+	"time"
+
 	analysisAPI "calllens/monolit/internal/API/analysis"
 	instructionAPI "calllens/monolit/internal/API/analysis_instruction"
 	authAPI "calllens/monolit/internal/API/auth"
@@ -8,6 +16,7 @@ import (
 	"calllens/monolit/internal/API/call"
 	companyAPI "calllens/monolit/internal/API/company"
 	departmentAPI "calllens/monolit/internal/API/department"
+	healthAPI "calllens/monolit/internal/API/health"
 	invitationAPI "calllens/monolit/internal/API/invitation"
 	reportAPI "calllens/monolit/internal/API/report"
 	"calllens/monolit/internal/analyzer"
@@ -41,13 +50,6 @@ import (
 	"calllens/monolit/internal/storage/instruction"
 	reportStorage "calllens/monolit/internal/storage/report"
 	"calllens/monolit/internal/transcriber"
-	"context"
-	"net/http"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"syscall"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
@@ -124,6 +126,14 @@ func main() {
 			return
 		}
 	}
+
+	healthHandler := healthAPI.NewHandler(
+		healthAPI.DatabaseCheck(sqlDB),
+		healthAPI.WritableDirectoryCheck("uploads.audio", audioUploadPath),
+		healthAPI.WritableDirectoryCheck("uploads.instructions", instructionUploadPath),
+		healthAPI.WritableDirectoryCheck("uploads.reports", reportUploadPath),
+		healthAPI.BinaryCheck("ffprobe", config.AppConfig().Upload.FFProbePath()),
+	)
 
 	audioStorage := audio.NewLocalStorage(audioUploadPath)
 	instructionStorage := instruction.NewLocalStorage(instructionUploadPath)
@@ -220,7 +230,7 @@ func main() {
 	reportHandler := reportAPI.NewHandler(reportSvc)
 	billingHandler := billingAPI.NewHandler(billingSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, healthHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

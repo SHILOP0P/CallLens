@@ -1,10 +1,13 @@
+//go:build integration
+
 package user
 
 import (
-	"calllens/monolit/internal/repository/repositorytest"
 	"context"
 	"database/sql"
 	"testing"
+
+	"calllens/monolit/internal/repository/repositorytest"
 
 	"github.com/stretchr/testify/suite"
 )

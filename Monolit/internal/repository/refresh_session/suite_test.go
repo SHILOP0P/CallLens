@@ -1,11 +1,14 @@
+//go:build integration
+
 package refresh_session
 
 import (
-	"calllens/monolit/internal/repository/repositorytest"
-	userRepo "calllens/monolit/internal/repository/user"
 	"context"
 	"database/sql"
 	"testing"
+
+	"calllens/monolit/internal/repository/repositorytest"
+	userRepo "calllens/monolit/internal/repository/user"
 
 	"github.com/stretchr/testify/suite"
 )

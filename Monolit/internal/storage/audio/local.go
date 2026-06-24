@@ -1,13 +1,14 @@
 package audio
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"calllens/monolit/internal/models"
 )
 
 func (l *LocalStorage) Save(ctx context.Context, input models.SaveInput) (models.SavedFile, error) {
@@ -37,7 +38,7 @@ func (l *LocalStorage) Save(ctx context.Context, input models.SaveInput) (models
 	if err != nil {
 		return models.SavedFile{}, fmt.Errorf("create audio file failed: %w", err)
 	}
-	defer dst.Close()
+	defer func() { _ = dst.Close() }()
 
 	syzeBytes, err := io.Copy(dst, input.Content)
 	if err != nil {

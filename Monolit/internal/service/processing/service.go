@@ -1,12 +1,13 @@
 package processing
 
 import (
+	"context"
+
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository"
 	"calllens/monolit/internal/storage"
 	"calllens/monolit/internal/transcriber"
-	"context"
 
 	"github.com/google/uuid"
 )

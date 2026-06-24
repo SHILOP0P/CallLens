@@ -1,14 +1,15 @@
 package invitation
 
 import (
-	model "calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/converter"
-	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"time"
+
+	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	"calllens/monolit/internal/repository/scaner"
 
 	"github.com/google/uuid"
 )

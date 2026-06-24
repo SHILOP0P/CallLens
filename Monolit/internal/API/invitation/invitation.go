@@ -1,12 +1,13 @@
 package invitation
 
 import (
+	"errors"
+	"net/http"
+
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/httpserver/middleware"
 	"calllens/monolit/internal/models"
 	"calllens/monolit/internal/service"
-	"errors"
-	"net/http"
 
 	"github.com/google/uuid"
 )

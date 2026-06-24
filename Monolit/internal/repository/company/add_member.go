@@ -1,12 +1,13 @@
 package company
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 )
 
 func (r *Repository) AddCompanyMember(ctx context.Context, member model.CompanyMember) (model.CompanyMember, error) {

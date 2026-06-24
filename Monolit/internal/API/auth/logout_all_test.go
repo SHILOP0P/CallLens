@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"calllens/monolit/internal/API/response"
 	"errors"
 	"net/http"
+
+	"calllens/monolit/internal/API/response"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

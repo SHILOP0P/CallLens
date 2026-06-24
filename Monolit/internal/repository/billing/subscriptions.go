@@ -1,8 +1,9 @@
 package billing
 
 import (
-	"calllens/monolit/internal/models"
 	"database/sql"
+
+	"calllens/monolit/internal/models"
 )
 
 func subscriptionColumns(subscriptionAlias string, planAlias string) string {

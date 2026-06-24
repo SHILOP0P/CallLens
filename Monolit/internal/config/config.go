@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 
 	"calllens/monolit/internal/config/env"
@@ -27,7 +28,7 @@ func NewConfig() *config {
 
 func Load(path ...string) error {
 	err := godotenv.Load(path...)
-	if err != nil && os.IsNotExist(err) {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err
 	}
 

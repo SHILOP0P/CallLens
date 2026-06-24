@@ -1,7 +1,6 @@
 package audio
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"errors"
 	"fmt"
@@ -10,6 +9,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"calllens/monolit/internal/models"
 )
 
 type FFProbeDurationDetector struct {

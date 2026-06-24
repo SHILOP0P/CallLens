@@ -1,29 +1,36 @@
 package httpserver
 
 import (
+	"net/http"
+	"time"
+
 	"calllens/monolit/internal/API"
 	"calllens/monolit/internal/API/health"
 	authMiddleware "calllens/monolit/internal/httpserver/middleware"
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/repository"
-	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, reportAPI API.ReportAPI, billingAPI API.BillingAPI, invitationAPI API.InvitationAPI, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
+func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, reportAPI API.ReportAPI, billingAPI API.BillingAPI, invitationAPI API.InvitationAPI, healthHandler *health.Handler, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	authGuard := authMiddleware.Auth(jwtSecret, refreshSessionRepository)
+	if healthHandler == nil {
+		healthHandler = health.NewHandler()
+	}
 
 	r.Use(middleware.RequestID)
 	r.Use(authMiddleware.RequestLogger(log))
 	r.Use(authMiddleware.Recoverer(log))
 	r.Use(middleware.URLFormat)
 
-	r.Get("/health", health.Health)
+	r.Get("/health", healthHandler.Health)
+	r.Get("/health/live", healthHandler.Live)
+	r.Get("/health/ready", healthHandler.Ready)
+	r.Get("/health/startup", healthHandler.Startup)
 	r.Route("/api/v1", func(r chi.Router) {
 		r.With(authGuard).Get("/calls/{uuid}/events", callAPI.Events)
 

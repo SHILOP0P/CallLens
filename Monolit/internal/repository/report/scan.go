@@ -1,8 +1,9 @@
 package report
 
 import (
-	"calllens/monolit/internal/models"
 	"database/sql"
+
+	"calllens/monolit/internal/models"
 )
 
 type rowScanner interface {

@@ -1,9 +1,12 @@
+//go:build integration
+
 package user
 
 import (
-	"calllens/monolit/internal/models"
 	"strings"
 	"time"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )

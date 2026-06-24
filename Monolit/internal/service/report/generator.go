@@ -2,8 +2,9 @@ package report
 
 import (
 	"bytes"
-	"calllens/monolit/internal/models"
 	"fmt"
+
+	"calllens/monolit/internal/models"
 )
 
 func generateReport(format models.ReportFormat, data ReportData) ([]byte, error) {

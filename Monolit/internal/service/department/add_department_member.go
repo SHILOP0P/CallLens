@@ -1,9 +1,10 @@
 package department
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"time"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -18,13 +19,8 @@ func (s *Service) AddDepartmentMember(ctx context.Context, input models.AddDepar
 		return models.DepartmentMember{}, models.ErrInvalidDepartmentInput
 	}
 
-	requestMember, err := s.companyRepository.GetCompanyMember(ctx, input.CompanyUUID, input.RequestUser)
-	if err != nil {
+	if err := s.authorizeAddDepartmentMember(ctx, input); err != nil {
 		return models.DepartmentMember{}, err
-	}
-
-	if requestMember.Role != models.CompanyMemberRoleManager {
-		return models.DepartmentMember{}, models.ErrForbidden
 	}
 
 	if err := s.requireActiveCompanySubscription(ctx, input.CompanyUUID); err != nil {
@@ -58,4 +54,28 @@ func (s *Service) AddDepartmentMember(ctx context.Context, input models.AddDepar
 	s.log.Info(ctx, "department member added", zap.String("company_id", input.CompanyUUID.String()), zap.String("department_id", input.DepartmentUUID.String()), zap.String("request_user_id", input.RequestUser.String()), zap.String("user_id", input.UserUUID.String()), zap.String("role", string(createdMember.Role)))
 
 	return createdMember, nil
+}
+
+func (s *Service) authorizeAddDepartmentMember(ctx context.Context, input models.AddDepartmentMemberInput) error {
+	requestMember, err := s.companyRepository.GetCompanyMember(ctx, input.CompanyUUID, input.RequestUser)
+	if err != nil {
+		return err
+	}
+	if requestMember.Role == models.CompanyMemberRoleManager {
+		return nil
+	}
+
+	if input.Role != models.DepartmentMemberRoleEmployee {
+		return models.ErrForbidden
+	}
+
+	departmentMember, err := s.departmentRepository.GetDepartmentMember(ctx, input.CompanyUUID, input.DepartmentUUID, input.RequestUser)
+	if err != nil {
+		return err
+	}
+	if departmentMember.Role != models.DepartmentMemberRoleLeader {
+		return models.ErrForbidden
+	}
+
+	return nil
 }

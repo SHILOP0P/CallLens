@@ -1,13 +1,14 @@
 package call
 
 import (
-	"calllens/monolit/internal/API/response"
 	"errors"
 	"io"
 	"mime"
 	"net/http"
 	"os"
 	"strconv"
+
+	"calllens/monolit/internal/API/response"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -38,7 +39,7 @@ func (h *CallHandler) GetAudioByUUID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer audioFile.Content.Close()
+	defer func() { _ = audioFile.Content.Close() }()
 
 	contentType := audioFile.MimeType
 

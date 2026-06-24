@@ -1,13 +1,14 @@
 package auth
 
 import (
+	"encoding/json"
+	"errors"
+	"net/http"
+
 	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
 	"calllens/monolit/internal/models"
-	"encoding/json"
-	"errors"
-	"net/http"
 )
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {

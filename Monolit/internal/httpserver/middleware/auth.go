@@ -1,13 +1,14 @@
 package middleware
 
 import (
+	"net/http"
+	"strings"
+	"time"
+
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/auth/token"
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/repository"
-	"net/http"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 )

@@ -1,8 +1,9 @@
 package call
 
 import (
-	"calllens/monolit/internal/models"
 	"errors"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

@@ -1,12 +1,13 @@
 package call
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -37,7 +38,7 @@ func (r *Repository) List(ctx context.Context, userID uuid.UUID) ([]model.Call, 
 	if err != nil {
 		return nil, fmt.Errorf("list calls: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var call repoModel.Call

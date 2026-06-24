@@ -1,10 +1,11 @@
 package converter
 
 import (
-	model "calllens/monolit/internal/models"
-	repoModel "calllens/monolit/internal/repository/models"
 	"database/sql"
 	"time"
+
+	model "calllens/monolit/internal/models"
+	repoModel "calllens/monolit/internal/repository/models"
 )
 
 func RepoRefreshSessionToModel(repoSession repoModel.RefreshSession) (model.RefreshSession, error) {

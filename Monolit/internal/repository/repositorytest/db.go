@@ -32,7 +32,7 @@ func OpenTestDB(t *testing.T) *sql.DB {
 	cfg.testDatabase = packageTestDatabaseName(t, cfg.testDatabase)
 
 	maintenanceDB := openDB(t, cfg.withDatabase("postgres"))
-	defer maintenanceDB.Close()
+	defer func() { _ = maintenanceDB.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

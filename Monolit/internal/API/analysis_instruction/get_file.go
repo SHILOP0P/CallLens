@@ -1,13 +1,14 @@
 package analysis_instruction
 
 import (
-	"calllens/monolit/internal/API/response"
-	"calllens/monolit/internal/models"
 	"errors"
 	"io"
 	"mime"
 	"net/http"
 	"strconv"
+
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/models"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -30,7 +31,7 @@ func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
 		writeInstructionFileError(w, err)
 		return
 	}
-	defer file.Content.Close()
+	defer func() { _ = file.Content.Close() }()
 
 	contentType := file.MimeType
 	if contentType == "" {

@@ -1,13 +1,14 @@
 package user
 
 import (
-	model "calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/converter"
-	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	"calllens/monolit/internal/repository/scaner"
 )
 
 func (r *Repository) GetUserByUsername(ctx context.Context, username string) (model.User, error) {

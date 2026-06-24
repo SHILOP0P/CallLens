@@ -1,9 +1,10 @@
 package department
 
 import (
-	model "calllens/monolit/internal/models"
 	"context"
 	"fmt"
+
+	model "calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -39,7 +40,7 @@ func (r *Repository) ListDepartmentMembers(ctx context.Context, companyID uuid.U
 	if err != nil {
 		return nil, fmt.Errorf("list department members: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var members []model.DepartmentMember
 	for rows.Next() {

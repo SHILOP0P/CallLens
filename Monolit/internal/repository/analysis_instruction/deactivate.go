@@ -1,10 +1,11 @@
 package analysis_instruction
 
 import (
-	model "calllens/monolit/internal/models"
 	"context"
 	"database/sql"
 	"fmt"
+
+	model "calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )

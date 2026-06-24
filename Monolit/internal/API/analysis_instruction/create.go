@@ -2,14 +2,15 @@ package analysis_instruction
 
 import (
 	"bytes"
-	"calllens/monolit/internal/API/response"
-	"calllens/monolit/internal/converter"
-	"calllens/monolit/internal/models"
 	"errors"
 	"io"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/converter"
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -34,7 +35,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		response.WriteError(w, http.StatusBadRequest, response.CodeInstructionFileRequired, "instruction file is required")
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	if filepath.Ext(fileHeader.Filename) == "" {
 		response.WriteError(w, http.StatusBadRequest, response.CodeInstructionFileExtensionRequired, "instruction file extension is required")

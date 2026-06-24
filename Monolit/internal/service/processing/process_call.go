@@ -1,10 +1,11 @@
 package processing
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"fmt"
 	"time"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -98,7 +99,7 @@ func (s *Service) processTranscribeCall(ctx context.Context, call models.Call) e
 	if err != nil {
 		return fmt.Errorf("open audio: %w", err)
 	}
-	defer audioFile.Content.Close()
+	defer func() { _ = audioFile.Content.Close() }()
 
 	result, err := s.transcriber.Transcribe(ctx, audioFile)
 	if err != nil {

@@ -1,9 +1,10 @@
 package mock
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"encoding/json"
+
+	"calllens/monolit/internal/models"
 )
 
 type Analyzer struct {

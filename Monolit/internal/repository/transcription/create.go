@@ -1,11 +1,12 @@
 package transcription
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 )
 
 func (r *Repository) Create(ctx context.Context, transcription model.Transcription) (model.Transcription, error) {

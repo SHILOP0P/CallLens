@@ -1,12 +1,13 @@
 package auth
 
 import (
-	"calllens/monolit/internal/API/dto"
-	"calllens/monolit/internal/API/response"
-	"calllens/monolit/internal/models"
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

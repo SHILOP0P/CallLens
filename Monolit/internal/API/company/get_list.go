@@ -1,10 +1,11 @@
 package company
 
 import (
+	"net/http"
+
 	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
-	"net/http"
 )
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {

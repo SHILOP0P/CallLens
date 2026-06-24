@@ -1,7 +1,6 @@
 package analysis
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )

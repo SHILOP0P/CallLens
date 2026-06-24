@@ -1,9 +1,10 @@
 package converter
 
 import (
+	"time"
+
 	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/models"
-	"time"
 
 	"github.com/google/uuid"
 )

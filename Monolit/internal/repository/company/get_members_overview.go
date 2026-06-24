@@ -1,11 +1,12 @@
 package company
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -77,7 +78,7 @@ func (r *Repository) listActiveCompanyMembers(ctx context.Context, companyID uui
 	if err != nil {
 		return nil, fmt.Errorf("list active company members: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var members []model.CompanyMember
 	for rows.Next() {
@@ -120,7 +121,7 @@ func (r *Repository) listCompanyDepartments(ctx context.Context, companyID uuid.
 	if err != nil {
 		return nil, fmt.Errorf("list company departments: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var departments []model.Department
 	for rows.Next() {
@@ -167,7 +168,7 @@ func (r *Repository) listActiveDepartmentMembers(ctx context.Context, companyID 
 	if err != nil {
 		return nil, fmt.Errorf("list active department members: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var members []model.DepartmentMember
 	for rows.Next() {

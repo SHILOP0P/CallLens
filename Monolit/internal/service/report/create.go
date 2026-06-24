@@ -2,11 +2,11 @@ package report
 
 import (
 	"bytes"
-	"calllens/monolit/internal/models"
 	"context"
-	"errors"
 	"fmt"
 	"strings"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -177,8 +177,4 @@ func reportFileName(title string, id uuid.UUID, format models.ReportFormat) stri
 	}
 
 	return fmt.Sprintf("%s-%s%s", base, id.String(), fileExtension(format))
-}
-
-func isMissingReportFile(err error) bool {
-	return errors.Is(err, models.ErrReportFileNotFound)
 }

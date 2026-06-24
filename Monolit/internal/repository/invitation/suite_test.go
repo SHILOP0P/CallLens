@@ -1,13 +1,16 @@
+//go:build integration
+
 package invitation
 
 import (
+	"context"
+	"database/sql"
+	"testing"
+
 	companyRepo "calllens/monolit/internal/repository/company"
 	departmentRepo "calllens/monolit/internal/repository/department"
 	"calllens/monolit/internal/repository/repositorytest"
 	userRepo "calllens/monolit/internal/repository/user"
-	"context"
-	"database/sql"
-	"testing"
 
 	"github.com/stretchr/testify/suite"
 )

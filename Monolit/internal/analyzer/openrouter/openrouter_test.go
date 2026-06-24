@@ -1,7 +1,6 @@
 package openrouter
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +8,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )

@@ -1,10 +1,11 @@
 package processing
 
 import (
-	"calllens/monolit/internal/models"
 	"errors"
 	"fmt"
 	"testing"
+
+	"calllens/monolit/internal/models"
 )
 
 func TestIsPermanentProcessingError(t *testing.T) {

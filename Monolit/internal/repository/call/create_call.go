@@ -1,14 +1,15 @@
 package call
 
 import (
-	model "calllens/monolit/internal/models"
-	"calllens/monolit/internal/repository/converter"
-	repoModel "calllens/monolit/internal/repository/models"
-	"calllens/monolit/internal/repository/scaner"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+
+	model "calllens/monolit/internal/models"
+	"calllens/monolit/internal/repository/converter"
+	repoModel "calllens/monolit/internal/repository/models"
+	"calllens/monolit/internal/repository/scaner"
 )
 
 func (r *Repository) CreateCall(ctx context.Context, call model.Call) (model.Call, error) {
@@ -92,7 +93,7 @@ func (r *Repository) CreateCallWithProcessingJob(ctx context.Context, call model
 	if err != nil {
 		return model.Call{}, fmt.Errorf("begin create call with processing job transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	createCall := `
 	INSERT INTO calls (

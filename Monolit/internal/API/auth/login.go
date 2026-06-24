@@ -1,15 +1,16 @@
 package auth
 
 import (
-	"calllens/monolit/internal/API/dto"
-	"calllens/monolit/internal/API/response"
-	"calllens/monolit/internal/converter"
-	model "calllens/monolit/internal/models"
 	"encoding/json"
 	"errors"
 	"net"
 	"net/http"
 	"strings"
+
+	"calllens/monolit/internal/API/dto"
+	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/converter"
+	model "calllens/monolit/internal/models"
 )
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {

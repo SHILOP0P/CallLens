@@ -1,12 +1,15 @@
+//go:build integration
+
 package department
 
 import (
-	companyRepo "calllens/monolit/internal/repository/company"
-	"calllens/monolit/internal/repository/repositorytest"
-	userRepo "calllens/monolit/internal/repository/user"
 	"context"
 	"database/sql"
 	"testing"
+
+	companyRepo "calllens/monolit/internal/repository/company"
+	"calllens/monolit/internal/repository/repositorytest"
+	userRepo "calllens/monolit/internal/repository/user"
 
 	"github.com/stretchr/testify/suite"
 )

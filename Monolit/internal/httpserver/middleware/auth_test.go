@@ -1,13 +1,14 @@
 package middleware
 
 import (
-	"calllens/monolit/internal/auth/token"
-	"calllens/monolit/internal/models"
 	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"calllens/monolit/internal/auth/token"
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )

@@ -1,12 +1,13 @@
 package httpserver
 
 import (
-	apiMocks "calllens/monolit/internal/API/mocks"
-	"calllens/monolit/internal/logger"
-	repositoryMocks "calllens/monolit/internal/repository/mocks"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	apiMocks "calllens/monolit/internal/API/mocks"
+	"calllens/monolit/internal/logger"
+	repositoryMocks "calllens/monolit/internal/repository/mocks"
 
 	"github.com/stretchr/testify/require"
 )
@@ -22,6 +23,7 @@ func TestNewRouterRegistersPublicAndProtectedRoutes(t *testing.T) {
 		apiMocks.NewReportAPI(t),
 		apiMocks.NewBillingAPI(t),
 		apiMocks.NewInvitationAPI(t),
+		nil,
 		"test-secret",
 		repositoryMocks.NewRefreshSessionRepository(t),
 		logger.NewNop(),
@@ -30,6 +32,10 @@ func TestNewRouterRegistersPublicAndProtectedRoutes(t *testing.T) {
 	healthRecorder := httptest.NewRecorder()
 	router.ServeHTTP(healthRecorder, httptest.NewRequest(http.MethodGet, "/health", nil))
 	require.Equal(t, http.StatusOK, healthRecorder.Code)
+
+	readyRecorder := httptest.NewRecorder()
+	router.ServeHTTP(readyRecorder, httptest.NewRequest(http.MethodGet, "/health/ready", nil))
+	require.Equal(t, http.StatusOK, readyRecorder.Code)
 
 	protectedRecorder := httptest.NewRecorder()
 	router.ServeHTTP(protectedRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/calls", nil))

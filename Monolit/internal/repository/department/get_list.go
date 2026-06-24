@@ -1,12 +1,13 @@
 package department
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -43,7 +44,7 @@ func (r *Repository) ListVisibleCompanyDepartments(ctx context.Context, companyI
 	if err != nil {
 		return nil, fmt.Errorf("list visible company departments: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var departments []repoModel.Department
 	for rows.Next() {

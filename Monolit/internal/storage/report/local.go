@@ -1,13 +1,14 @@
 package report
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 )
@@ -40,7 +41,7 @@ func (l *LocalStorage) Save(ctx context.Context, input models.SaveReportInput) (
 	if err != nil {
 		return models.SavedReportFile{}, fmt.Errorf("create report file failed: %w", err)
 	}
-	defer dst.Close()
+	defer func() { _ = dst.Close() }()
 
 	sizeBytes, err := io.Copy(dst, input.Content)
 	if err != nil {

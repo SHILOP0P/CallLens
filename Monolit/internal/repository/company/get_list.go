@@ -1,12 +1,13 @@
 package company
 
 import (
+	"context"
+	"fmt"
+
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
 	repoModel "calllens/monolit/internal/repository/models"
 	"calllens/monolit/internal/repository/scaner"
-	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -29,7 +30,7 @@ func (r *Repository) ListUserCompanies(ctx context.Context, userID uuid.UUID) ([
 	if err != nil {
 		return nil, fmt.Errorf("list user companies: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var companies []repoModel.Company
 	for rows.Next() {

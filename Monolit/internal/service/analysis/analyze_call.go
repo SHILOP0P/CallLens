@@ -1,7 +1,6 @@
 package analysis
 
 import (
-	"calllens/monolit/internal/models"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +8,8 @@ import (
 	"io"
 	"strings"
 	"time"
+
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -321,7 +322,7 @@ func (s *Service) readInstructionContent(ctx context.Context, instruction models
 	if err != nil {
 		return models.AnalysisInstructionContent{}, err
 	}
-	defer content.Close()
+	defer func() { _ = content.Close() }()
 
 	data, err := io.ReadAll(content)
 	if err != nil {

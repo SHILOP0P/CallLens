@@ -1,10 +1,11 @@
 package auth
 
 import (
-	"calllens/monolit/internal/auth/refresh"
-	"calllens/monolit/internal/models"
 	"errors"
 	"time"
+
+	"calllens/monolit/internal/auth/refresh"
+	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
