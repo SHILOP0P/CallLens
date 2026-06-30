@@ -14,7 +14,11 @@ func generatePDFReport(data ReportData) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	pdf.AddUTF8Font("report", "", fontPath)
+	fontBytes, err := os.ReadFile(fontPath)
+	if err != nil {
+		return nil, fmt.Errorf("read pdf report font: %w", err)
+	}
+	pdf.AddUTF8FontFromBytes("report", "", fontBytes)
 	pdf.SetFont("report", "", 12)
 	pdf.SetMargins(15, 15, 15)
 	pdf.AddPage()
