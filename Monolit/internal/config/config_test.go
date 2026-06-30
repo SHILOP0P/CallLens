@@ -39,11 +39,12 @@ func TestLoadErrorsAndNewConfig(t *testing.T) {
 	}
 
 	envFile := filepath.Join(t.TempDir(), ".env")
-	if err := os.WriteFile(envFile, []byte("HTTP_READ_TIMEOUT=invalid\n"), 0600); err != nil {
+	if err := os.WriteFile(envFile, nil, 0600); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("HTTP_HOST", "localhost")
 	t.Setenv("HTTP_PORT", "8080")
+	t.Setenv("HTTP_READ_TIMEOUT", "invalid")
 	if err := Load(envFile); err == nil {
 		t.Fatal("expected invalid config error")
 	}
