@@ -45,6 +45,28 @@ type UpdateUsernameRequest struct {
 	Username string `json:"username"`
 }
 
+type UpdatePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
+type UpdatePasswordResponse struct {
+	UpdatedAt string `json:"updated_at"`
+}
+
+type UserSessionResponse struct {
+	ID         string  `json:"id"`
+	Current    bool    `json:"current"`
+	UserAgent  *string `json:"user_agent"`
+	IP         *string `json:"ip"`
+	CreatedAt  string  `json:"created_at"`
+	LastSeenAt *string `json:"last_seen_at"`
+}
+
+type UserSessionsResponse struct {
+	Sessions []UserSessionResponse `json:"sessions"`
+}
+
 type UpdateProfileRequest struct {
 	FullName    *string `json:"full_name"`
 	FullSurname *string `json:"full_surname"`

@@ -366,6 +366,64 @@ func (_c *UserRepository_UpdateAvatar_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
+// UpdatePasswordHash provides a mock function with given fields: ctx, userID, passwordHash
+func (_m *UserRepository) UpdatePasswordHash(ctx context.Context, userID uuid.UUID, passwordHash string) (models.User, error) {
+	ret := _m.Called(ctx, userID, passwordHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdatePasswordHash")
+	}
+
+	var r0 models.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (models.User, error)); ok {
+		return rf(ctx, userID, passwordHash)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) models.User); ok {
+		r0 = rf(ctx, userID, passwordHash)
+	} else {
+		r0 = ret.Get(0).(models.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, userID, passwordHash)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UserRepository_UpdatePasswordHash_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdatePasswordHash'
+type UserRepository_UpdatePasswordHash_Call struct {
+	*mock.Call
+}
+
+// UpdatePasswordHash is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - passwordHash string
+func (_e *UserRepository_Expecter) UpdatePasswordHash(ctx interface{}, userID interface{}, passwordHash interface{}) *UserRepository_UpdatePasswordHash_Call {
+	return &UserRepository_UpdatePasswordHash_Call{Call: _e.mock.On("UpdatePasswordHash", ctx, userID, passwordHash)}
+}
+
+func (_c *UserRepository_UpdatePasswordHash_Call) Run(run func(ctx context.Context, userID uuid.UUID, passwordHash string)) *UserRepository_UpdatePasswordHash_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *UserRepository_UpdatePasswordHash_Call) Return(_a0 models.User, _a1 error) *UserRepository_UpdatePasswordHash_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *UserRepository_UpdatePasswordHash_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (models.User, error)) *UserRepository_UpdatePasswordHash_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateProfile provides a mock function with given fields: ctx, input
 func (_m *UserRepository) UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error) {
 	ret := _m.Called(ctx, input)

@@ -80,6 +80,10 @@ func (r *authRefreshSessionRepository) GetRefreshSessionByUUID(ctx context.Conte
 	return r.session, nil
 }
 
+func (r *authRefreshSessionRepository) ListActiveUserRefreshSessions(ctx context.Context, userID uuid.UUID) ([]models.RefreshSession, error) {
+	return nil, nil
+}
+
 func (r *authRefreshSessionRepository) RotateRefreshSession(ctx context.Context, oldRefreshTokenHash string, newRefreshTokenHash string, expiresAt time.Time) (models.RefreshSession, error) {
 	return models.RefreshSession{}, nil
 }
@@ -88,6 +92,14 @@ func (r *authRefreshSessionRepository) RevokeRefreshSession(ctx context.Context,
 	return nil
 }
 
+func (r *authRefreshSessionRepository) RevokeUserRefreshSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, reason string) error {
+	return nil
+}
+
 func (r *authRefreshSessionRepository) RevokeAllUserRefreshSessions(ctx context.Context, userID uuid.UUID, reason string) error {
+	return nil
+}
+
+func (r *authRefreshSessionRepository) RevokeOtherUserRefreshSessions(ctx context.Context, userID uuid.UUID, keepSessionID uuid.UUID, reason string) error {
 	return nil
 }

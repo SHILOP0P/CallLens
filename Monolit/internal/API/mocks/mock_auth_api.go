@@ -55,6 +55,40 @@ func (_c *AuthAPI_DeleteAvatar_Call) RunAndReturn(run func(http.ResponseWriter, 
 	return _c
 }
 
+// DeleteSession provides a mock function with given fields: w, r
+func (_m *AuthAPI) DeleteSession(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AuthAPI_DeleteSession_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteSession'
+type AuthAPI_DeleteSession_Call struct {
+	*mock.Call
+}
+
+// DeleteSession is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AuthAPI_Expecter) DeleteSession(w interface{}, r interface{}) *AuthAPI_DeleteSession_Call {
+	return &AuthAPI_DeleteSession_Call{Call: _e.mock.On("DeleteSession", w, r)}
+}
+
+func (_c *AuthAPI_DeleteSession_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AuthAPI_DeleteSession_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AuthAPI_DeleteSession_Call) Return() *AuthAPI_DeleteSession_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AuthAPI_DeleteSession_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AuthAPI_DeleteSession_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetPreferences provides a mock function with given fields: w, r
 func (_m *AuthAPI) GetPreferences(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -85,6 +119,40 @@ func (_c *AuthAPI_GetPreferences_Call) Return() *AuthAPI_GetPreferences_Call {
 }
 
 func (_c *AuthAPI_GetPreferences_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AuthAPI_GetPreferences_Call {
+	_c.Run(run)
+	return _c
+}
+
+// ListSessions provides a mock function with given fields: w, r
+func (_m *AuthAPI) ListSessions(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AuthAPI_ListSessions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListSessions'
+type AuthAPI_ListSessions_Call struct {
+	*mock.Call
+}
+
+// ListSessions is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AuthAPI_Expecter) ListSessions(w interface{}, r interface{}) *AuthAPI_ListSessions_Call {
+	return &AuthAPI_ListSessions_Call{Call: _e.mock.On("ListSessions", w, r)}
+}
+
+func (_c *AuthAPI_ListSessions_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AuthAPI_ListSessions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AuthAPI_ListSessions_Call) Return() *AuthAPI_ListSessions_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AuthAPI_ListSessions_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AuthAPI_ListSessions_Call {
 	_c.Run(run)
 	return _c
 }
@@ -323,6 +391,40 @@ func (_c *AuthAPI_Register_Call) Return() *AuthAPI_Register_Call {
 }
 
 func (_c *AuthAPI_Register_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AuthAPI_Register_Call {
+	_c.Run(run)
+	return _c
+}
+
+// UpdatePassword provides a mock function with given fields: w, r
+func (_m *AuthAPI) UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AuthAPI_UpdatePassword_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdatePassword'
+type AuthAPI_UpdatePassword_Call struct {
+	*mock.Call
+}
+
+// UpdatePassword is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AuthAPI_Expecter) UpdatePassword(w interface{}, r interface{}) *AuthAPI_UpdatePassword_Call {
+	return &AuthAPI_UpdatePassword_Call{Call: _e.mock.On("UpdatePassword", w, r)}
+}
+
+func (_c *AuthAPI_UpdatePassword_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AuthAPI_UpdatePassword_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AuthAPI_UpdatePassword_Call) Return() *AuthAPI_UpdatePassword_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AuthAPI_UpdatePassword_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AuthAPI_UpdatePassword_Call {
 	_c.Run(run)
 	return _c
 }

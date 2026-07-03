@@ -40,6 +40,7 @@ type UserRepository interface {
 	//POST
 	CreateUser(ctx context.Context, user models.User) (models.User, error)
 	UpdateUsername(ctx context.Context, input models.UpdateUsernameInput) (models.User, error)
+	UpdatePasswordHash(ctx context.Context, userID uuid.UUID, passwordHash string) (models.User, error)
 	UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error)
 	UpdateAvatar(ctx context.Context, input models.UserAvatarUpdate) (models.User, error)
 	DeleteAvatar(ctx context.Context, userID uuid.UUID) (models.User, error)
@@ -86,9 +87,12 @@ type RefreshSessionRepository interface {
 	CreateRefreshSession(ctx context.Context, session models.RefreshSession) (models.RefreshSession, error)
 	GetRefreshSessionByHash(ctx context.Context, refreshTokenHash string) (models.RefreshSession, error)
 	GetRefreshSessionByUUID(ctx context.Context, sessionID uuid.UUID) (models.RefreshSession, error)
+	ListActiveUserRefreshSessions(ctx context.Context, userID uuid.UUID) ([]models.RefreshSession, error)
 	RotateRefreshSession(ctx context.Context, oldRefreshTokenHash string, newRefreshTokenHash string, expiresAt time.Time) (models.RefreshSession, error)
 	RevokeRefreshSession(ctx context.Context, sessionID uuid.UUID, reason string) error
+	RevokeUserRefreshSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, reason string) error
 	RevokeAllUserRefreshSessions(ctx context.Context, userID uuid.UUID, reason string) error
+	RevokeOtherUserRefreshSessions(ctx context.Context, userID uuid.UUID, keepSessionID uuid.UUID, reason string) error
 }
 
 type TranscriptionRepository interface {

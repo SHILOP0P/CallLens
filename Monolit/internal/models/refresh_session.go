@@ -18,3 +18,12 @@ type RefreshSession struct {
 	RevokedAt        *time.Time
 	RevokedReason    *string
 }
+
+type UserSession struct {
+	ID         uuid.UUID
+	Current    bool
+	UserAgent  *string
+	IPAddress  *string
+	CreatedAt  time.Time
+	LastSeenAt *time.Time
+}

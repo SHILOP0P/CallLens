@@ -43,6 +43,9 @@ type AuthService interface {
 	LogoutAll(ctx context.Context, userID uuid.UUID) error
 	Me(ctx context.Context, userID uuid.UUID) (models.User, error)
 	UpdateUsername(ctx context.Context, input models.UpdateUsernameInput) (models.User, error)
+	UpdatePassword(ctx context.Context, input models.UpdatePasswordInput) (models.UpdatePasswordResult, error)
+	ListSessions(ctx context.Context, userID uuid.UUID, currentSessionID uuid.UUID) ([]models.UserSession, error)
+	RevokeSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID) error
 	GetUserByUsername(ctx context.Context, username string) (models.User, error)
 	UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error)
 	UploadAvatar(ctx context.Context, input models.SaveUserAvatarInput) (models.UserAvatarResponse, error)

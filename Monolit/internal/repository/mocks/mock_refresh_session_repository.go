@@ -197,6 +197,65 @@ func (_c *RefreshSessionRepository_GetRefreshSessionByUUID_Call) RunAndReturn(ru
 	return _c
 }
 
+// ListActiveUserRefreshSessions provides a mock function with given fields: ctx, userID
+func (_m *RefreshSessionRepository) ListActiveUserRefreshSessions(ctx context.Context, userID uuid.UUID) ([]models.RefreshSession, error) {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListActiveUserRefreshSessions")
+	}
+
+	var r0 []models.RefreshSession
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]models.RefreshSession, error)); ok {
+		return rf(ctx, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) []models.RefreshSession); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.RefreshSession)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RefreshSessionRepository_ListActiveUserRefreshSessions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListActiveUserRefreshSessions'
+type RefreshSessionRepository_ListActiveUserRefreshSessions_Call struct {
+	*mock.Call
+}
+
+// ListActiveUserRefreshSessions is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *RefreshSessionRepository_Expecter) ListActiveUserRefreshSessions(ctx interface{}, userID interface{}) *RefreshSessionRepository_ListActiveUserRefreshSessions_Call {
+	return &RefreshSessionRepository_ListActiveUserRefreshSessions_Call{Call: _e.mock.On("ListActiveUserRefreshSessions", ctx, userID)}
+}
+
+func (_c *RefreshSessionRepository_ListActiveUserRefreshSessions_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *RefreshSessionRepository_ListActiveUserRefreshSessions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *RefreshSessionRepository_ListActiveUserRefreshSessions_Call) Return(_a0 []models.RefreshSession, _a1 error) *RefreshSessionRepository_ListActiveUserRefreshSessions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *RefreshSessionRepository_ListActiveUserRefreshSessions_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]models.RefreshSession, error)) *RefreshSessionRepository_ListActiveUserRefreshSessions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RevokeAllUserRefreshSessions provides a mock function with given fields: ctx, userID, reason
 func (_m *RefreshSessionRepository) RevokeAllUserRefreshSessions(ctx context.Context, userID uuid.UUID, reason string) error {
 	ret := _m.Called(ctx, userID, reason)
@@ -245,6 +304,55 @@ func (_c *RefreshSessionRepository_RevokeAllUserRefreshSessions_Call) RunAndRetu
 	return _c
 }
 
+// RevokeOtherUserRefreshSessions provides a mock function with given fields: ctx, userID, keepSessionID, reason
+func (_m *RefreshSessionRepository) RevokeOtherUserRefreshSessions(ctx context.Context, userID uuid.UUID, keepSessionID uuid.UUID, reason string) error {
+	ret := _m.Called(ctx, userID, keepSessionID, reason)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RevokeOtherUserRefreshSessions")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, string) error); ok {
+		r0 = rf(ctx, userID, keepSessionID, reason)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RevokeOtherUserRefreshSessions'
+type RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call struct {
+	*mock.Call
+}
+
+// RevokeOtherUserRefreshSessions is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - keepSessionID uuid.UUID
+//   - reason string
+func (_e *RefreshSessionRepository_Expecter) RevokeOtherUserRefreshSessions(ctx interface{}, userID interface{}, keepSessionID interface{}, reason interface{}) *RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call {
+	return &RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call{Call: _e.mock.On("RevokeOtherUserRefreshSessions", ctx, userID, keepSessionID, reason)}
+}
+
+func (_c *RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call) Run(run func(ctx context.Context, userID uuid.UUID, keepSessionID uuid.UUID, reason string)) *RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call) Return(_a0 error) *RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID, string) error) *RefreshSessionRepository_RevokeOtherUserRefreshSessions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RevokeRefreshSession provides a mock function with given fields: ctx, sessionID, reason
 func (_m *RefreshSessionRepository) RevokeRefreshSession(ctx context.Context, sessionID uuid.UUID, reason string) error {
 	ret := _m.Called(ctx, sessionID, reason)
@@ -289,6 +397,55 @@ func (_c *RefreshSessionRepository_RevokeRefreshSession_Call) Return(_a0 error) 
 }
 
 func (_c *RefreshSessionRepository_RevokeRefreshSession_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) error) *RefreshSessionRepository_RevokeRefreshSession_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RevokeUserRefreshSession provides a mock function with given fields: ctx, userID, sessionID, reason
+func (_m *RefreshSessionRepository) RevokeUserRefreshSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, reason string) error {
+	ret := _m.Called(ctx, userID, sessionID, reason)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RevokeUserRefreshSession")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, string) error); ok {
+		r0 = rf(ctx, userID, sessionID, reason)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RefreshSessionRepository_RevokeUserRefreshSession_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RevokeUserRefreshSession'
+type RefreshSessionRepository_RevokeUserRefreshSession_Call struct {
+	*mock.Call
+}
+
+// RevokeUserRefreshSession is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - sessionID uuid.UUID
+//   - reason string
+func (_e *RefreshSessionRepository_Expecter) RevokeUserRefreshSession(ctx interface{}, userID interface{}, sessionID interface{}, reason interface{}) *RefreshSessionRepository_RevokeUserRefreshSession_Call {
+	return &RefreshSessionRepository_RevokeUserRefreshSession_Call{Call: _e.mock.On("RevokeUserRefreshSession", ctx, userID, sessionID, reason)}
+}
+
+func (_c *RefreshSessionRepository_RevokeUserRefreshSession_Call) Run(run func(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, reason string)) *RefreshSessionRepository_RevokeUserRefreshSession_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *RefreshSessionRepository_RevokeUserRefreshSession_Call) Return(_a0 error) *RefreshSessionRepository_RevokeUserRefreshSession_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *RefreshSessionRepository_RevokeUserRefreshSession_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID, string) error) *RefreshSessionRepository_RevokeUserRefreshSession_Call {
 	_c.Call.Return(run)
 	return _c
 }

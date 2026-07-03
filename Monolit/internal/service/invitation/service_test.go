@@ -201,6 +201,16 @@ func (f *serviceFixture) UpdateUsername(ctx context.Context, input models.Update
 	return user, nil
 }
 
+func (f *serviceFixture) UpdatePasswordHash(ctx context.Context, userID uuid.UUID, passwordHash string) (models.User, error) {
+	user, ok := f.users[userID]
+	if !ok {
+		return models.User{}, models.ErrUserNotFound
+	}
+	user.PasswordHash = passwordHash
+	f.users[userID] = user
+	return user, nil
+}
+
 func (f *serviceFixture) UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error) {
 	user, ok := f.users[input.UserUUID]
 	if !ok {

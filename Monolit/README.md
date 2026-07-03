@@ -313,6 +313,9 @@ Auth:
 | POST | `/api/v1/auth/login` | Нет | Логин, создание refresh session и установка auth cookies |
 | POST | `/api/v1/auth/refresh` | Нет | Ротация refresh token из cookie |
 | GET | `/api/v1/auth/me` | Да | Получить текущего пользователя |
+| PATCH | `/api/v1/auth/me/password` | Да | Сменить пароль текущего пользователя |
+| GET | `/api/v1/auth/me/sessions` | Да | Получить активные refresh session текущего пользователя |
+| DELETE | `/api/v1/auth/me/sessions/{session_uuid}` | Да | Отозвать одну свою refresh session |
 | PATCH | `/api/v1/auth/me/profile` | Да | Частично обновить профиль пользователя |
 | POST | `/api/v1/auth/me/avatar` | Да | Загрузить avatar через multipart field `avatar` |
 | DELETE | `/api/v1/auth/me/avatar` | Да | Сбросить avatar к буквенной заглушке |
@@ -320,6 +323,44 @@ Auth:
 | PATCH | `/api/v1/auth/me/preferences` | Да | Частично обновить UI preferences пользователя |
 | POST | `/api/v1/auth/logout` | Да | Отозвать текущую session |
 | POST | `/api/v1/auth/logout-all` | Да | Отозвать все session пользователя |
+
+`PATCH /api/v1/auth/me/password` принимает:
+
+```json
+{
+  "current_password": "old password",
+  "new_password": "new strong password"
+}
+```
+
+Backend проверяет текущий пароль, применяет действующее правило сложности пароля (минимум 8 символов), обновляет password hash и отзывает все refresh session пользователя, кроме текущей. Ответ:
+
+```json
+{
+  "updated_at": "2026-07-02T10:00:00Z"
+}
+```
+
+`GET /api/v1/auth/me/sessions` возвращает только активные, не истекшие refresh session текущего пользователя и не раскрывает raw refresh token или token hash:
+
+```json
+{
+  "sessions": [
+    {
+      "id": "session_uuid",
+      "current": true,
+      "user_agent": "Chrome on Windows",
+      "ip": "127.0.0.1/32",
+      "created_at": "2026-07-02T10:00:00Z",
+      "last_seen_at": "2026-07-02T12:00:00Z"
+    }
+  ]
+}
+```
+
+`last_seen_at` сейчас отражает последнее refresh/rotation событие (`last_used_at`); если refresh еще не было, используется `created_at`. Middleware не обновляет это поле на каждый authenticated request, чтобы не добавлять запись в БД на каждый запрос.
+
+`DELETE /api/v1/auth/me/sessions/{session_uuid}` отзывает только session текущего пользователя. Если удаляется текущая session, backend дополнительно очищает auth cookies. `POST /api/v1/auth/logout-all` сохранен и по-прежнему отзывает все refresh session пользователя.
 
 `PATCH /api/v1/auth/me/profile` принимает частичный JSON с полями `full_name`, `full_surname`, `post`, `phone`, `timezone` и возвращает обновленный `UserResponse`. `timezone` проверяется через IANA timezone database, например `Europe/Moscow`.
 

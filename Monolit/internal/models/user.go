@@ -48,6 +48,17 @@ type UpdateUsernameInput struct {
 	Username string
 }
 
+type UpdatePasswordInput struct {
+	UserUUID        uuid.UUID
+	SessionUUID     uuid.UUID
+	CurrentPassword string
+	NewPassword     string
+}
+
+type UpdatePasswordResult struct {
+	UpdatedAt time.Time
+}
+
 type UpdateUserProfileInput struct {
 	UserUUID    uuid.UUID
 	FullName    *string

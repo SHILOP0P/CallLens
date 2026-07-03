@@ -195,6 +195,66 @@ func (_c *AuthService_GetUserByUsername_Call) RunAndReturn(run func(context.Cont
 	return _c
 }
 
+// ListSessions provides a mock function with given fields: ctx, userID, currentSessionID
+func (_m *AuthService) ListSessions(ctx context.Context, userID uuid.UUID, currentSessionID uuid.UUID) ([]models.UserSession, error) {
+	ret := _m.Called(ctx, userID, currentSessionID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListSessions")
+	}
+
+	var r0 []models.UserSession
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) ([]models.UserSession, error)); ok {
+		return rf(ctx, userID, currentSessionID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) []models.UserSession); ok {
+		r0 = rf(ctx, userID, currentSessionID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.UserSession)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r1 = rf(ctx, userID, currentSessionID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AuthService_ListSessions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListSessions'
+type AuthService_ListSessions_Call struct {
+	*mock.Call
+}
+
+// ListSessions is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - currentSessionID uuid.UUID
+func (_e *AuthService_Expecter) ListSessions(ctx interface{}, userID interface{}, currentSessionID interface{}) *AuthService_ListSessions_Call {
+	return &AuthService_ListSessions_Call{Call: _e.mock.On("ListSessions", ctx, userID, currentSessionID)}
+}
+
+func (_c *AuthService_ListSessions_Call) Run(run func(ctx context.Context, userID uuid.UUID, currentSessionID uuid.UUID)) *AuthService_ListSessions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AuthService_ListSessions_Call) Return(_a0 []models.UserSession, _a1 error) *AuthService_ListSessions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AuthService_ListSessions_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) ([]models.UserSession, error)) *AuthService_ListSessions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Login provides a mock function with given fields: ctx, input
 func (_m *AuthService) Login(ctx context.Context, input models.LoginInput) (models.User, string, string, error) {
 	ret := _m.Called(ctx, input)
@@ -541,6 +601,111 @@ func (_c *AuthService_Register_Call) Return(_a0 models.User, _a1 error) *AuthSer
 }
 
 func (_c *AuthService_Register_Call) RunAndReturn(run func(context.Context, models.CreateUserInput) (models.User, error)) *AuthService_Register_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// RevokeSession provides a mock function with given fields: ctx, userID, sessionID
+func (_m *AuthService) RevokeSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID) error {
+	ret := _m.Called(ctx, userID, sessionID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for RevokeSession")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r0 = rf(ctx, userID, sessionID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// AuthService_RevokeSession_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'RevokeSession'
+type AuthService_RevokeSession_Call struct {
+	*mock.Call
+}
+
+// RevokeSession is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - sessionID uuid.UUID
+func (_e *AuthService_Expecter) RevokeSession(ctx interface{}, userID interface{}, sessionID interface{}) *AuthService_RevokeSession_Call {
+	return &AuthService_RevokeSession_Call{Call: _e.mock.On("RevokeSession", ctx, userID, sessionID)}
+}
+
+func (_c *AuthService_RevokeSession_Call) Run(run func(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID)) *AuthService_RevokeSession_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AuthService_RevokeSession_Call) Return(_a0 error) *AuthService_RevokeSession_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *AuthService_RevokeSession_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) error) *AuthService_RevokeSession_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdatePassword provides a mock function with given fields: ctx, input
+func (_m *AuthService) UpdatePassword(ctx context.Context, input models.UpdatePasswordInput) (models.UpdatePasswordResult, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdatePassword")
+	}
+
+	var r0 models.UpdatePasswordResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdatePasswordInput) (models.UpdatePasswordResult, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdatePasswordInput) models.UpdatePasswordResult); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.UpdatePasswordResult)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdatePasswordInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AuthService_UpdatePassword_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdatePassword'
+type AuthService_UpdatePassword_Call struct {
+	*mock.Call
+}
+
+// UpdatePassword is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UpdatePasswordInput
+func (_e *AuthService_Expecter) UpdatePassword(ctx interface{}, input interface{}) *AuthService_UpdatePassword_Call {
+	return &AuthService_UpdatePassword_Call{Call: _e.mock.On("UpdatePassword", ctx, input)}
+}
+
+func (_c *AuthService_UpdatePassword_Call) Run(run func(ctx context.Context, input models.UpdatePasswordInput)) *AuthService_UpdatePassword_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UpdatePasswordInput))
+	})
+	return _c
+}
+
+func (_c *AuthService_UpdatePassword_Call) Return(_a0 models.UpdatePasswordResult, _a1 error) *AuthService_UpdatePassword_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AuthService_UpdatePassword_Call) RunAndReturn(run func(context.Context, models.UpdatePasswordInput) (models.UpdatePasswordResult, error)) *AuthService_UpdatePassword_Call {
 	_c.Call.Return(run)
 	return _c
 }
