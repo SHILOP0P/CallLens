@@ -44,6 +44,8 @@ CallLens - backend-монолит на Go для будущего продукт
 - Создание отдела.
 - Управление участниками компании и отдела.
 - Приглашения в компанию и отдел с подтверждением пользователем.
+- Глобальный поиск по видимым звонкам, компаниям, отчетам и инструкциям.
+- Уведомления для bell с read/unread API; автоматическое создание подключено для invitation-событий.
 - Ролевая модель доступа к загрузке и просмотру звонков.
 - Единый JSON-формат ошибок API.
 - Логирование запросов.
@@ -71,6 +73,7 @@ flowchart LR
     departments["departments<br/>department_uuid PK<br/>company_uuid FK<br/>name<br/>created_at"]
     department_members["department_members<br/>department_uuid FK<br/>user_uuid FK<br/>role<br/>status<br/>created_at"]
     membership_invitations["membership_invitations<br/>invitation_uuid PK<br/>company_uuid FK<br/>department_uuid FK nullable<br/>invited_user_uuid FK<br/>invited_by_user_uuid FK<br/>company_role<br/>department_role nullable<br/>status<br/>expires_at<br/>responded_at nullable<br/>created_at<br/>updated_at"]
+    notifications["notifications<br/>notification_uuid PK<br/>user_uuid FK<br/>type<br/>title<br/>body<br/>entity_type nullable<br/>entity_uuid nullable<br/>read_at nullable<br/>created_at"]
     calls["calls<br/>call_uuid PK<br/>title<br/>status<br/>audio_path<br/>original_filename<br/>mime_type<br/>size_bytes<br/>duration_seconds<br/>uploaded_by_user_uuid FK<br/>company_uuid FK nullable<br/>department_uuid FK nullable<br/>visibility_scope<br/>created_at"]
     processing_jobs["processing_jobs<br/>job_uuid PK<br/>type<br/>entity_uuid<br/>status<br/>attempts<br/>available_at<br/>created_at<br/>updated_at"]
     call_transcriptions["call_transcriptions<br/>transcription_uuid PK<br/>call_uuid FK unique<br/>status<br/>text<br/>language<br/>provider<br/>error_message<br/>created_at<br/>updated_at"]
@@ -81,6 +84,7 @@ flowchart LR
     users -->|"1:N"| company_members
     users -->|"1:N"| department_members
     users -->|"1:N invited"| membership_invitations
+    users -->|"1:N"| notifications
     users -->|"1:N uploads"| calls
 
     companies -->|"1:N"| company_members
@@ -474,6 +478,80 @@ Analytics and monitoring:
 | --- | --- | --- | --- |
 | GET | `/api/v1/analytics/overview` | Да | KPI summary по видимым текущему пользователю звонкам |
 | GET | `/api/v1/monitoring/processing` | Да | Summary очереди обработки для `admin`/`superadmin` или `company_manager` своей компании |
+
+Search:
+
+| Method | Path | Auth | Описание |
+| --- | --- | --- | --- |
+| GET | `/api/v1/search` | Да | Глобальный поиск по видимым calls, companies, reports, instructions |
+
+`GET /api/v1/search` принимает обязательный `q`, optional `types=calls,companies,reports,instructions` и optional `limit`. Пустой или слишком короткий `q` возвращает `400 invalid_search_input`. Поиск не обращается к CRM-клиентам, потому что таких сущностей в backend-контракте нет.
+
+Ответ:
+
+```json
+{
+  "calls": [
+    {
+      "id": "call_uuid",
+      "title": "Обсуждение условий",
+      "status": "analyzed",
+      "created_at": "2026-07-02T10:00:00Z"
+    }
+  ],
+  "companies": [
+    {
+      "id": "company_uuid",
+      "name": "CallLens Test Company"
+    }
+  ],
+  "reports": [
+    {
+      "id": "report_uuid",
+      "call_uuid": "call_uuid",
+      "file_name": "report.pdf",
+      "status": "ready"
+    }
+  ],
+  "instructions": [
+    {
+      "id": "instruction_uuid",
+      "title": "Инструкция продаж",
+      "scope": "company"
+    }
+  ]
+}
+```
+
+Notifications:
+
+| Method | Path | Auth | Описание |
+| --- | --- | --- | --- |
+| GET | `/api/v1/notifications` | Да | Получить уведомления текущего пользователя |
+| POST | `/api/v1/notifications/{uuid}/read` | Да | Отметить одно свое уведомление прочитанным |
+| POST | `/api/v1/notifications/read-all` | Да | Отметить все свои уведомления прочитанными |
+
+`GET /api/v1/notifications` принимает `unread_only=true|false`, `limit`, `offset` и возвращает `unread_count` по текущему пользователю. Сейчас backend реально создает notification типа `invitation` при создании company/department invitation. Типы `report_ready`, `subscription`, `processing_failed` закреплены в БД и service API для подключения будущих потоков, но статические события для них не имитируются.
+
+Ответ:
+
+```json
+{
+  "notifications": [
+    {
+      "id": "notification_uuid",
+      "type": "invitation",
+      "title": "Новое приглашение",
+      "body": "Вам отправили приглашение в CallLens",
+      "entity_type": "invitation",
+      "entity_uuid": "invitation_uuid",
+      "read_at": null,
+      "created_at": "2026-07-02T10:00:00Z"
+    }
+  ],
+  "unread_count": 1
+}
+```
 
 `GET /api/v1/analytics/overview` принимает query-параметры:
 

@@ -35,6 +35,17 @@ type MonitoringService interface {
 	GetProcessing(ctx context.Context, input models.ProcessingMonitoringInput) (models.ProcessingMonitoring, error)
 }
 
+type SearchService interface {
+	Search(ctx context.Context, input models.SearchInput) (models.SearchResult, error)
+}
+
+type NotificationService interface {
+	Create(ctx context.Context, input models.CreateNotificationInput) (models.Notification, error)
+	List(ctx context.Context, input models.ListNotificationsInput) (models.ListNotificationsResult, error)
+	MarkRead(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Notification, error)
+	MarkAllRead(ctx context.Context, userID uuid.UUID) error
+}
+
 type AuthService interface {
 	Register(ctx context.Context, input models.CreateUserInput) (models.User, error)
 	Login(ctx context.Context, input models.LoginInput) (models.User, string, string, error)

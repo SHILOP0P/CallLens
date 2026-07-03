@@ -25,9 +25,12 @@ type Service struct {
 	userRepository       repo.UserRepository
 	companyRepository    repo.CompanyRepository
 	departmentRepository repo.DepartmentRepository
-	billingLimiter       BillingLimiter
-	now                  func() time.Time
-	log                  logger.Logger
+	notificationService  interface {
+		Create(ctx context.Context, input models.CreateNotificationInput) (models.Notification, error)
+	}
+	billingLimiter BillingLimiter
+	now            func() time.Time
+	log            logger.Logger
 }
 
 func NewService(invitationRepository repo.InvitationRepository, userRepository repo.UserRepository, companyRepository repo.CompanyRepository, departmentRepository repo.DepartmentRepository, log logger.Logger) *Service {
@@ -47,6 +50,12 @@ func NewService(invitationRepository repo.InvitationRepository, userRepository r
 
 func (s *Service) SetBillingLimiter(limiter BillingLimiter) {
 	s.billingLimiter = limiter
+}
+
+func (s *Service) SetNotificationService(notificationService interface {
+	Create(ctx context.Context, input models.CreateNotificationInput) (models.Notification, error)
+}) {
+	s.notificationService = notificationService
 }
 
 func (s *Service) SetNow(now func() time.Time) {

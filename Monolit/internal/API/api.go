@@ -28,6 +28,16 @@ type MonitoringAPI interface {
 	GetProcessing(w http.ResponseWriter, r *http.Request)
 }
 
+type SearchAPI interface {
+	Search(w http.ResponseWriter, r *http.Request)
+}
+
+type NotificationAPI interface {
+	List(w http.ResponseWriter, r *http.Request)
+	MarkRead(w http.ResponseWriter, r *http.Request)
+	MarkAllRead(w http.ResponseWriter, r *http.Request)
+}
+
 type AuthAPI interface {
 	Register(w http.ResponseWriter, r *http.Request)
 	Login(w http.ResponseWriter, r *http.Request)

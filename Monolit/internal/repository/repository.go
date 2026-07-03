@@ -140,6 +140,17 @@ type MonitoringRepository interface {
 	GetMonitoring(ctx context.Context, input models.ProcessingMonitoringInput) (models.ProcessingMonitoring, error)
 }
 
+type SearchRepository interface {
+	Search(ctx context.Context, input models.SearchInput) (models.SearchResult, error)
+}
+
+type NotificationRepository interface {
+	Create(ctx context.Context, input models.CreateNotificationInput) (models.Notification, error)
+	List(ctx context.Context, input models.ListNotificationsInput) (models.ListNotificationsResult, error)
+	MarkRead(ctx context.Context, id uuid.UUID, userID uuid.UUID, readAt time.Time) (models.Notification, error)
+	MarkAllRead(ctx context.Context, userID uuid.UUID, readAt time.Time) error
+}
+
 type AnalysisInstructionRepository interface {
 	Create(ctx context.Context, instruction models.AnalysisInstruction) (models.AnalysisInstruction, error)
 	GetByUUID(ctx context.Context, id uuid.UUID) (models.AnalysisInstruction, error)

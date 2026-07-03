@@ -51,6 +51,8 @@ const (
 	CodeFailedToListCalls                = "failed_to_list_calls"
 	CodeFailedToGetAnalyticsOverview     = "failed_to_get_analytics_overview"
 	CodeFailedToGetProcessingMonitoring  = "failed_to_get_processing_monitoring"
+	CodeInvalidSearchInput               = "invalid_search_input"
+	CodeFailedToSearch                   = "failed_to_search"
 	CodeFailedToProcessCall              = "failed_to_process_call"
 	CodeInvalidMultipartForm             = "invalid_multipart_form"
 	CodeCallTitleRequired                = "call_title_required"
@@ -128,4 +130,9 @@ const (
 	CodeFailedToDeclineInvitation        = "failed_to_decline_invitation"
 	CodeFailedToCancelInvitation         = "failed_to_cancel_invitation"
 	CodeFailedToConvertInvitation        = "failed_to_convert_invitation"
+	CodeNotificationNotFound             = "notification_not_found"
+	CodeInvalidNotificationInput         = "invalid_notification_input"
+	CodeFailedToListNotifications        = "failed_to_list_notifications"
+	CodeFailedToMarkNotificationRead     = "failed_to_mark_notification_read"
+	CodeFailedToConvertNotification      = "failed_to_convert_notification"
 )

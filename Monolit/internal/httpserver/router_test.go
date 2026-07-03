@@ -25,6 +25,8 @@ func TestNewRouterRegistersPublicAndProtectedRoutes(t *testing.T) {
 		apiMocks.NewInvitationAPI(t),
 		apiMocks.NewAnalyticsAPI(t),
 		apiMocks.NewMonitoringAPI(t),
+		stubSearchAPI{},
+		stubNotificationAPI{},
 		nil,
 		"test-secret",
 		repositoryMocks.NewRefreshSessionRepository(t),
@@ -47,3 +49,13 @@ func TestNewRouterRegistersPublicAndProtectedRoutes(t *testing.T) {
 	router.ServeHTTP(notFoundRecorder, httptest.NewRequest(http.MethodGet, "/missing", nil))
 	require.Equal(t, http.StatusNotFound, notFoundRecorder.Code)
 }
+
+type stubSearchAPI struct{}
+
+func (stubSearchAPI) Search(w http.ResponseWriter, r *http.Request) {}
+
+type stubNotificationAPI struct{}
+
+func (stubNotificationAPI) List(w http.ResponseWriter, r *http.Request)        {}
+func (stubNotificationAPI) MarkRead(w http.ResponseWriter, r *http.Request)    {}
+func (stubNotificationAPI) MarkAllRead(w http.ResponseWriter, r *http.Request) {}

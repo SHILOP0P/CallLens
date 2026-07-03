@@ -102,3 +102,10 @@ var ErrInvitationAlreadyExists = errors.New("invitation already exists")
 var ErrInvitationNotPending = errors.New("invitation not pending")
 var ErrInvitationExpired = errors.New("invitation expired")
 var ErrInvitationConvert = errors.New("invitation convert error")
+
+// SEARCH
+var ErrInvalidSearchInput = errors.New("invalid search input")
+
+// NOTIFICATION
+var ErrNotificationNotFound = errors.New("notification not found")
+var ErrInvalidNotificationInput = errors.New("invalid notification input")

@@ -7,6 +7,7 @@ import (
 	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 func (s *Service) CreateCompanyInvitation(ctx context.Context, input models.CreateCompanyInvitationInput) (models.MembershipInvitation, error) {
@@ -36,7 +37,7 @@ func (s *Service) CreateCompanyInvitation(ctx context.Context, input models.Crea
 	}
 
 	now := s.now()
-	return s.invitationRepository.CreateInvitation(ctx, models.MembershipInvitation{
+	invitation, err := s.invitationRepository.CreateInvitation(ctx, models.MembershipInvitation{
 		ID:                uuid.New(),
 		CompanyUUID:       input.CompanyUUID,
 		InvitedUserUUID:   targetUserID,
@@ -47,6 +48,11 @@ func (s *Service) CreateCompanyInvitation(ctx context.Context, input models.Crea
 		CreatedAt:         now,
 		UpdatedAt:         now,
 	})
+	if err != nil {
+		return models.MembershipInvitation{}, err
+	}
+	s.notifyInvitationCreated(ctx, invitation)
+	return invitation, nil
 }
 
 func (s *Service) CreateDepartmentInvitation(ctx context.Context, input models.CreateDepartmentInvitationInput) (models.MembershipInvitation, error) {
@@ -88,7 +94,7 @@ func (s *Service) CreateDepartmentInvitation(ctx context.Context, input models.C
 
 	now := s.now()
 	role := input.Role
-	return s.invitationRepository.CreateInvitation(ctx, models.MembershipInvitation{
+	invitation, err := s.invitationRepository.CreateInvitation(ctx, models.MembershipInvitation{
 		ID:                uuid.New(),
 		CompanyUUID:       input.CompanyUUID,
 		DepartmentUUID:    uuid.NullUUID{UUID: input.DepartmentUUID, Valid: true},
@@ -101,6 +107,31 @@ func (s *Service) CreateDepartmentInvitation(ctx context.Context, input models.C
 		CreatedAt:         now,
 		UpdatedAt:         now,
 	})
+	if err != nil {
+		return models.MembershipInvitation{}, err
+	}
+	s.notifyInvitationCreated(ctx, invitation)
+	return invitation, nil
+}
+
+func (s *Service) notifyInvitationCreated(ctx context.Context, invitation models.MembershipInvitation) {
+	if s.notificationService == nil {
+		return
+	}
+
+	entityType := "invitation"
+	_, err := s.notificationService.Create(ctx, models.CreateNotificationInput{
+		UserUUID:   invitation.InvitedUserUUID,
+		Type:       models.NotificationTypeInvitation,
+		Title:      "Новое приглашение",
+		Body:       "Вам отправили приглашение в CallLens",
+		EntityType: &entityType,
+		EntityUUID: uuid.NullUUID{UUID: invitation.ID, Valid: true},
+		CreatedAt:  invitation.CreatedAt,
+	})
+	if err != nil {
+		s.log.Warn(ctx, "failed to create invitation notification", zap.Error(err), zap.String("invitation_uuid", invitation.ID.String()))
+	}
 }
 
 func (s *Service) requireDepartmentInvitePermission(ctx context.Context, input models.CreateDepartmentInvitationInput) error {
