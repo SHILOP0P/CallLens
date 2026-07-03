@@ -35,6 +35,7 @@ func CallModelToAPI(call models.Call) (dto.CallResponse, error) {
 		MimeType:           call.MimeType,
 		SizeBytes:          call.SizeBytes,
 		DurationSeconds:    call.DurationSeconds,
+		AudioURL:           "/api/v1/calls/" + call.ID.String() + "/audio",
 		UploadedByUserUUID: nullUUIDToStringPtr(call.UploadedByUserUUID),
 		CompanyUUID:        nullUUIDToStringPtr(call.CompanyUUID),
 		DepartmentUUID:     nullUUIDToStringPtr(call.DepartmentUUID),

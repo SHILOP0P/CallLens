@@ -10,6 +10,7 @@ import (
 type AudioStorage interface {
 	Save(ctx context.Context, input models.SaveInput) (models.SavedFile, error)
 	Open(ctx context.Context, path string) (io.ReadCloser, error)
+	OpenReadSeeker(ctx context.Context, path string) (models.ReadSeekCloser, error)
 	Delete(ctx context.Context, path string) error
 }
 

@@ -58,6 +58,7 @@ const (
 	CodeAudioProbeNotFound               = "audio_probe_not_found"
 	CodeAudioFileUnreadable              = "audio_file_unreadable"
 	CodeUnsupportedAudioType             = "unsupported_audio_type"
+	CodeAudioFileNotFound                = "audio_file_not_found"
 	CodeAudioNotFound                    = "audio_not_found"
 	CodeFailedToGetAudio                 = "failed_to_get_audio"
 	CodeTranscriptionNotFound            = "transcription_not_found"

@@ -15,13 +15,14 @@ func (s *Service) GetAudioByUUID(ctx context.Context, id uuid.UUID, userID uuid.
 		return models.File{}, err
 	}
 
-	content, err := s.audioStorage.Open(ctx, call.AudioPath)
+	content, err := s.audioStorage.OpenReadSeeker(ctx, call.AudioPath)
 	if err != nil {
 		return models.File{}, fmt.Errorf("error opening audio storage: %w", err)
 	}
 
 	return models.File{
 		Content:          content,
+		ReadSeeker:       content,
 		Path:             call.AudioPath,
 		OriginalFilename: call.OriginalFilename,
 		MimeType:         call.MimeType,

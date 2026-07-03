@@ -33,7 +33,7 @@ func TestCoreConverters(t *testing.T) {
 		t.Fatalf("SavedFileToModel = %+v, %v", savedCall, err)
 	}
 	callResponse, err := CallModelToAPI(savedCall)
-	if err != nil || callResponse.UploadedByUserUUID == nil || callResponse.CompanyUUID == nil || callResponse.DepartmentUUID != nil {
+	if err != nil || callResponse.UploadedByUserUUID == nil || callResponse.CompanyUUID == nil || callResponse.DepartmentUUID != nil || callResponse.AudioURL != "/api/v1/calls/"+id.String()+"/audio" {
 		t.Fatalf("CallModelToAPI = %+v, %v", callResponse, err)
 	}
 

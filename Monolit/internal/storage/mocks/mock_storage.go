@@ -130,6 +130,65 @@ func (_c *Storage_Open_Call) RunAndReturn(run func(context.Context, string) (io.
 	return _c
 }
 
+// OpenReadSeeker provides a mock function with given fields: ctx, path
+func (_m *Storage) OpenReadSeeker(ctx context.Context, path string) (models.ReadSeekCloser, error) {
+	ret := _m.Called(ctx, path)
+
+	if len(ret) == 0 {
+		panic("no return value specified for OpenReadSeeker")
+	}
+
+	var r0 models.ReadSeekCloser
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (models.ReadSeekCloser, error)); ok {
+		return rf(ctx, path)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) models.ReadSeekCloser); ok {
+		r0 = rf(ctx, path)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(models.ReadSeekCloser)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, path)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Storage_OpenReadSeeker_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'OpenReadSeeker'
+type Storage_OpenReadSeeker_Call struct {
+	*mock.Call
+}
+
+// OpenReadSeeker is a helper method to define mock.On call
+//   - ctx context.Context
+//   - path string
+func (_e *Storage_Expecter) OpenReadSeeker(ctx interface{}, path interface{}) *Storage_OpenReadSeeker_Call {
+	return &Storage_OpenReadSeeker_Call{Call: _e.mock.On("OpenReadSeeker", ctx, path)}
+}
+
+func (_c *Storage_OpenReadSeeker_Call) Run(run func(ctx context.Context, path string)) *Storage_OpenReadSeeker_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Storage_OpenReadSeeker_Call) Return(_a0 models.ReadSeekCloser, _a1 error) *Storage_OpenReadSeeker_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Storage_OpenReadSeeker_Call) RunAndReturn(run func(context.Context, string) (models.ReadSeekCloser, error)) *Storage_OpenReadSeeker_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Save provides a mock function with given fields: ctx, input
 func (_m *Storage) Save(ctx context.Context, input models.SaveInput) (models.SavedFile, error) {
 	ret := _m.Called(ctx, input)

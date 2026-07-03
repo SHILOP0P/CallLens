@@ -6,6 +6,12 @@ import (
 	"github.com/google/uuid"
 )
 
+type ReadSeekCloser interface {
+	io.Reader
+	io.Seeker
+	io.Closer
+}
+
 type SaveInput struct {
 	CallID           uuid.UUID
 	OriginalFilename string
@@ -23,6 +29,7 @@ type SavedFile struct {
 
 type File struct {
 	Content          io.ReadCloser
+	ReadSeeker       io.ReadSeeker
 	Path             string
 	OriginalFilename string
 	MimeType         string

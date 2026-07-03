@@ -42,6 +42,19 @@ func TestLocalStorageLifecycle(t *testing.T) {
 		t.Fatalf("content = %q", data)
 	}
 
+	seekable, err := storage.OpenReadSeeker(context.Background(), saved.Path)
+	if err != nil {
+		t.Fatalf("OpenReadSeeker: %v", err)
+	}
+	if _, err := seekable.Seek(1, io.SeekStart); err != nil {
+		t.Fatalf("Seek: %v", err)
+	}
+	data, _ = io.ReadAll(seekable)
+	_ = seekable.Close()
+	if string(data) != "udio" {
+		t.Fatalf("seekable content = %q", data)
+	}
+
 	if err := storage.Delete(context.Background(), saved.Path); err != nil {
 		t.Fatalf("Delete: %v", err)
 	}
@@ -69,6 +82,9 @@ func TestLocalStorageValidationAndCancellation(t *testing.T) {
 	}
 	if _, err := storage.Open(ctx, "x.mp3"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("Open canceled error = %v", err)
+	}
+	if _, err := storage.OpenReadSeeker(ctx, "x.mp3"); !errors.Is(err, context.Canceled) {
+		t.Fatalf("OpenReadSeeker canceled error = %v", err)
 	}
 	if err := storage.Delete(ctx, "x.mp3"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("Delete canceled error = %v", err)

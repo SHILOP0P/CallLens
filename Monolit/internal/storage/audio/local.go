@@ -54,6 +54,14 @@ func (l *LocalStorage) Save(ctx context.Context, input models.SaveInput) (models
 }
 
 func (l *LocalStorage) Open(ctx context.Context, path string) (io.ReadCloser, error) {
+	return l.openFile(ctx, path)
+}
+
+func (l *LocalStorage) OpenReadSeeker(ctx context.Context, path string) (models.ReadSeekCloser, error) {
+	return l.openFile(ctx, path)
+}
+
+func (l *LocalStorage) openFile(ctx context.Context, path string) (*os.File, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

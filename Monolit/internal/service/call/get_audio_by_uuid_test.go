@@ -2,7 +2,6 @@ package call
 
 import (
 	"errors"
-	"io"
 	"strings"
 
 	"calllens/monolit/internal/models"
@@ -14,7 +13,7 @@ import (
 func (s *ServiceSuite) TestGetAudioByUUIDSuccess() {
 	callID := uuid.New()
 	userID := uuid.New()
-	content := io.NopCloser(strings.NewReader("audio"))
+	content := newReadSeekCloser("audio")
 
 	s.repository.EXPECT().GetByUUID(mock.Anything, callID, userID).
 		Return(models.Call{
@@ -25,13 +24,14 @@ func (s *ServiceSuite) TestGetAudioByUUIDSuccess() {
 			SizeBytes:        10,
 		}, nil).
 		Once()
-	s.audioStorage.EXPECT().Open(mock.Anything, "uploads/call.wav").Return(content, nil).Once()
+	s.audioStorage.EXPECT().OpenReadSeeker(mock.Anything, "uploads/call.wav").Return(content, nil).Once()
 
 	got, err := s.service.GetAudioByUUID(s.ctx, callID, userID)
 
 	s.Require().NoError(err)
 	s.Require().Equal("call.wav", got.OriginalFilename)
 	s.Require().Equal("audio/wav", got.MimeType)
+	s.Require().NotNil(got.ReadSeeker)
 }
 
 func (s *ServiceSuite) TestGetAudioByUUIDReturnsCallLookupError() {
@@ -55,9 +55,21 @@ func (s *ServiceSuite) TestGetAudioByUUIDReturnsOpenError() {
 	s.repository.EXPECT().GetByUUID(mock.Anything, callID, userID).
 		Return(models.Call{ID: callID, AudioPath: "uploads/call.wav"}, nil).
 		Once()
-	s.audioStorage.EXPECT().Open(mock.Anything, "uploads/call.wav").Return(nil, openErr).Once()
+	s.audioStorage.EXPECT().OpenReadSeeker(mock.Anything, "uploads/call.wav").Return(nil, openErr).Once()
 
 	_, err := s.service.GetAudioByUUID(s.ctx, callID, userID)
 
 	s.Require().ErrorIs(err, openErr)
+}
+
+type readSeekCloser struct {
+	*strings.Reader
+}
+
+func newReadSeekCloser(content string) *readSeekCloser {
+	return &readSeekCloser{Reader: strings.NewReader(content)}
+}
+
+func (r *readSeekCloser) Close() error {
+	return nil
 }
