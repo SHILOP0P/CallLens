@@ -4,6 +4,17 @@ type CreateReportRequest struct {
 	Format string `json:"format"`
 }
 
+type CreateGlobalReportRequest struct {
+	Format          string  `json:"format"`
+	Scope           string  `json:"scope"`
+	CallUUID        *string `json:"call_uuid"`
+	CompanyUUID     *string `json:"company_uuid"`
+	DepartmentUUID  *string `json:"department_uuid"`
+	ManagerUserUUID *string `json:"manager_user_uuid"`
+	PeriodFrom      *string `json:"period_from"`
+	PeriodTo        *string `json:"period_to"`
+}
+
 type ReportResponse struct {
 	ID                  string  `json:"id"`
 	CallUUID            string  `json:"call_uuid"`
@@ -23,4 +34,25 @@ type ReportResponse struct {
 
 type ReportsResponse struct {
 	Reports []ReportResponse `json:"reports"`
+}
+
+type ReportCallSummaryResponse struct {
+	ID             string  `json:"id"`
+	Title          string  `json:"title"`
+	Status         string  `json:"status"`
+	CreatedAt      string  `json:"created_at"`
+	CompanyUUID    *string `json:"company_uuid"`
+	DepartmentUUID *string `json:"department_uuid"`
+}
+
+type ReportWithCallResponse struct {
+	ReportResponse
+	Call ReportCallSummaryResponse `json:"call"`
+}
+
+type GlobalReportsResponse struct {
+	Reports []ReportWithCallResponse `json:"reports"`
+	Total   int                      `json:"total"`
+	Limit   int                      `json:"limit"`
+	Offset  int                      `json:"offset"`
 }

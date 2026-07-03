@@ -149,6 +149,107 @@ func TestReadOperations(t *testing.T) {
 	}(), models.ErrInvalidReportInput)
 }
 
+func TestListGlobalReportsValidationAndDefaults(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	callID := uuid.New()
+	from := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2026, 7, 31, 23, 59, 59, 0, time.UTC)
+	reports := &fakeReportRepository{
+		listResult: models.ListReportsResult{
+			Reports: []models.ReportWithCall{{
+				Report: models.ReportExport{ID: uuid.New(), CallUUID: callID},
+				Call:   models.ReportCallSummary{ID: callID, Title: "Call"},
+			}},
+			Total: 1,
+		},
+	}
+	svc := NewService(&fakeCallRepository{call: testCall(callID)}, nil, nil, reports, &fakeReportStorage{})
+
+	result, err := svc.List(ctx, models.ListReportsInput{
+		UserUUID: userID,
+		Format:   models.ReportFormatPDF,
+		Status:   models.ReportStatusReady,
+		CallUUID: uuid.NullUUID{UUID: callID, Valid: true},
+		From:     &from,
+		To:       &to,
+		Limit:    1,
+		Offset:   2,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, 1, result.Total)
+	require.Equal(t, models.ReportSortCreatedAt, reports.lastListInput.Sort)
+	require.Equal(t, models.SortOrderDesc, reports.lastListInput.Order)
+	require.Equal(t, 1, reports.lastListInput.Limit)
+	require.Equal(t, 2, reports.lastListInput.Offset)
+
+	for _, tt := range []models.ListReportsInput{
+		{UserUUID: uuid.Nil},
+		{UserUUID: userID, Format: models.ReportFormat("csv")},
+		{UserUUID: userID, Status: models.ReportStatus("done")},
+		{UserUUID: userID, Sort: models.ReportSortField("size")},
+		{UserUUID: userID, Order: models.SortOrder("sideways")},
+		{UserUUID: userID, Limit: 101},
+		{UserUUID: userID, Offset: -1},
+		{UserUUID: userID, From: &to, To: &from},
+	} {
+		_, err := svc.List(ctx, tt)
+		require.Error(t, err)
+	}
+}
+
+func TestCreateGlobalReport(t *testing.T) {
+	ctx := context.Background()
+	callID := uuid.New()
+	userID := uuid.New()
+	analysisID := uuid.New()
+	reports := &fakeReportRepository{}
+	storage := &fakeReportStorage{}
+	svc := NewService(
+		&fakeCallRepository{call: testCall(callID)},
+		&fakeAnalysisRepository{analysis: testAnalysis(callID, analysisID)},
+		&fakeTranscriptionRepository{text: "Текст"},
+		reports,
+		storage,
+	)
+	svc.SetBillingLimiter(&fakeBillingLimiter{
+		subscription: models.Subscription{Plan: models.Plan{ExportEnabled: true}},
+	})
+
+	created, err := svc.CreateGlobal(ctx, models.CreateGlobalReportInput{
+		UserUUID: userID,
+		Format:   models.ReportFormatMD,
+		Scope:    models.ReportScopeCall,
+		CallUUID: uuid.NullUUID{UUID: callID, Valid: true},
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, models.ReportStatusReady, created.Status)
+	require.Equal(t, models.ReportFormatMD, storage.saved.Format)
+
+	_, err = svc.CreateGlobal(ctx, models.CreateGlobalReportInput{
+		UserUUID: userID,
+		Format:   models.ReportFormatPDF,
+		Scope:    models.ReportScopeCompany,
+	})
+	require.ErrorIs(t, err, models.ErrReportScopeNotImplemented)
+
+	_, err = svc.CreateGlobal(ctx, models.CreateGlobalReportInput{
+		UserUUID: userID,
+		Format:   models.ReportFormatPDF,
+		Scope:    models.ReportScope("unknown"),
+	})
+	require.ErrorIs(t, err, models.ErrUnsupportedReportScope)
+
+	_, err = svc.CreateGlobal(ctx, models.CreateGlobalReportInput{
+		UserUUID: userID,
+		Format:   models.ReportFormatPDF,
+		Scope:    models.ReportScopeCall,
+	})
+	require.ErrorIs(t, err, models.ErrInvalidReportInput)
+}
+
 func TestGetFileStateValidationAndDeleteExpired(t *testing.T) {
 	ctx := context.Background()
 	now := time.Now().UTC()
@@ -290,9 +391,11 @@ func (f *fakeTranscriptionRepository) MarkFailed(context.Context, uuid.UUID, str
 }
 
 type fakeReportRepository struct {
-	items   map[uuid.UUID]models.ReportExport
-	list    []models.ReportExport
-	expired []models.ReportExport
+	items         map[uuid.UUID]models.ReportExport
+	list          []models.ReportExport
+	expired       []models.ReportExport
+	listResult    models.ListReportsResult
+	lastListInput models.ListReportsInput
 }
 
 func (f *fakeReportRepository) Create(_ context.Context, report models.ReportExport) (models.ReportExport, error) {
@@ -324,6 +427,12 @@ func (f *fakeReportRepository) GetByUUID(_ context.Context, id uuid.UUID) (model
 }
 func (f *fakeReportRepository) ListByCallUUID(context.Context, uuid.UUID, time.Time) ([]models.ReportExport, error) {
 	return f.list, nil
+}
+func (f *fakeReportRepository) List(_ context.Context, input models.ListReportsInput, _ time.Time) (models.ListReportsResult, error) {
+	f.lastListInput = input
+	f.listResult.Limit = input.Limit
+	f.listResult.Offset = input.Offset
+	return f.listResult, nil
 }
 func (f *fakeReportRepository) ListExpiredReady(context.Context, time.Time, int) ([]models.ReportExport, error) {
 	return f.expired, nil

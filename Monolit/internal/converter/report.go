@@ -47,3 +47,48 @@ func ReportsModelToAPI(reports []models.ReportExport) (dto.ReportsResponse, erro
 
 	return resp, nil
 }
+
+func GlobalReportsModelToAPI(result models.ListReportsResult) (dto.GlobalReportsResponse, error) {
+	resp := dto.GlobalReportsResponse{
+		Reports: make([]dto.ReportWithCallResponse, 0, len(result.Reports)),
+		Total:   result.Total,
+		Limit:   result.Limit,
+		Offset:  result.Offset,
+	}
+
+	for _, item := range result.Reports {
+		report, err := ReportModelToAPI(item.Report)
+		if err != nil {
+			return dto.GlobalReportsResponse{}, err
+		}
+		resp.Reports = append(resp.Reports, dto.ReportWithCallResponse{
+			ReportResponse: report,
+			Call:           reportCallSummaryToAPI(item.Call),
+		})
+	}
+
+	return resp, nil
+}
+
+func reportCallSummaryToAPI(call models.ReportCallSummary) dto.ReportCallSummaryResponse {
+	var companyUUID *string
+	if call.CompanyUUID.Valid {
+		value := call.CompanyUUID.UUID.String()
+		companyUUID = &value
+	}
+
+	var departmentUUID *string
+	if call.DepartmentUUID.Valid {
+		value := call.DepartmentUUID.UUID.String()
+		departmentUUID = &value
+	}
+
+	return dto.ReportCallSummaryResponse{
+		ID:             call.ID.String(),
+		Title:          call.Title,
+		Status:         string(call.Status),
+		CreatedAt:      call.CreatedAt.Format(time.RFC3339),
+		CompanyUUID:    companyUUID,
+		DepartmentUUID: departmentUUID,
+	}
+}

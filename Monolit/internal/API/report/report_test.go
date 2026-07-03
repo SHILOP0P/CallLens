@@ -31,6 +31,34 @@ func TestReportHandlersSuccess(t *testing.T) {
 	}
 	service := serviceMocks.NewReportService(t)
 	service.EXPECT().Create(mock.Anything, mock.Anything).Return(item, nil).Once()
+	service.EXPECT().CreateGlobal(mock.Anything, mock.MatchedBy(func(input models.CreateGlobalReportInput) bool {
+		return input.UserUUID == userID && input.CallUUID.Valid && input.CallUUID.UUID == callID && input.Scope == models.ReportScopeCall
+	})).Return(item, nil).Once()
+	service.EXPECT().List(mock.Anything, mock.MatchedBy(func(input models.ListReportsInput) bool {
+		return input.UserUUID == userID &&
+			input.Format == models.ReportFormatMD &&
+			input.Status == models.ReportStatusReady &&
+			input.CallUUID.Valid &&
+			input.CallUUID.UUID == callID &&
+			input.Sort == models.ReportSortCreatedAt &&
+			input.Order == models.SortOrderDesc &&
+			input.Limit == 1
+	})).Return(models.ListReportsResult{
+		Reports: []models.ReportWithCall{{
+			Report: item,
+			Call: models.ReportCallSummary{
+				ID:             callID,
+				Title:          "Обсуждение условий договора",
+				Status:         models.CallStatusAnalyzed,
+				CreatedAt:      item.CreatedAt,
+				CompanyUUID:    uuid.NullUUID{UUID: uuid.New(), Valid: true},
+				DepartmentUUID: uuid.NullUUID{},
+			},
+		}},
+		Total:  1,
+		Limit:  1,
+		Offset: 0,
+	}, nil).Once()
 	service.EXPECT().ListByCallUUID(mock.Anything, mock.Anything, mock.Anything).
 		Return([]models.ReportExport{item}, nil).Once()
 	service.EXPECT().GetFile(mock.Anything, mock.Anything, mock.Anything).
@@ -42,6 +70,19 @@ func TestReportHandlersSuccess(t *testing.T) {
 	handler.Create(rec, req)
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("Create status = %d", rec.Code)
+	}
+
+	rec, req = reportRequest(http.MethodPost, `{"format":"md","scope":"call","call_uuid":"`+callID.String()+`"}`, userID, nil)
+	handler.CreateGlobal(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("CreateGlobal status = %d", rec.Code)
+	}
+
+	rec, req = reportRequest(http.MethodGet, "", userID, nil)
+	req.URL.RawQuery = "format=md&status=ready&call_uuid=" + callID.String() + "&limit=1&sort=created_at&order=desc"
+	handler.List(rec, req)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"total":1`) || !strings.Contains(rec.Body.String(), `"call":`) {
+		t.Fatalf("Global List status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
 	rec, req = reportRequest(http.MethodGet, "", userID, map[string]string{"uuid": callID.String()})
@@ -70,7 +111,7 @@ func TestReportHandlersSuccess(t *testing.T) {
 func TestReportHandlersValidationAndErrors(t *testing.T) {
 	service := serviceMocks.NewReportService(t)
 	handler := NewHandler(service)
-	for _, method := range []func(http.ResponseWriter, *http.Request){handler.Create, handler.ListByCallUUID, handler.Download, handler.Delete} {
+	for _, method := range []func(http.ResponseWriter, *http.Request){handler.Create, handler.CreateGlobal, handler.List, handler.ListByCallUUID, handler.Download, handler.Delete} {
 		rec, req := reportRequest(http.MethodGet, "", uuid.Nil, nil)
 		method(rec, req)
 		if rec.Code != http.StatusUnauthorized {
@@ -83,6 +124,30 @@ func TestReportHandlersValidationAndErrors(t *testing.T) {
 	handler.Create(rec, req)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("invalid body status = %d", rec.Code)
+	}
+	rec, req = reportRequest(http.MethodPost, `{`, userID, nil)
+	handler.CreateGlobal(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("invalid global body status = %d", rec.Code)
+	}
+
+	for _, rawQuery := range []string{
+		"format=csv",
+		"status=done",
+		"company_uuid=bad",
+		"from=bad",
+		"sort=size",
+		"order=sideways",
+		"limit=0",
+		"offset=-1",
+	} {
+		service.EXPECT().List(mock.Anything, mock.Anything).Return(models.ListReportsResult{}, models.ErrInvalidReportInput).Maybe()
+		rec, req = reportRequest(http.MethodGet, "", userID, nil)
+		req.URL.RawQuery = rawQuery
+		handler.List(rec, req)
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("bad global query %q status = %d", rawQuery, rec.Code)
+		}
 	}
 
 	for _, method := range []func(http.ResponseWriter, *http.Request){handler.Create, handler.ListByCallUUID} {
@@ -108,7 +173,9 @@ func TestReportHandlersValidationAndErrors(t *testing.T) {
 		{models.ErrAnalysisNotFound, http.StatusNotFound},
 		{models.ErrReportNotFound, http.StatusNotFound},
 		{models.ErrUnsupportedReportFormat, http.StatusBadRequest},
+		{models.ErrUnsupportedReportScope, http.StatusBadRequest},
 		{models.ErrInvalidReportInput, http.StatusBadRequest},
+		{models.ErrReportScopeNotImplemented, http.StatusNotImplemented},
 		{models.ErrInvalidAnalysisStatus, http.StatusConflict},
 		{models.ErrSubscriptionRequired, http.StatusPaymentRequired},
 		{models.ErrExportAccessDenied, http.StatusForbidden},

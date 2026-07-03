@@ -326,6 +326,12 @@ Calls:
 | GET | `/api/v1/calls/{uuid}/transcription` | Да | Получить сохраненную транскрипцию звонка |
 | POST | `/api/v1/calls/{uuid}/analysis` | Да | Поставить `analyze_call` job по готовой транскрипции |
 | GET | `/api/v1/calls/{uuid}/analysis` | Да | Получить сохраненный анализ звонка |
+| POST | `/api/v1/calls/{uuid}/reports` | Да | Создать отчет по одному видимому звонку |
+| GET | `/api/v1/calls/{uuid}/reports` | Да | Получить отчеты одного видимого звонка |
+| GET | `/api/v1/reports` | Да | Получить глобальный список отчетов по видимым звонкам |
+| POST | `/api/v1/reports` | Да | Создать отчет из глобальной страницы |
+| GET | `/api/v1/reports/{report_uuid}/download` | Да | Скачать готовый отчет |
+| DELETE | `/api/v1/reports/{report_uuid}` | Да | Удалить отчет |
 | PATCH | `/api/v1/calls/{uuid}` | Да | Обновить title звонка |
 | DELETE | `/api/v1/calls/{uuid}` | Да | Удалить звонок и аудиофайл |
 
@@ -396,6 +402,68 @@ Calls:
 ```
 
 Поле `managers` в справочнике содержит компактный список пользователей, которые загрузили видимые текущему пользователю звонки в выбранном scope компании/отдела. Название поля сохранено для frontend-контракта фильтров.
+
+Reports:
+
+`POST /api/v1/calls/{uuid}/reports` и `POST /api/v1/reports` с `scope=call` используют один и тот же генератор отчета по звонку. Поддерживаемые форматы: `pdf`, `docx`, `md`, `xlsx`. Для `scope=company`, `department`, `manager`, `period` API возвращает `501 not_implemented`, пока в backend нет реального агрегированного генератора.
+
+`POST /api/v1/reports`:
+
+```json
+{
+  "format": "pdf",
+  "scope": "call",
+  "call_uuid": "call_uuid",
+  "company_uuid": null,
+  "department_uuid": null,
+  "manager_user_uuid": null,
+  "period_from": "2026-07-01T00:00:00Z",
+  "period_to": "2026-07-31T23:59:59Z"
+}
+```
+
+`GET /api/v1/reports` возвращает только отчеты по звонкам, которые видны текущему пользователю. Поддерживаемые query-параметры:
+
+| Параметр | Значение |
+| --- | --- |
+| `format` | `pdf`, `docx`, `md`, `xlsx` |
+| `status` | `pending`, `ready`, `failed` |
+| `company_uuid` | UUID компании звонка |
+| `department_uuid` | UUID отдела звонка |
+| `call_uuid` | UUID звонка |
+| `from` | ISO datetime, нижняя граница `created_at` отчета |
+| `to` | ISO datetime, верхняя граница `created_at` отчета |
+| `sort` | `created_at` или `updated_at`; по умолчанию `created_at` |
+| `order` | `desc` или `asc`; по умолчанию `desc` |
+| `limit` | 1..100; по умолчанию 20 |
+| `offset` | 0 или больше; по умолчанию 0 |
+
+Ответ:
+
+```json
+{
+  "reports": [
+    {
+      "id": "report_uuid",
+      "call_uuid": "call_uuid",
+      "format": "pdf",
+      "status": "ready",
+      "download_url": "/api/v1/reports/report_uuid/download",
+      "call": {
+        "id": "call_uuid",
+        "title": "Обсуждение условий договора",
+        "status": "analyzed",
+        "created_at": "2026-07-02T10:00:00Z",
+        "company_uuid": "company_uuid",
+        "department_uuid": null
+      }
+    }
+  ],
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
 
 Analysis instructions:
 

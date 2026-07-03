@@ -81,6 +81,63 @@ func (_c *ReportService_Create_Call) RunAndReturn(run func(context.Context, mode
 	return _c
 }
 
+// CreateGlobal provides a mock function with given fields: ctx, input
+func (_m *ReportService) CreateGlobal(ctx context.Context, input models.CreateGlobalReportInput) (models.ReportExport, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateGlobal")
+	}
+
+	var r0 models.ReportExport
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.CreateGlobalReportInput) (models.ReportExport, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.CreateGlobalReportInput) models.ReportExport); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.ReportExport)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.CreateGlobalReportInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ReportService_CreateGlobal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateGlobal'
+type ReportService_CreateGlobal_Call struct {
+	*mock.Call
+}
+
+// CreateGlobal is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.CreateGlobalReportInput
+func (_e *ReportService_Expecter) CreateGlobal(ctx interface{}, input interface{}) *ReportService_CreateGlobal_Call {
+	return &ReportService_CreateGlobal_Call{Call: _e.mock.On("CreateGlobal", ctx, input)}
+}
+
+func (_c *ReportService_CreateGlobal_Call) Run(run func(ctx context.Context, input models.CreateGlobalReportInput)) *ReportService_CreateGlobal_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.CreateGlobalReportInput))
+	})
+	return _c
+}
+
+func (_c *ReportService_CreateGlobal_Call) Return(_a0 models.ReportExport, _a1 error) *ReportService_CreateGlobal_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ReportService_CreateGlobal_Call) RunAndReturn(run func(context.Context, models.CreateGlobalReportInput) (models.ReportExport, error)) *ReportService_CreateGlobal_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Delete provides a mock function with given fields: ctx, reportID, userID
 func (_m *ReportService) Delete(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) error {
 	ret := _m.Called(ctx, reportID, userID)
@@ -183,6 +240,63 @@ func (_c *ReportService_GetFile_Call) Return(_a0 models.ReportFile, _a1 error) *
 }
 
 func (_c *ReportService_GetFile_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) (models.ReportFile, error)) *ReportService_GetFile_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// List provides a mock function with given fields: ctx, input
+func (_m *ReportService) List(ctx context.Context, input models.ListReportsInput) (models.ListReportsResult, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for List")
+	}
+
+	var r0 models.ListReportsResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListReportsInput) (models.ListReportsResult, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListReportsInput) models.ListReportsResult); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.ListReportsResult)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.ListReportsInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ReportService_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type ReportService_List_Call struct {
+	*mock.Call
+}
+
+// List is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ListReportsInput
+func (_e *ReportService_Expecter) List(ctx interface{}, input interface{}) *ReportService_List_Call {
+	return &ReportService_List_Call{Call: _e.mock.On("List", ctx, input)}
+}
+
+func (_c *ReportService_List_Call) Run(run func(ctx context.Context, input models.ListReportsInput)) *ReportService_List_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ListReportsInput))
+	})
+	return _c
+}
+
+func (_c *ReportService_List_Call) Return(_a0 models.ListReportsResult, _a1 error) *ReportService_List_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ReportService_List_Call) RunAndReturn(run func(context.Context, models.ListReportsInput) (models.ListReportsResult, error)) *ReportService_List_Call {
 	_c.Call.Return(run)
 	return _c
 }

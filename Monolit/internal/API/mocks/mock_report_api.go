@@ -55,6 +55,40 @@ func (_c *ReportAPI_Create_Call) RunAndReturn(run func(http.ResponseWriter, *htt
 	return _c
 }
 
+// CreateGlobal provides a mock function with given fields: w, r
+func (_m *ReportAPI) CreateGlobal(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// ReportAPI_CreateGlobal_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateGlobal'
+type ReportAPI_CreateGlobal_Call struct {
+	*mock.Call
+}
+
+// CreateGlobal is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *ReportAPI_Expecter) CreateGlobal(w interface{}, r interface{}) *ReportAPI_CreateGlobal_Call {
+	return &ReportAPI_CreateGlobal_Call{Call: _e.mock.On("CreateGlobal", w, r)}
+}
+
+func (_c *ReportAPI_CreateGlobal_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *ReportAPI_CreateGlobal_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *ReportAPI_CreateGlobal_Call) Return() *ReportAPI_CreateGlobal_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *ReportAPI_CreateGlobal_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *ReportAPI_CreateGlobal_Call {
+	_c.Run(run)
+	return _c
+}
+
 // Delete provides a mock function with given fields: w, r
 func (_m *ReportAPI) Delete(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -119,6 +153,40 @@ func (_c *ReportAPI_Download_Call) Return() *ReportAPI_Download_Call {
 }
 
 func (_c *ReportAPI_Download_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *ReportAPI_Download_Call {
+	_c.Run(run)
+	return _c
+}
+
+// List provides a mock function with given fields: w, r
+func (_m *ReportAPI) List(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// ReportAPI_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type ReportAPI_List_Call struct {
+	*mock.Call
+}
+
+// List is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *ReportAPI_Expecter) List(w interface{}, r interface{}) *ReportAPI_List_Call {
+	return &ReportAPI_List_Call{Call: _e.mock.On("List", w, r)}
+}
+
+func (_c *ReportAPI_List_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *ReportAPI_List_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *ReportAPI_List_Call) Return() *ReportAPI_List_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *ReportAPI_List_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *ReportAPI_List_Call {
 	_c.Run(run)
 	return _c
 }

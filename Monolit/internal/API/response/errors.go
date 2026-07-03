@@ -73,6 +73,8 @@ const (
 	CodeReportNotFound                   = "report_not_found"
 	CodeInvalidReportInput               = "invalid_report_input"
 	CodeUnsupportedReportFormat          = "unsupported_report_format"
+	CodeUnsupportedReportScope           = "unsupported_report_scope"
+	CodeNotImplemented                   = "not_implemented"
 	CodeReportFileNotFound               = "report_file_not_found"
 	CodeReportNotReady                   = "report_not_ready"
 	CodeReportExpired                    = "report_expired"

@@ -99,6 +99,7 @@ type ReportRepository interface {
 	MarkReady(ctx context.Context, input models.MarkReportReadyInput) (models.ReportExport, error)
 	MarkFailed(ctx context.Context, input models.MarkReportFailedInput) (models.ReportExport, error)
 	GetByUUID(ctx context.Context, id uuid.UUID) (models.ReportExport, error)
+	List(ctx context.Context, input models.ListReportsInput, now time.Time) (models.ListReportsResult, error)
 	ListByCallUUID(ctx context.Context, callID uuid.UUID, now time.Time) ([]models.ReportExport, error)
 	ListExpiredReady(ctx context.Context, now time.Time, limit int) ([]models.ReportExport, error)
 	Delete(ctx context.Context, id uuid.UUID) error

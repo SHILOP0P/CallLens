@@ -187,6 +187,64 @@ func (_c *ReportRepository_GetByUUID_Call) RunAndReturn(run func(context.Context
 	return _c
 }
 
+// List provides a mock function with given fields: ctx, input, now
+func (_m *ReportRepository) List(ctx context.Context, input models.ListReportsInput, now time.Time) (models.ListReportsResult, error) {
+	ret := _m.Called(ctx, input, now)
+
+	if len(ret) == 0 {
+		panic("no return value specified for List")
+	}
+
+	var r0 models.ListReportsResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListReportsInput, time.Time) (models.ListReportsResult, error)); ok {
+		return rf(ctx, input, now)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListReportsInput, time.Time) models.ListReportsResult); ok {
+		r0 = rf(ctx, input, now)
+	} else {
+		r0 = ret.Get(0).(models.ListReportsResult)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.ListReportsInput, time.Time) error); ok {
+		r1 = rf(ctx, input, now)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ReportRepository_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type ReportRepository_List_Call struct {
+	*mock.Call
+}
+
+// List is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ListReportsInput
+//   - now time.Time
+func (_e *ReportRepository_Expecter) List(ctx interface{}, input interface{}, now interface{}) *ReportRepository_List_Call {
+	return &ReportRepository_List_Call{Call: _e.mock.On("List", ctx, input, now)}
+}
+
+func (_c *ReportRepository_List_Call) Run(run func(ctx context.Context, input models.ListReportsInput, now time.Time)) *ReportRepository_List_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ListReportsInput), args[2].(time.Time))
+	})
+	return _c
+}
+
+func (_c *ReportRepository_List_Call) Return(_a0 models.ListReportsResult, _a1 error) *ReportRepository_List_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ReportRepository_List_Call) RunAndReturn(run func(context.Context, models.ListReportsInput, time.Time) (models.ListReportsResult, error)) *ReportRepository_List_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListByCallUUID provides a mock function with given fields: ctx, callID, now
 func (_m *ReportRepository) ListByCallUUID(ctx context.Context, callID uuid.UUID, now time.Time) ([]models.ReportExport, error) {
 	ret := _m.Called(ctx, callID, now)

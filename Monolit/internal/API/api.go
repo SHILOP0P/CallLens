@@ -64,6 +64,8 @@ type AnalysisAPI interface {
 
 type ReportAPI interface {
 	Create(w http.ResponseWriter, r *http.Request)
+	CreateGlobal(w http.ResponseWriter, r *http.Request)
+	List(w http.ResponseWriter, r *http.Request)
 	ListByCallUUID(w http.ResponseWriter, r *http.Request)
 	Download(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)

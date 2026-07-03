@@ -71,6 +71,8 @@ type AnalysisService interface {
 
 type ReportService interface {
 	Create(ctx context.Context, input models.CreateReportInput) (models.ReportExport, error)
+	CreateGlobal(ctx context.Context, input models.CreateGlobalReportInput) (models.ReportExport, error)
+	List(ctx context.Context, input models.ListReportsInput) (models.ListReportsResult, error)
 	ListByCallUUID(ctx context.Context, callID uuid.UUID, userID uuid.UUID) ([]models.ReportExport, error)
 	GetFile(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) (models.ReportFile, error)
 	Delete(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) error

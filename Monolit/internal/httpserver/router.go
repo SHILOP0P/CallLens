@@ -50,6 +50,8 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 			r.With(authGuard).Get("/calls/{uuid}/analysis", analysisAPI.GetByCallUUID)
 			r.With(authGuard).Post("/calls/{uuid}/reports", reportAPI.Create)
 			r.With(authGuard).Get("/calls/{uuid}/reports", reportAPI.ListByCallUUID)
+			r.With(authGuard).Get("/reports", reportAPI.List)
+			r.With(authGuard).Post("/reports", reportAPI.CreateGlobal)
 			r.With(authGuard).Get("/reports/{report_uuid}/download", reportAPI.Download)
 			r.With(authGuard).Delete("/reports/{report_uuid}", reportAPI.Delete)
 			//UPDATE

@@ -69,8 +69,16 @@ func writeReportError(w http.ResponseWriter, err error, fallbackCode string) {
 		response.WriteError(w, http.StatusBadRequest, response.CodeUnsupportedReportFormat, "unsupported report format")
 		return
 	}
+	if errors.Is(err, models.ErrUnsupportedReportScope) {
+		response.WriteError(w, http.StatusBadRequest, response.CodeUnsupportedReportScope, "unsupported report scope")
+		return
+	}
 	if errors.Is(err, models.ErrInvalidReportInput) {
 		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidReportInput, "invalid report input")
+		return
+	}
+	if errors.Is(err, models.ErrReportScopeNotImplemented) {
+		response.WriteError(w, http.StatusNotImplemented, response.CodeNotImplemented, "report scope is not implemented")
 		return
 	}
 	if errors.Is(err, models.ErrInvalidAnalysisStatus) {
