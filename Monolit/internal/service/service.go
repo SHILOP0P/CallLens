@@ -14,6 +14,8 @@ type CallService interface {
 
 	//GET
 	List(ctx context.Context, userID uuid.UUID) ([]models.Call, error)
+	ListFiltered(ctx context.Context, input models.ListCallsInput) (models.ListCallsResult, error)
+	GetFilterOptions(ctx context.Context, input models.CallFilterOptionsInput) (models.CallFilterOptions, error)
 	GetByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Call, error)
 	GetAudioByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.File, error)
 	GetTranscriptionByCallUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Transcription, error)

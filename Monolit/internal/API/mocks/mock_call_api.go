@@ -191,6 +191,40 @@ func (_c *CallAPI_GetByUUID_Call) RunAndReturn(run func(http.ResponseWriter, *ht
 	return _c
 }
 
+// GetFilterOptions provides a mock function with given fields: w, r
+func (_m *CallAPI) GetFilterOptions(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// CallAPI_GetFilterOptions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetFilterOptions'
+type CallAPI_GetFilterOptions_Call struct {
+	*mock.Call
+}
+
+// GetFilterOptions is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *CallAPI_Expecter) GetFilterOptions(w interface{}, r interface{}) *CallAPI_GetFilterOptions_Call {
+	return &CallAPI_GetFilterOptions_Call{Call: _e.mock.On("GetFilterOptions", w, r)}
+}
+
+func (_c *CallAPI_GetFilterOptions_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *CallAPI_GetFilterOptions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *CallAPI_GetFilterOptions_Call) Return() *CallAPI_GetFilterOptions_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *CallAPI_GetFilterOptions_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *CallAPI_GetFilterOptions_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetTranscriptionByCallUUID provides a mock function with given fields: w, r
 func (_m *CallAPI) GetTranscriptionByCallUUID(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)

@@ -3,6 +3,7 @@ package call
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
@@ -53,4 +54,203 @@ func (r *Repository) List(ctx context.Context, userID uuid.UUID) ([]model.Call, 
 	}
 
 	return converter.RepoCallsToModels(calls)
+}
+
+func (r *Repository) ListFiltered(ctx context.Context, input model.ListCallsInput) (model.ListCallsResult, error) {
+	where, args := buildListFilters(input)
+	limitParam := len(args) + 1
+	args = append(args, input.Limit)
+	offsetParam := len(args) + 1
+	args = append(args, input.Offset)
+
+	qList := fmt.Sprintf(`
+	SELECT c.call_uuid,
+	       c.title,
+	       c.status,
+	       c.audio_path,
+	       c.original_filename,
+	       c.mime_type,
+	       c.size_bytes,
+	       c.duration_seconds,
+	       c.uploaded_by_user_uuid,
+	       c.company_uuid,
+	       c.department_uuid,
+	       c.visibility_scope,
+	       c.created_at,
+	       COUNT(*) OVER() AS total
+	FROM calls c
+	WHERE %s
+	ORDER BY c.created_at DESC
+	LIMIT $%d OFFSET $%d
+	`, where, limitParam, offsetParam)
+
+	rows, err := r.db.QueryContext(ctx, qList, args...)
+	if err != nil {
+		return model.ListCallsResult{}, fmt.Errorf("list filtered calls: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var calls []repoModel.Call
+	total := 0
+	for rows.Next() {
+		var call repoModel.Call
+		err = rows.Scan(
+			&call.ID,
+			&call.Title,
+			&call.Status,
+			&call.AudioPath,
+			&call.OriginalFilename,
+			&call.MimeType,
+			&call.SizeBytes,
+			&call.DurationSeconds,
+			&call.UploadedByUserUUID,
+			&call.CompanyUUID,
+			&call.DepartmentUUID,
+			&call.VisibilityScope,
+			&call.CreatedAt,
+			&total,
+		)
+		if err != nil {
+			return model.ListCallsResult{}, fmt.Errorf("list filtered calls: %w", err)
+		}
+		calls = append(calls, call)
+	}
+	if err := rows.Err(); err != nil {
+		return model.ListCallsResult{}, fmt.Errorf("list filtered calls: %w", err)
+	}
+
+	converted, err := converter.RepoCallsToModels(calls)
+	if err != nil {
+		return model.ListCallsResult{}, fmt.Errorf("list filtered calls: %w", err)
+	}
+
+	if len(converted) == 0 && input.Offset > 0 {
+		total, err = r.countFilteredCalls(ctx, input)
+		if err != nil {
+			return model.ListCallsResult{}, err
+		}
+	}
+
+	return model.ListCallsResult{
+		Items:  converted,
+		Total:  total,
+		Limit:  input.Limit,
+		Offset: input.Offset,
+	}, nil
+}
+
+func (r *Repository) countFilteredCalls(ctx context.Context, input model.ListCallsInput) (int, error) {
+	where, args := buildListFilters(input)
+	qCount := fmt.Sprintf(`SELECT COUNT(*) FROM calls c WHERE %s`, where)
+
+	var total int
+	if err := r.db.QueryRowContext(ctx, qCount, args...).Scan(&total); err != nil {
+		return 0, fmt.Errorf("count filtered calls: %w", err)
+	}
+
+	return total, nil
+}
+
+func (r *Repository) GetFilterOptions(ctx context.Context, input model.CallFilterOptionsInput) (model.CallFilterOptions, error) {
+	where, args := buildFilterOptionsFilters(input)
+	qList := fmt.Sprintf(`
+	SELECT DISTINCT u.user_uuid,
+	       u.full_name,
+	       u.full_surname,
+	       u.username
+	FROM calls c
+	JOIN users u ON u.user_uuid = c.uploaded_by_user_uuid
+	WHERE %s
+	ORDER BY u.full_surname, u.full_name, u.username
+	`, where)
+
+	rows, err := r.db.QueryContext(ctx, qList, args...)
+	if err != nil {
+		return model.CallFilterOptions{}, fmt.Errorf("get call filter options: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var managers []model.CallFilterUser
+	for rows.Next() {
+		var manager model.CallFilterUser
+		if err := rows.Scan(&manager.ID, &manager.FullName, &manager.FullSurname, &manager.Username); err != nil {
+			return model.CallFilterOptions{}, fmt.Errorf("get call filter options: %w", err)
+		}
+		managers = append(managers, manager)
+	}
+	if err := rows.Err(); err != nil {
+		return model.CallFilterOptions{}, fmt.Errorf("get call filter options: %w", err)
+	}
+
+	return model.CallFilterOptions{
+		Statuses: []model.CallStatus{
+			model.CallStatusNew,
+			model.CallStatusProcessing,
+			model.CallStatusTranscribed,
+			model.CallStatusAnalyzed,
+			model.CallStatusFailed,
+		},
+		Scopes: []model.CallVisibilityScope{
+			model.CallVisibilityScopePersonal,
+			model.CallVisibilityScopeCompany,
+			model.CallVisibilityScopeDepartment,
+		},
+		Managers: managers,
+	}, nil
+}
+
+func buildListFilters(input model.ListCallsInput) (string, []any) {
+	args := []any{input.UserID}
+	conditions := []string{visibleToUserCondition("c", "$1")}
+
+	if input.Q != "" {
+		args = append(args, "%"+strings.ToLower(input.Q)+"%")
+		conditions = append(conditions, fmt.Sprintf("(LOWER(c.title) LIKE $%d OR LOWER(c.original_filename) LIKE $%d)", len(args), len(args)))
+	}
+	if input.Status != "" {
+		args = append(args, string(input.Status))
+		conditions = append(conditions, fmt.Sprintf("c.status = $%d", len(args)))
+	}
+	if input.VisibilityScope != "" {
+		args = append(args, string(input.VisibilityScope))
+		conditions = append(conditions, fmt.Sprintf("c.visibility_scope = $%d", len(args)))
+	}
+	if input.CompanyUUID.Valid {
+		args = append(args, input.CompanyUUID.UUID)
+		conditions = append(conditions, fmt.Sprintf("c.company_uuid = $%d", len(args)))
+	}
+	if input.DepartmentUUID.Valid {
+		args = append(args, input.DepartmentUUID.UUID)
+		conditions = append(conditions, fmt.Sprintf("c.department_uuid = $%d", len(args)))
+	}
+	if input.UploadedByUserUUID.Valid {
+		args = append(args, input.UploadedByUserUUID.UUID)
+		conditions = append(conditions, fmt.Sprintf("c.uploaded_by_user_uuid = $%d", len(args)))
+	}
+	if input.From != nil {
+		args = append(args, *input.From)
+		conditions = append(conditions, fmt.Sprintf("c.created_at >= $%d", len(args)))
+	}
+	if input.To != nil {
+		args = append(args, *input.To)
+		conditions = append(conditions, fmt.Sprintf("c.created_at <= $%d", len(args)))
+	}
+
+	return strings.Join(conditions, " AND "), args
+}
+
+func buildFilterOptionsFilters(input model.CallFilterOptionsInput) (string, []any) {
+	args := []any{input.UserID}
+	conditions := []string{visibleToUserCondition("c", "$1"), "c.uploaded_by_user_uuid IS NOT NULL"}
+
+	if input.CompanyUUID.Valid {
+		args = append(args, input.CompanyUUID.UUID)
+		conditions = append(conditions, fmt.Sprintf("c.company_uuid = $%d", len(args)))
+	}
+	if input.DepartmentUUID.Valid {
+		args = append(args, input.DepartmentUUID.UUID)
+		conditions = append(conditions, fmt.Sprintf("c.department_uuid = $%d", len(args)))
+	}
+
+	return strings.Join(conditions, " AND "), args
 }

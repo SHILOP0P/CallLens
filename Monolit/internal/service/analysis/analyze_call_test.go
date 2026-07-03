@@ -373,6 +373,14 @@ func (r *analysisCallRepository) List(ctx context.Context, userID uuid.UUID) ([]
 	panic("not implemented")
 }
 
+func (r *analysisCallRepository) ListFiltered(ctx context.Context, input models.ListCallsInput) (models.ListCallsResult, error) {
+	panic("not implemented")
+}
+
+func (r *analysisCallRepository) GetFilterOptions(ctx context.Context, input models.CallFilterOptionsInput) (models.CallFilterOptions, error) {
+	panic("not implemented")
+}
+
 func (r *analysisCallRepository) GetByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Call, error) {
 	if id != r.call.ID {
 		return models.Call{}, models.ErrCallNotFound

@@ -15,6 +15,8 @@ type CallRepository interface {
 	CreateCallWithProcessingJob(ctx context.Context, call models.Call, job models.ProcessingJob) (models.Call, error)
 	//GET
 	List(ctx context.Context, userID uuid.UUID) ([]models.Call, error)
+	ListFiltered(ctx context.Context, input models.ListCallsInput) (models.ListCallsResult, error)
+	GetFilterOptions(ctx context.Context, input models.CallFilterOptionsInput) (models.CallFilterOptions, error)
 	GetByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.Call, error)
 	GetByUUIDForProcessing(ctx context.Context, id uuid.UUID) (models.Call, error)
 	//UPDATE

@@ -305,6 +305,132 @@ func (s *RepositorySuite) TestListReturnsOnlyVisibleCalls() {
 	s.Require().Equal(personal.ID, employeeCalls[0].ID)
 }
 
+func (s *RepositorySuite) TestListFilteredAppliesFiltersPaginationAndVisibility() {
+	company, manager := s.createCompanyWithManager()
+	outsider := s.createUser(uuid.NewString() + "@example.com")
+	uploader := s.createUser(uuid.NewString() + "@example.com")
+	baseTime := time.Date(2026, 7, 1, 12, 0, 0, 0, time.UTC)
+
+	first := testCall(uploader.ID)
+	first.Title = "Alpha discovery"
+	first.OriginalFilename = "first-alpha.wav"
+	first.Status = models.CallStatusAnalyzed
+	first.VisibilityScope = models.CallVisibilityScopeCompany
+	first.CompanyUUID = uuid.NullUUID{UUID: company.ID, Valid: true}
+	first.CreatedAt = baseTime
+	_, err := s.repository.CreateCall(s.ctx, first)
+	s.Require().NoError(err)
+
+	second := testCall(uploader.ID)
+	second.Title = "Second"
+	second.OriginalFilename = "second-alpha.wav"
+	second.Status = models.CallStatusAnalyzed
+	second.VisibilityScope = models.CallVisibilityScopeCompany
+	second.CompanyUUID = uuid.NullUUID{UUID: company.ID, Valid: true}
+	second.CreatedAt = baseTime.Add(time.Hour)
+	_, err = s.repository.CreateCall(s.ctx, second)
+	s.Require().NoError(err)
+
+	failed := testCall(uploader.ID)
+	failed.Title = "Alpha failed"
+	failed.Status = models.CallStatusFailed
+	failed.VisibilityScope = models.CallVisibilityScopeCompany
+	failed.CompanyUUID = uuid.NullUUID{UUID: company.ID, Valid: true}
+	failed.CreatedAt = baseTime.Add(2 * time.Hour)
+	_, err = s.repository.CreateCall(s.ctx, failed)
+	s.Require().NoError(err)
+
+	from := baseTime.Add(-time.Minute)
+	to := baseTime.Add(90 * time.Minute)
+	result, err := s.repository.ListFiltered(s.ctx, models.ListCallsInput{
+		UserID:             manager.ID,
+		Q:                  "alpha",
+		Status:             models.CallStatusAnalyzed,
+		VisibilityScope:    models.CallVisibilityScopeCompany,
+		CompanyUUID:        uuid.NullUUID{UUID: company.ID, Valid: true},
+		UploadedByUserUUID: uuid.NullUUID{UUID: uploader.ID, Valid: true},
+		From:               &from,
+		To:                 &to,
+		Limit:              1,
+		Offset:             0,
+	})
+	s.Require().NoError(err)
+	s.Require().Equal(2, result.Total)
+	s.Require().Equal(1, result.Limit)
+	s.Require().Equal(0, result.Offset)
+	s.Require().Len(result.Items, 1)
+	s.Require().Equal(second.ID, result.Items[0].ID)
+
+	outsiderResult, err := s.repository.ListFiltered(s.ctx, models.ListCallsInput{
+		UserID: outsider.ID,
+		Q:      "alpha",
+		Limit:  20,
+	})
+	s.Require().NoError(err)
+	s.Require().Zero(outsiderResult.Total)
+	s.Require().Empty(outsiderResult.Items)
+}
+
+func (s *RepositorySuite) TestListFilteredCountsWhenOffsetReturnsNoRows() {
+	company, manager := s.createCompanyWithManager()
+	uploader := s.createUser(uuid.NewString() + "@example.com")
+	call := testCall(uploader.ID)
+	call.VisibilityScope = models.CallVisibilityScopeCompany
+	call.CompanyUUID = uuid.NullUUID{UUID: company.ID, Valid: true}
+	_, err := s.repository.CreateCall(s.ctx, call)
+	s.Require().NoError(err)
+
+	result, err := s.repository.ListFiltered(s.ctx, models.ListCallsInput{
+		UserID: manager.ID,
+		Limit:  20,
+		Offset: 10,
+	})
+
+	s.Require().NoError(err)
+	s.Require().Equal(1, result.Total)
+	s.Require().Empty(result.Items)
+}
+
+func (s *RepositorySuite) TestGetFilterOptionsReturnsVisibleUploaders() {
+	company, manager := s.createCompanyWithManager()
+	department := s.createDepartment(company.ID)
+	leader := s.addCompanyEmployee(company.ID, models.CompanyMemberRoleEmployee)
+	s.addDepartmentMember(company.ID, department.ID, leader.ID, models.DepartmentMemberRoleLeader)
+	companyUploader := s.createUser(uuid.NewString() + "@example.com")
+	departmentUploader := s.createUser(uuid.NewString() + "@example.com")
+
+	companyCall := testCall(companyUploader.ID)
+	companyCall.VisibilityScope = models.CallVisibilityScopeCompany
+	companyCall.CompanyUUID = uuid.NullUUID{UUID: company.ID, Valid: true}
+	_, err := s.repository.CreateCall(s.ctx, companyCall)
+	s.Require().NoError(err)
+
+	departmentCall := testCall(departmentUploader.ID)
+	departmentCall.VisibilityScope = models.CallVisibilityScopeDepartment
+	departmentCall.CompanyUUID = uuid.NullUUID{UUID: company.ID, Valid: true}
+	departmentCall.DepartmentUUID = uuid.NullUUID{UUID: department.ID, Valid: true}
+	_, err = s.repository.CreateCall(s.ctx, departmentCall)
+	s.Require().NoError(err)
+
+	managerOptions, err := s.repository.GetFilterOptions(s.ctx, models.CallFilterOptionsInput{
+		UserID:      manager.ID,
+		CompanyUUID: uuid.NullUUID{UUID: company.ID, Valid: true},
+	})
+	s.Require().NoError(err)
+	s.Require().Len(managerOptions.Statuses, 5)
+	s.Require().Len(managerOptions.Scopes, 3)
+	s.Require().Len(managerOptions.Managers, 2)
+
+	leaderOptions, err := s.repository.GetFilterOptions(s.ctx, models.CallFilterOptionsInput{
+		UserID:         leader.ID,
+		CompanyUUID:    uuid.NullUUID{UUID: company.ID, Valid: true},
+		DepartmentUUID: uuid.NullUUID{UUID: department.ID, Valid: true},
+	})
+	s.Require().NoError(err)
+	s.Require().Len(leaderOptions.Managers, 1)
+	s.Require().Equal(departmentUploader.ID, leaderOptions.Managers[0].ID)
+}
+
 func (s *RepositorySuite) TestUpdateCallTitleRequiresVisibility() {
 	owner := s.createUser(uuid.NewString() + "@example.com")
 	outsider := s.createUser(uuid.NewString() + "@example.com")

@@ -320,6 +320,7 @@ Calls:
 | --- | --- | --- | --- |
 | POST | `/api/v1/calls` | Да | Загрузить аудио звонка |
 | GET | `/api/v1/calls` | Да | Получить список видимых звонков |
+| GET | `/api/v1/calls/filters` | Да | Получить справочник фильтров для списка звонков |
 | GET | `/api/v1/calls/{uuid}` | Да | Получить видимый звонок по UUID |
 | GET | `/api/v1/calls/{uuid}/audio` | Да | Получить аудиофайл звонка |
 | GET | `/api/v1/calls/{uuid}/transcription` | Да | Получить сохраненную транскрипцию звонка |
@@ -327,6 +328,55 @@ Calls:
 | GET | `/api/v1/calls/{uuid}/analysis` | Да | Получить сохраненный анализ звонка |
 | PATCH | `/api/v1/calls/{uuid}` | Да | Обновить title звонка |
 | DELETE | `/api/v1/calls/{uuid}` | Да | Удалить звонок и аудиофайл |
+
+`GET /api/v1/calls` без query-параметров сохраняет старую форму ответа и возвращает массив `CallResponse`.
+
+Если передан хотя бы один фильтр или параметр пагинации, ответ возвращается в envelope:
+
+```json
+{
+  "items": [{ "...": "CallResponse" }],
+  "total": 42,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+Поддерживаемые query-параметры:
+
+| Параметр | Значение |
+| --- | --- |
+| `q` | Поиск по `title` и `original_filename` |
+| `status` | `new`, `processing`, `transcribed`, `analyzed`, `failed` |
+| `scope` | `personal`, `company`, `department` |
+| `company_uuid` | UUID компании |
+| `department_uuid` | UUID отдела |
+| `uploaded_by_user_uuid` | UUID пользователя, загрузившего звонок |
+| `from` | ISO date/datetime, нижняя граница `created_at` |
+| `to` | ISO date/datetime, верхняя граница `created_at`; дата `YYYY-MM-DD` считается до конца этого дня |
+| `limit` | 1..100; по умолчанию 20 для filtered/envelope-ответа |
+| `offset` | 0 или больше; по умолчанию 0 |
+
+Все фильтры применяются только поверх видимых текущему пользователю звонков.
+
+`GET /api/v1/calls/filters` принимает optional `company_uuid` и `department_uuid` и возвращает:
+
+```json
+{
+  "statuses": ["new", "processing", "transcribed", "analyzed", "failed"],
+  "scopes": ["personal", "company", "department"],
+  "managers": [
+    {
+      "id": "user_uuid",
+      "full_name": "Ivan",
+      "full_surname": "Petrov",
+      "username": "petrov"
+    }
+  ]
+}
+```
+
+Поле `managers` в справочнике содержит компактный список пользователей, которые загрузили видимые текущему пользователю звонки в выбранном scope компании/отдела. Название поля сохранено для frontend-контракта фильтров.
 
 Analysis instructions:
 

@@ -302,6 +302,63 @@ func (_c *CallRepository_GetByUUIDForProcessing_Call) RunAndReturn(run func(cont
 	return _c
 }
 
+// GetFilterOptions provides a mock function with given fields: ctx, input
+func (_m *CallRepository) GetFilterOptions(ctx context.Context, input models.CallFilterOptionsInput) (models.CallFilterOptions, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFilterOptions")
+	}
+
+	var r0 models.CallFilterOptions
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.CallFilterOptionsInput) (models.CallFilterOptions, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.CallFilterOptionsInput) models.CallFilterOptions); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.CallFilterOptions)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.CallFilterOptionsInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CallRepository_GetFilterOptions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetFilterOptions'
+type CallRepository_GetFilterOptions_Call struct {
+	*mock.Call
+}
+
+// GetFilterOptions is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.CallFilterOptionsInput
+func (_e *CallRepository_Expecter) GetFilterOptions(ctx interface{}, input interface{}) *CallRepository_GetFilterOptions_Call {
+	return &CallRepository_GetFilterOptions_Call{Call: _e.mock.On("GetFilterOptions", ctx, input)}
+}
+
+func (_c *CallRepository_GetFilterOptions_Call) Run(run func(ctx context.Context, input models.CallFilterOptionsInput)) *CallRepository_GetFilterOptions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.CallFilterOptionsInput))
+	})
+	return _c
+}
+
+func (_c *CallRepository_GetFilterOptions_Call) Return(_a0 models.CallFilterOptions, _a1 error) *CallRepository_GetFilterOptions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CallRepository_GetFilterOptions_Call) RunAndReturn(run func(context.Context, models.CallFilterOptionsInput) (models.CallFilterOptions, error)) *CallRepository_GetFilterOptions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // List provides a mock function with given fields: ctx, userID
 func (_m *CallRepository) List(ctx context.Context, userID uuid.UUID) ([]models.Call, error) {
 	ret := _m.Called(ctx, userID)
@@ -357,6 +414,63 @@ func (_c *CallRepository_List_Call) Return(_a0 []models.Call, _a1 error) *CallRe
 }
 
 func (_c *CallRepository_List_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]models.Call, error)) *CallRepository_List_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListFiltered provides a mock function with given fields: ctx, input
+func (_m *CallRepository) ListFiltered(ctx context.Context, input models.ListCallsInput) (models.ListCallsResult, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListFiltered")
+	}
+
+	var r0 models.ListCallsResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListCallsInput) (models.ListCallsResult, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListCallsInput) models.ListCallsResult); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.ListCallsResult)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.ListCallsInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CallRepository_ListFiltered_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListFiltered'
+type CallRepository_ListFiltered_Call struct {
+	*mock.Call
+}
+
+// ListFiltered is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ListCallsInput
+func (_e *CallRepository_Expecter) ListFiltered(ctx interface{}, input interface{}) *CallRepository_ListFiltered_Call {
+	return &CallRepository_ListFiltered_Call{Call: _e.mock.On("ListFiltered", ctx, input)}
+}
+
+func (_c *CallRepository_ListFiltered_Call) Run(run func(ctx context.Context, input models.ListCallsInput)) *CallRepository_ListFiltered_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ListCallsInput))
+	})
+	return _c
+}
+
+func (_c *CallRepository_ListFiltered_Call) Return(_a0 models.ListCallsResult, _a1 error) *CallRepository_ListFiltered_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CallRepository_ListFiltered_Call) RunAndReturn(run func(context.Context, models.ListCallsInput) (models.ListCallsResult, error)) *CallRepository_ListFiltered_Call {
 	_c.Call.Return(run)
 	return _c
 }

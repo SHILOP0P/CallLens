@@ -229,6 +229,12 @@ func (f *fakeCallRepository) CreateCallWithProcessingJob(context.Context, models
 	return models.Call{}, nil
 }
 func (f *fakeCallRepository) List(context.Context, uuid.UUID) ([]models.Call, error) { return nil, nil }
+func (f *fakeCallRepository) ListFiltered(context.Context, models.ListCallsInput) (models.ListCallsResult, error) {
+	return models.ListCallsResult{}, nil
+}
+func (f *fakeCallRepository) GetFilterOptions(context.Context, models.CallFilterOptionsInput) (models.CallFilterOptions, error) {
+	return models.CallFilterOptions{}, nil
+}
 func (f *fakeCallRepository) GetByUUID(context.Context, uuid.UUID, uuid.UUID) (models.Call, error) {
 	return f.call, nil
 }

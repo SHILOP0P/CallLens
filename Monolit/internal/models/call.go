@@ -56,3 +56,43 @@ type UpdateCallStatusInput struct {
 	CallUUID uuid.UUID
 	Status   CallStatus
 }
+
+type ListCallsInput struct {
+	UserID             uuid.UUID
+	Q                  string
+	Status             CallStatus
+	VisibilityScope    CallVisibilityScope
+	CompanyUUID        uuid.NullUUID
+	DepartmentUUID     uuid.NullUUID
+	UploadedByUserUUID uuid.NullUUID
+	From               *time.Time
+	To                 *time.Time
+	Limit              int
+	Offset             int
+}
+
+type ListCallsResult struct {
+	Items  []Call
+	Total  int
+	Limit  int
+	Offset int
+}
+
+type CallFilterOptionsInput struct {
+	UserID         uuid.UUID
+	CompanyUUID    uuid.NullUUID
+	DepartmentUUID uuid.NullUUID
+}
+
+type CallFilterOptions struct {
+	Statuses []CallStatus
+	Scopes   []CallVisibilityScope
+	Managers []CallFilterUser
+}
+
+type CallFilterUser struct {
+	ID          uuid.UUID
+	FullName    string
+	FullSurname string
+	Username    string
+}
