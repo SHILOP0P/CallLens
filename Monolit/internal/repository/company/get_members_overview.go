@@ -111,9 +111,11 @@ func (r *Repository) listCompanyDepartments(ctx context.Context, companyID uuid.
 	SELECT department_uuid,
 	       company_uuid,
 	       name,
-	       created_at
+	       created_at,
+	       deleted_at
 	FROM departments
 	WHERE company_uuid = $1
+	  AND deleted_at IS NULL
 	ORDER BY created_at DESC
 	`
 
@@ -160,6 +162,7 @@ func (r *Repository) listActiveDepartmentMembers(ctx context.Context, companyID 
 	JOIN departments d ON d.department_uuid = dm.department_uuid
 	JOIN users u ON u.user_uuid = dm.user_uuid
 	WHERE d.company_uuid = $1
+	  AND d.deleted_at IS NULL
 	  AND dm.status = 'active'
 	ORDER BY dm.created_at ASC
 	`

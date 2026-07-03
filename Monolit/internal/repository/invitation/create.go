@@ -40,6 +40,7 @@ func (r *Repository) CreateInvitation(ctx context.Context, invitation model.Memb
 		   FROM departments d
 		   WHERE d.department_uuid = $3
 		     AND d.company_uuid = $2
+		     AND d.deleted_at IS NULL
 	   )
 	RETURNING ` + invitationColumns
 

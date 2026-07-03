@@ -306,6 +306,14 @@ func (f *serviceFixture) CreateCompany(ctx context.Context, company models.Compa
 	return company, nil
 }
 
+func (f *serviceFixture) UpdateCompany(ctx context.Context, companyID uuid.UUID, name string) (models.Company, error) {
+	return models.Company{ID: companyID, Name: name}, nil
+}
+
+func (f *serviceFixture) ArchiveCompany(ctx context.Context, companyID uuid.UUID) error {
+	return nil
+}
+
 func (f *serviceFixture) AddCompanyMember(ctx context.Context, member models.CompanyMember) (models.CompanyMember, error) {
 	f.companyMembers[companyKey(member.CompanyUUID, member.UserUUID)] = member
 	return member, nil
@@ -317,6 +325,16 @@ func (f *serviceFixture) UpdateCompanyMemberRole(ctx context.Context, companyID 
 
 func (f *serviceFixture) UpdateCompanyMemberStatus(ctx context.Context, companyID uuid.UUID, userID uuid.UUID, status models.MembershipStatus) (models.CompanyMember, error) {
 	return models.CompanyMember{}, nil
+}
+
+func (f *serviceFixture) CountActiveCompanyManagers(ctx context.Context, companyID uuid.UUID, exceptUserID uuid.UUID) (int, error) {
+	count := 0
+	for _, member := range f.companyMembers {
+		if member.CompanyUUID == companyID && member.UserUUID != exceptUserID && member.Role == models.CompanyMemberRoleManager && member.Status == models.MembershipStatusActive {
+			count++
+		}
+	}
+	return count, nil
 }
 
 func (f *serviceFixture) ListUserCompanies(ctx context.Context, userID uuid.UUID) ([]models.Company, error) {
@@ -343,8 +361,20 @@ func (f *serviceFixture) GetCompanyMembersOverview(ctx context.Context, companyI
 	return models.CompanyMembersOverview{}, nil
 }
 
+func (f *serviceFixture) ListCompanyMembers(ctx context.Context, input models.ListCompanyMembersInput) (models.CompanyMembersResult, error) {
+	return models.CompanyMembersResult{}, nil
+}
+
 func (f *serviceFixture) CreateDepartment(ctx context.Context, department models.Department) (models.Department, error) {
 	return department, nil
+}
+
+func (f *serviceFixture) UpdateDepartment(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID, name string) (models.Department, error) {
+	return models.Department{ID: departmentID, CompanyUUID: companyID, Name: name}, nil
+}
+
+func (f *serviceFixture) ArchiveDepartment(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID) error {
+	return nil
 }
 
 func (f *serviceFixture) AddDepartmentMember(ctx context.Context, companyID uuid.UUID, member models.DepartmentMember) (models.DepartmentMember, error) {

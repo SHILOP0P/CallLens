@@ -75,6 +75,7 @@ func (r *Repository) departmentExists(ctx context.Context, companyID uuid.UUID, 
 		FROM departments
 		WHERE company_uuid = $1
 		  AND department_uuid = $2
+		  AND deleted_at IS NULL
 	)
 	`
 

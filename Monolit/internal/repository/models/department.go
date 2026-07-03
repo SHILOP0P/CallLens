@@ -11,6 +11,7 @@ type Department struct {
 	CompanyUUID uuid.UUID
 	Name        string
 	CreatedAt   time.Time
+	DeletedAt   *time.Time
 }
 
 type DepartmentMember struct {

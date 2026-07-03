@@ -11,6 +11,7 @@ func ScanCompany(row rowScanner) (repoModel.Company, error) {
 		&company.ManagerUserUUID,
 		&company.MemberLimit,
 		&company.CreatedAt,
+		&company.DeletedAt,
 	)
 	if err != nil {
 		return repoModel.Company{}, err

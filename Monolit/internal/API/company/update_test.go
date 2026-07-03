@@ -1,0 +1,41 @@
+package company
+
+import (
+	"net/http"
+
+	"calllens/monolit/internal/models"
+
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
+)
+
+func (s *APISuite) TestUpdateCompanySuccess() {
+	companyID := uuid.New()
+	userID := uuid.New()
+
+	s.service.EXPECT().UpdateCompany(mock.Anything, models.UpdateCompanyInput{
+		CompanyUUID: companyID,
+		RequestUser: userID,
+		Name:        "New",
+	}).Return(models.Company{ID: companyID, Name: "New"}, nil).Once()
+
+	rec, req := s.request(http.MethodPatch, "/", `{"name":"New"}`, userID, map[string]string{"uuid": companyID.String()})
+	s.api.Update(rec, req)
+
+	s.Require().Equal(http.StatusOK, rec.Code)
+}
+
+func (s *APISuite) TestDeleteCompanySuccess() {
+	companyID := uuid.New()
+	userID := uuid.New()
+
+	s.service.EXPECT().DeleteCompany(mock.Anything, models.DeleteCompanyInput{
+		CompanyUUID: companyID,
+		RequestUser: userID,
+	}).Return(nil).Once()
+
+	rec, req := s.request(http.MethodDelete, "/", "", userID, map[string]string{"uuid": companyID.String()})
+	s.api.Delete(rec, req)
+
+	s.Require().Equal(http.StatusNoContent, rec.Code)
+}

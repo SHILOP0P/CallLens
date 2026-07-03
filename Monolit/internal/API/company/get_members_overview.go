@@ -3,6 +3,7 @@ package company
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
@@ -25,7 +26,13 @@ func (h *Handler) GetCompanyMembersOverview(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	overview, err := h.service.GetCompanyMembersOverview(r.Context(), companyID, userID)
+	input, err := companyMembersInputFromRequest(r, companyID, userID)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCompanyInput, "invalid company input")
+		return
+	}
+
+	result, err := h.service.ListCompanyMembers(r.Context(), input)
 	if err != nil {
 		if errors.Is(err, models.ErrInvalidCompanyInput) {
 			response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCompanyInput, "invalid company input")
@@ -48,7 +55,7 @@ func (h *Handler) GetCompanyMembersOverview(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	resp, err := converter.CompanyMembersOverviewModelToAPI(overview)
+	resp, err := converter.CompanyMembersResultModelToAPI(result)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertCompany, "failed to convert company members")
 		return
@@ -57,4 +64,51 @@ func (h *Handler) GetCompanyMembersOverview(w http.ResponseWriter, r *http.Reque
 	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
 		return
 	}
+}
+
+func companyMembersInputFromRequest(r *http.Request, companyID uuid.UUID, userID uuid.UUID) (models.ListCompanyMembersInput, error) {
+	query := r.URL.Query()
+	input := models.ListCompanyMembersInput{
+		CompanyUUID: companyID,
+		RequestUser: userID,
+		Query:       query.Get("q"),
+		Limit:       20,
+		Offset:      0,
+	}
+
+	if value := query.Get("status"); value != "" {
+		status := models.MembershipStatus(value)
+		input.Status = &status
+	}
+
+	if value := query.Get("role"); value != "" {
+		role := value
+		input.Role = &role
+	}
+
+	if value := query.Get("department_uuid"); value != "" {
+		departmentID, err := uuid.Parse(value)
+		if err != nil {
+			return models.ListCompanyMembersInput{}, err
+		}
+		input.DepartmentUUID = departmentID
+	}
+
+	if value := query.Get("limit"); value != "" {
+		limit, err := strconv.Atoi(value)
+		if err != nil {
+			return models.ListCompanyMembersInput{}, err
+		}
+		input.Limit = limit
+	}
+
+	if value := query.Get("offset"); value != "" {
+		offset, err := strconv.Atoi(value)
+		if err != nil {
+			return models.ListCompanyMembersInput{}, err
+		}
+		input.Offset = offset
+	}
+
+	return input, nil
 }

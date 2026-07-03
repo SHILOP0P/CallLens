@@ -4,6 +4,10 @@ type CreateCompanyRequest struct {
 	Name string `json:"name"`
 }
 
+type UpdateCompanyRequest struct {
+	Name string `json:"name"`
+}
+
 type CompanyResponse struct {
 	ID              string `json:"id"`
 	Name            string `json:"name"`
@@ -13,6 +17,10 @@ type CompanyResponse struct {
 }
 
 type CreateDepartmentRequest struct {
+	Name string `json:"name"`
+}
+
+type UpdateDepartmentRequest struct {
 	Name string `json:"name"`
 }
 
@@ -68,6 +76,32 @@ type CompanyMembersOverviewResponse struct {
 	Manager          *CompanyMemberResponse              `json:"manager"`
 	CompanyEmployees []CompanyMemberResponse             `json:"company_employees"`
 	Departments      []DepartmentMembersOverviewResponse `json:"departments"`
+}
+
+type CompanyMemberDepartmentResponse struct {
+	DepartmentUUID string `json:"department_uuid"`
+	DepartmentName string `json:"department_name"`
+	Role           string `json:"role"`
+	Status         string `json:"status"`
+}
+
+type CompanyMemberListItemResponse struct {
+	UserUUID    string                            `json:"user_uuid"`
+	Email       string                            `json:"email"`
+	Username    string                            `json:"username"`
+	FullName    string                            `json:"full_name"`
+	FullSurname string                            `json:"full_surname"`
+	CompanyRole string                            `json:"company_role"`
+	Status      string                            `json:"status"`
+	Departments []CompanyMemberDepartmentResponse `json:"departments"`
+	CreatedAt   string                            `json:"created_at"`
+}
+
+type CompanyMembersResponse struct {
+	Members []CompanyMemberListItemResponse `json:"members"`
+	Total   int                             `json:"total"`
+	Limit   int                             `json:"limit"`
+	Offset  int                             `json:"offset"`
 }
 
 type DepartmentMembersOverviewResponse struct {

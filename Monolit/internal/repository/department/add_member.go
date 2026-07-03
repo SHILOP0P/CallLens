@@ -34,6 +34,7 @@ func (r *Repository) AddDepartmentMember(ctx context.Context, companyID uuid.UUI
 		FROM departments d
 		WHERE d.department_uuid = $1
 		  AND d.company_uuid = $6
+		  AND d.deleted_at IS NULL
 	)
 	ON CONFLICT (department_uuid, user_uuid)
 	DO UPDATE SET role = EXCLUDED.role,

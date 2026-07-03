@@ -89,6 +89,40 @@ func (_c *DepartmentAPI_CreateDepartment_Call) RunAndReturn(run func(http.Respon
 	return _c
 }
 
+// DeleteDepartment provides a mock function with given fields: w, r
+func (_m *DepartmentAPI) DeleteDepartment(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// DepartmentAPI_DeleteDepartment_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteDepartment'
+type DepartmentAPI_DeleteDepartment_Call struct {
+	*mock.Call
+}
+
+// DeleteDepartment is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *DepartmentAPI_Expecter) DeleteDepartment(w interface{}, r interface{}) *DepartmentAPI_DeleteDepartment_Call {
+	return &DepartmentAPI_DeleteDepartment_Call{Call: _e.mock.On("DeleteDepartment", w, r)}
+}
+
+func (_c *DepartmentAPI_DeleteDepartment_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *DepartmentAPI_DeleteDepartment_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *DepartmentAPI_DeleteDepartment_Call) Return() *DepartmentAPI_DeleteDepartment_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *DepartmentAPI_DeleteDepartment_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *DepartmentAPI_DeleteDepartment_Call {
+	_c.Run(run)
+	return _c
+}
+
 // ListDepartmentMembers provides a mock function with given fields: w, r
 func (_m *DepartmentAPI) ListDepartmentMembers(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -153,6 +187,40 @@ func (_c *DepartmentAPI_ListDepartments_Call) Return() *DepartmentAPI_ListDepart
 }
 
 func (_c *DepartmentAPI_ListDepartments_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *DepartmentAPI_ListDepartments_Call {
+	_c.Run(run)
+	return _c
+}
+
+// UpdateDepartment provides a mock function with given fields: w, r
+func (_m *DepartmentAPI) UpdateDepartment(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// DepartmentAPI_UpdateDepartment_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateDepartment'
+type DepartmentAPI_UpdateDepartment_Call struct {
+	*mock.Call
+}
+
+// UpdateDepartment is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *DepartmentAPI_Expecter) UpdateDepartment(w interface{}, r interface{}) *DepartmentAPI_UpdateDepartment_Call {
+	return &DepartmentAPI_UpdateDepartment_Call{Call: _e.mock.On("UpdateDepartment", w, r)}
+}
+
+func (_c *DepartmentAPI_UpdateDepartment_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *DepartmentAPI_UpdateDepartment_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *DepartmentAPI_UpdateDepartment_Call) Return() *DepartmentAPI_UpdateDepartment_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *DepartmentAPI_UpdateDepartment_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *DepartmentAPI_UpdateDepartment_Call {
 	_c.Run(run)
 	return _c
 }

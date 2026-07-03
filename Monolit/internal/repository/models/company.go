@@ -12,6 +12,7 @@ type Company struct {
 	ManagerUserUUID uuid.UUID
 	MemberLimit     int
 	CreatedAt       time.Time
+	DeletedAt       *time.Time
 }
 
 type CompanyMember struct {

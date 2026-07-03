@@ -30,6 +30,23 @@ func (s *Service) UpdateCompanyMemberStatus(ctx context.Context, input models.Up
 		return models.CompanyMember{}, err
 	}
 
+	if input.Status != models.MembershipStatusActive {
+		currentMember, err := s.companyRepository.GetCompanyMember(ctx, input.CompanyUUID, input.UserUUID)
+		if err != nil {
+			return models.CompanyMember{}, err
+		}
+
+		if currentMember.Role == models.CompanyMemberRoleManager {
+			managerCount, err := s.companyRepository.CountActiveCompanyManagers(ctx, input.CompanyUUID, input.UserUUID)
+			if err != nil {
+				return models.CompanyMember{}, err
+			}
+			if managerCount == 0 {
+				return models.CompanyMember{}, models.ErrLastCompanyManager
+			}
+		}
+	}
+
 	member, err := s.companyRepository.UpdateCompanyMemberStatus(ctx, input.CompanyUUID, input.UserUUID, input.Status)
 	if err != nil {
 		s.log.Error(ctx, "failed to update company member status", zap.String("company_id", input.CompanyUUID.String()), zap.String("request_user_id", input.RequestUser.String()), zap.String("user_id", input.UserUUID.String()), zap.Error(err))

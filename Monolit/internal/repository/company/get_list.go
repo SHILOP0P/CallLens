@@ -18,11 +18,13 @@ func (r *Repository) ListUserCompanies(ctx context.Context, userID uuid.UUID) ([
 	       c.name,
 	       c.manager_user_uuid,
 	       c.member_limit,
-	       c.created_at
+	       c.created_at,
+	       c.deleted_at
 	FROM companies c
 	JOIN company_members cm ON cm.company_uuid = c.company_uuid
 	WHERE cm.user_uuid = $1
 	  AND cm.status = 'active'
+	  AND c.deleted_at IS NULL
 	ORDER BY c.created_at DESC
 	`
 

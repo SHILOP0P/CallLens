@@ -32,6 +32,7 @@ var ErrInvalidUserInput = errors.New("invalid user input")
 var ErrCompanyNotFound = errors.New("company not found")
 var ErrInvalidCompanyInput = errors.New("invalid company input")
 var ErrUserAlreadyManagesCompany = errors.New("user already manages company")
+var ErrLastCompanyManager = errors.New("last company manager cannot be removed")
 
 // DEPARTMENT
 var ErrDepartmentNotFound = errors.New("department not found")

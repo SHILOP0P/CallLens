@@ -89,6 +89,40 @@ func (_c *CompanyAPI_Create_Call) RunAndReturn(run func(http.ResponseWriter, *ht
 	return _c
 }
 
+// Delete provides a mock function with given fields: w, r
+func (_m *CompanyAPI) Delete(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// CompanyAPI_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type CompanyAPI_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *CompanyAPI_Expecter) Delete(w interface{}, r interface{}) *CompanyAPI_Delete_Call {
+	return &CompanyAPI_Delete_Call{Call: _e.mock.On("Delete", w, r)}
+}
+
+func (_c *CompanyAPI_Delete_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *CompanyAPI_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *CompanyAPI_Delete_Call) Return() *CompanyAPI_Delete_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *CompanyAPI_Delete_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *CompanyAPI_Delete_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetByUUID provides a mock function with given fields: w, r
 func (_m *CompanyAPI) GetByUUID(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -187,6 +221,40 @@ func (_c *CompanyAPI_List_Call) Return() *CompanyAPI_List_Call {
 }
 
 func (_c *CompanyAPI_List_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *CompanyAPI_List_Call {
+	_c.Run(run)
+	return _c
+}
+
+// Update provides a mock function with given fields: w, r
+func (_m *CompanyAPI) Update(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// CompanyAPI_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type CompanyAPI_Update_Call struct {
+	*mock.Call
+}
+
+// Update is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *CompanyAPI_Expecter) Update(w interface{}, r interface{}) *CompanyAPI_Update_Call {
+	return &CompanyAPI_Update_Call{Call: _e.mock.On("Update", w, r)}
+}
+
+func (_c *CompanyAPI_Update_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *CompanyAPI_Update_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *CompanyAPI_Update_Call) Return() *CompanyAPI_Update_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *CompanyAPI_Update_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *CompanyAPI_Update_Call {
 	_c.Run(run)
 	return _c
 }

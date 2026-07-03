@@ -28,3 +28,40 @@ func (s *Service) GetCompanyMembersOverview(ctx context.Context, companyID uuid.
 
 	return s.companyRepository.GetCompanyMembersOverview(ctx, companyID)
 }
+
+func (s *Service) ListCompanyMembers(ctx context.Context, input models.ListCompanyMembersInput) (models.CompanyMembersResult, error) {
+	if input.CompanyUUID == uuid.Nil || input.RequestUser == uuid.Nil {
+		return models.CompanyMembersResult{}, models.ErrInvalidCompanyInput
+	}
+
+	if input.Limit == 0 {
+		input.Limit = 20
+	}
+	if input.Limit < 0 || input.Limit > 100 || input.Offset < 0 {
+		return models.CompanyMembersResult{}, models.ErrInvalidCompanyInput
+	}
+
+	if input.Status != nil && !validMembershipStatus(*input.Status) {
+		return models.CompanyMembersResult{}, models.ErrInvalidCompanyInput
+	}
+
+	if input.Role != nil && !validCompanyMemberListRole(*input.Role) {
+		return models.CompanyMembersResult{}, models.ErrInvalidCompanyInput
+	}
+
+	if err := s.requireCompanyManager(ctx, input.CompanyUUID, input.RequestUser); err != nil {
+		return models.CompanyMembersResult{}, err
+	}
+
+	if err := s.requireActiveCompanySubscription(ctx, input.CompanyUUID); err != nil {
+		return models.CompanyMembersResult{}, err
+	}
+
+	return s.companyRepository.ListCompanyMembers(ctx, input)
+}
+
+func validCompanyMemberListRole(role string) bool {
+	return role == string(models.CompanyMemberRoleEmployee) ||
+		role == string(models.CompanyMemberRoleManager) ||
+		role == string(models.DepartmentMemberRoleLeader)
+}

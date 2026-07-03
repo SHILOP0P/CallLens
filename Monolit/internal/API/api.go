@@ -49,6 +49,8 @@ type AuthAPI interface {
 
 type CompanyAPI interface {
 	Create(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
 	AddCompanyMember(w http.ResponseWriter, r *http.Request)
 	UpdateCompanyMemberRole(w http.ResponseWriter, r *http.Request)
 	UpdateCompanyMemberStatus(w http.ResponseWriter, r *http.Request)
@@ -59,6 +61,8 @@ type CompanyAPI interface {
 
 type DepartmentAPI interface {
 	CreateDepartment(w http.ResponseWriter, r *http.Request)
+	UpdateDepartment(w http.ResponseWriter, r *http.Request)
+	DeleteDepartment(w http.ResponseWriter, r *http.Request)
 	AddDepartmentMember(w http.ResponseWriter, r *http.Request)
 	ListDepartmentMembers(w http.ResponseWriter, r *http.Request)
 	UpdateDepartmentMemberRole(w http.ResponseWriter, r *http.Request)

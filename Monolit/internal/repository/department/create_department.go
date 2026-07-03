@@ -27,7 +27,8 @@ func (r *Repository) CreateDepartment(ctx context.Context, department model.Depa
 	RETURNING department_uuid,
 	          company_uuid,
 	          name,
-	          created_at
+	          created_at,
+	          deleted_at
 	`
 
 	row := r.db.QueryRowContext(

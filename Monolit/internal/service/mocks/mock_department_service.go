@@ -138,6 +138,53 @@ func (_c *DepartmentService_CreateDepartment_Call) RunAndReturn(run func(context
 	return _c
 }
 
+// DeleteDepartment provides a mock function with given fields: ctx, input
+func (_m *DepartmentService) DeleteDepartment(ctx context.Context, input models.DeleteDepartmentInput) error {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteDepartment")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.DeleteDepartmentInput) error); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DepartmentService_DeleteDepartment_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteDepartment'
+type DepartmentService_DeleteDepartment_Call struct {
+	*mock.Call
+}
+
+// DeleteDepartment is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.DeleteDepartmentInput
+func (_e *DepartmentService_Expecter) DeleteDepartment(ctx interface{}, input interface{}) *DepartmentService_DeleteDepartment_Call {
+	return &DepartmentService_DeleteDepartment_Call{Call: _e.mock.On("DeleteDepartment", ctx, input)}
+}
+
+func (_c *DepartmentService_DeleteDepartment_Call) Run(run func(ctx context.Context, input models.DeleteDepartmentInput)) *DepartmentService_DeleteDepartment_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.DeleteDepartmentInput))
+	})
+	return _c
+}
+
+func (_c *DepartmentService_DeleteDepartment_Call) Return(_a0 error) *DepartmentService_DeleteDepartment_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *DepartmentService_DeleteDepartment_Call) RunAndReturn(run func(context.Context, models.DeleteDepartmentInput) error) *DepartmentService_DeleteDepartment_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListCompanyDepartments provides a mock function with given fields: ctx, companyID, userID
 func (_m *DepartmentService) ListCompanyDepartments(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) ([]models.Department, error) {
 	ret := _m.Called(ctx, companyID, userID)
@@ -255,6 +302,63 @@ func (_c *DepartmentService_ListDepartmentMembers_Call) Return(_a0 []models.Depa
 }
 
 func (_c *DepartmentService_ListDepartmentMembers_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) ([]models.DepartmentMember, error)) *DepartmentService_ListDepartmentMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateDepartment provides a mock function with given fields: ctx, input
+func (_m *DepartmentService) UpdateDepartment(ctx context.Context, input models.UpdateDepartmentInput) (models.Department, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateDepartment")
+	}
+
+	var r0 models.Department
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateDepartmentInput) (models.Department, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateDepartmentInput) models.Department); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.Department)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateDepartmentInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DepartmentService_UpdateDepartment_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateDepartment'
+type DepartmentService_UpdateDepartment_Call struct {
+	*mock.Call
+}
+
+// UpdateDepartment is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UpdateDepartmentInput
+func (_e *DepartmentService_Expecter) UpdateDepartment(ctx interface{}, input interface{}) *DepartmentService_UpdateDepartment_Call {
+	return &DepartmentService_UpdateDepartment_Call{Call: _e.mock.On("UpdateDepartment", ctx, input)}
+}
+
+func (_c *DepartmentService_UpdateDepartment_Call) Run(run func(ctx context.Context, input models.UpdateDepartmentInput)) *DepartmentService_UpdateDepartment_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UpdateDepartmentInput))
+	})
+	return _c
+}
+
+func (_c *DepartmentService_UpdateDepartment_Call) Return(_a0 models.Department, _a1 error) *DepartmentService_UpdateDepartment_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *DepartmentService_UpdateDepartment_Call) RunAndReturn(run func(context.Context, models.UpdateDepartmentInput) (models.Department, error)) *DepartmentService_UpdateDepartment_Call {
 	_c.Call.Return(run)
 	return _c
 }

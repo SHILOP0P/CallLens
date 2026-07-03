@@ -14,6 +14,7 @@ func (r *Repository) CountOwnerCompanies(ctx context.Context, ownerID uuid.UUID)
 	SELECT COUNT(*)
 	FROM companies
 	WHERE manager_user_uuid = $1
+	  AND deleted_at IS NULL
 	`
 
 	return r.count(ctx, query, ownerID)
@@ -24,6 +25,7 @@ func (r *Repository) CountCompanyDepartments(ctx context.Context, companyID uuid
 	SELECT COUNT(*)
 	FROM departments
 	WHERE company_uuid = $1
+	  AND deleted_at IS NULL
 	`
 
 	return r.count(ctx, query, companyID)

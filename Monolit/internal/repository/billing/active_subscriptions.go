@@ -27,6 +27,7 @@ func (r *Repository) GetBestActiveBusinessSubscriptionForManager(ctx context.Con
 	      SELECT company_uuid
 	      FROM companies
 	      WHERE manager_user_uuid = $1
+	        AND deleted_at IS NULL
 	  )
 	ORDER BY CASE p.code
 	    WHEN 'business_pro' THEN 3

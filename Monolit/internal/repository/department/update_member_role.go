@@ -21,6 +21,7 @@ func (r *Repository) UpdateDepartmentMemberRole(ctx context.Context, companyID u
 	FROM departments d
 	WHERE d.department_uuid = dm.department_uuid
 	  AND d.company_uuid = $1
+	  AND d.deleted_at IS NULL
 	  AND dm.department_uuid = $2
 	  AND dm.user_uuid = $3
 	  AND dm.status = 'active'

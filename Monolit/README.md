@@ -651,20 +651,26 @@ Companies and departments:
 | POST | `/api/v1/companies` | Да | Создать компанию |
 | GET | `/api/v1/companies` | Да | Получить список компаний пользователя |
 | GET | `/api/v1/companies/{uuid}` | Да | Получить компанию |
-| GET | `/api/v1/companies/{uuid}/members` | Да | Получить структурированный обзор участников |
+| PATCH | `/api/v1/companies/{uuid}` | Да | Переименовать компанию. Доступ: `company_manager` |
+| DELETE | `/api/v1/companies/{uuid}` | Да | Архивировать компанию через `deleted_at`. Доступ: `company_manager` |
+| GET | `/api/v1/companies/{uuid}/members` | Да | Получить участников компании с фильтрами `status`, `role`, `department_uuid`, `q`, `limit`, `offset` |
 | POST | `/api/v1/companies/{uuid}/members` | Да | Добавить участника компании |
 | POST | `/api/v1/companies/{uuid}/invitations` | Да | Создать приглашение в компанию |
 | POST | `/api/v1/companies/{uuid}/invitations/{invitation_uuid}/cancel` | Да | Отменить приглашение в компанию |
 | PATCH | `/api/v1/companies/{uuid}/members/{user_uuid}/role` | Да | Изменить роль участника компании |
-| PATCH | `/api/v1/companies/{uuid}/members/{user_uuid}/status` | Да | Изменить статус участника компании |
+| PATCH | `/api/v1/companies/{uuid}/members/{user_uuid}/status` | Да | Изменить статус участника компании. Нельзя вывести последнего активного `company_manager`; `left`/`suspended` отключает effective access к company/department ресурсам |
 | POST | `/api/v1/companies/{uuid}/departments` | Да | Создать отдел |
 | GET | `/api/v1/companies/{uuid}/departments` | Да | Получить список видимых отделов |
+| PATCH | `/api/v1/companies/{uuid}/departments/{department_uuid}` | Да | Переименовать отдел. Доступ: `company_manager` |
+| DELETE | `/api/v1/companies/{uuid}/departments/{department_uuid}` | Да | Архивировать отдел через `deleted_at`, не ломая старые `CallResponse.department_uuid` |
 | GET | `/api/v1/companies/{uuid}/departments/{department_uuid}/members` | Да | Получить участников отдела |
 | POST | `/api/v1/companies/{uuid}/departments/{department_uuid}/members` | Да | Добавить участника отдела |
 | POST | `/api/v1/companies/{uuid}/departments/{department_uuid}/invitations` | Да | Создать приглашение в отдел |
 | POST | `/api/v1/companies/{uuid}/departments/{department_uuid}/invitations/{invitation_uuid}/cancel` | Да | Отменить приглашение в отдел |
 | PATCH | `/api/v1/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/role` | Да | Изменить роль участника отдела |
 | PATCH | `/api/v1/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/status` | Да | Изменить статус участника отдела |
+
+Отдельный `DELETE /companies/{company_uuid}/departments/{department_uuid}/members/{user_uuid}` не вводится: удаление участника отдела выражается существующим `PATCH .../status` со значением `left`.
 
 Invitations:
 
@@ -712,6 +718,48 @@ Invitations:
 ```json
 {
   "name": "Sales Department"
+}
+```
+
+Переименование компании или отдела:
+
+```json
+{
+  "name": "New name"
+}
+```
+
+Список участников компании:
+
+```text
+GET /api/v1/companies/{uuid}/members?status=active&role=department_leader&department_uuid=...&q=petrov&limit=20&offset=0
+```
+
+```json
+{
+  "members": [
+    {
+      "user_uuid": "...",
+      "email": "user@example.com",
+      "username": "@petrov",
+      "full_name": "Ivan",
+      "full_surname": "Petrov",
+      "company_role": "employee",
+      "status": "active",
+      "departments": [
+        {
+          "department_uuid": "...",
+          "department_name": "Sales",
+          "role": "department_leader",
+          "status": "active"
+        }
+      ],
+      "created_at": "2026-07-02T10:00:00Z"
+    }
+  ],
+  "total": 1,
+  "limit": 20,
+  "offset": 0
 }
 ```
 

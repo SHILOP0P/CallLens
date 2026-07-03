@@ -53,18 +53,24 @@ type UserPreferencesRepository interface {
 
 type CompanyRepository interface {
 	CreateCompany(ctx context.Context, company models.Company, member models.CompanyMember) (models.Company, error)
+	UpdateCompany(ctx context.Context, companyID uuid.UUID, name string) (models.Company, error)
+	ArchiveCompany(ctx context.Context, companyID uuid.UUID) error
 	AddCompanyMember(ctx context.Context, member models.CompanyMember) (models.CompanyMember, error)
 	UpdateCompanyMemberRole(ctx context.Context, companyID uuid.UUID, userID uuid.UUID, role models.CompanyMemberRole) (models.CompanyMember, error)
 	UpdateCompanyMemberStatus(ctx context.Context, companyID uuid.UUID, userID uuid.UUID, status models.MembershipStatus) (models.CompanyMember, error)
+	CountActiveCompanyManagers(ctx context.Context, companyID uuid.UUID, exceptUserID uuid.UUID) (int, error)
 	ListUserCompanies(ctx context.Context, userID uuid.UUID) ([]models.Company, error)
 	GetCompanyByUUID(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.Company, error)
 	GetManagedCompanyByUserUUID(ctx context.Context, userID uuid.UUID) (models.Company, error)
 	GetCompanyMember(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.CompanyMember, error)
 	GetCompanyMembersOverview(ctx context.Context, companyID uuid.UUID) (models.CompanyMembersOverview, error)
+	ListCompanyMembers(ctx context.Context, input models.ListCompanyMembersInput) (models.CompanyMembersResult, error)
 }
 
 type DepartmentRepository interface {
 	CreateDepartment(ctx context.Context, department models.Department) (models.Department, error)
+	UpdateDepartment(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID, name string) (models.Department, error)
+	ArchiveDepartment(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID) error
 	AddDepartmentMember(ctx context.Context, companyID uuid.UUID, member models.DepartmentMember) (models.DepartmentMember, error)
 	ListDepartmentMembers(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID) ([]models.DepartmentMember, error)
 	UpdateDepartmentMemberRole(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID, userID uuid.UUID, role models.DepartmentMemberRole) (models.DepartmentMember, error)

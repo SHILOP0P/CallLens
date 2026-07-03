@@ -17,17 +17,21 @@ func (r *Repository) ListVisibleCompanyDepartments(ctx context.Context, companyI
 	SELECT d.department_uuid,
 	       d.company_uuid,
 	       d.name,
-	       d.created_at
+	       d.created_at,
+	       d.deleted_at
 	FROM departments d
 	WHERE d.company_uuid = $1
+	  AND d.deleted_at IS NULL
 	  AND (
 	      EXISTS (
 	          SELECT 1
 	          FROM company_members cm
+	          JOIN companies c ON c.company_uuid = cm.company_uuid
 	          WHERE cm.company_uuid = d.company_uuid
 	            AND cm.user_uuid = $2
 	            AND cm.role = 'company_manager'
 	            AND cm.status = 'active'
+	            AND c.deleted_at IS NULL
 	      )
 	      OR EXISTS (
 	          SELECT 1

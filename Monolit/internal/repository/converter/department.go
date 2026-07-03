@@ -11,6 +11,7 @@ func RepoDepartmentToModel(repoDepartment repoModel.Department) (model.Departmen
 		CompanyUUID: repoDepartment.CompanyUUID,
 		Name:        repoDepartment.Name,
 		CreatedAt:   repoDepartment.CreatedAt,
+		DeletedAt:   repoDepartment.DeletedAt,
 	}, nil
 }
 
@@ -29,6 +30,7 @@ func ModelDepartmentToRepoDepartment(modelDepartment model.Department) (repoMode
 		CompanyUUID: modelDepartment.CompanyUUID,
 		Name:        modelDepartment.Name,
 		CreatedAt:   modelDepartment.CreatedAt,
+		DeletedAt:   modelDepartment.DeletedAt,
 	}, nil
 }
 

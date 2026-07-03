@@ -100,6 +100,42 @@ func CompanyMembersOverviewModelToAPI(overview models.CompanyMembersOverview) (d
 	return resp, nil
 }
 
+func CompanyMembersResultModelToAPI(result models.CompanyMembersResult) (dto.CompanyMembersResponse, error) {
+	resp := dto.CompanyMembersResponse{
+		Members: make([]dto.CompanyMemberListItemResponse, 0, len(result.Members)),
+		Total:   result.Total,
+		Limit:   result.Limit,
+		Offset:  result.Offset,
+	}
+
+	for _, member := range result.Members {
+		item := dto.CompanyMemberListItemResponse{
+			UserUUID:    member.UserUUID.String(),
+			Email:       member.Email,
+			Username:    member.Username,
+			FullName:    member.FullName,
+			FullSurname: member.FullSurname,
+			CompanyRole: string(member.CompanyRole),
+			Status:      string(member.Status),
+			Departments: make([]dto.CompanyMemberDepartmentResponse, 0, len(member.Departments)),
+			CreatedAt:   member.CreatedAt.Format(time.RFC3339),
+		}
+
+		for _, department := range member.Departments {
+			item.Departments = append(item.Departments, dto.CompanyMemberDepartmentResponse{
+				DepartmentUUID: department.DepartmentUUID.String(),
+				DepartmentName: department.DepartmentName,
+				Role:           string(department.Role),
+				Status:         string(department.Status),
+			})
+		}
+
+		resp.Members = append(resp.Members, item)
+	}
+
+	return resp, nil
+}
+
 func InvitationModelToAPI(invitation models.MembershipInvitation) (dto.InvitationResponse, error) {
 	var departmentUUID *string
 	if invitation.DepartmentUUID.Valid {

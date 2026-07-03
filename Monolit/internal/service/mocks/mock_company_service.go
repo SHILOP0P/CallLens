@@ -138,6 +138,53 @@ func (_c *CompanyService_CreateCompany_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
+// DeleteCompany provides a mock function with given fields: ctx, input
+func (_m *CompanyService) DeleteCompany(ctx context.Context, input models.DeleteCompanyInput) error {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteCompany")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.DeleteCompanyInput) error); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// CompanyService_DeleteCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteCompany'
+type CompanyService_DeleteCompany_Call struct {
+	*mock.Call
+}
+
+// DeleteCompany is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.DeleteCompanyInput
+func (_e *CompanyService_Expecter) DeleteCompany(ctx interface{}, input interface{}) *CompanyService_DeleteCompany_Call {
+	return &CompanyService_DeleteCompany_Call{Call: _e.mock.On("DeleteCompany", ctx, input)}
+}
+
+func (_c *CompanyService_DeleteCompany_Call) Run(run func(ctx context.Context, input models.DeleteCompanyInput)) *CompanyService_DeleteCompany_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.DeleteCompanyInput))
+	})
+	return _c
+}
+
+func (_c *CompanyService_DeleteCompany_Call) Return(_a0 error) *CompanyService_DeleteCompany_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *CompanyService_DeleteCompany_Call) RunAndReturn(run func(context.Context, models.DeleteCompanyInput) error) *CompanyService_DeleteCompany_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetCompanyByUUID provides a mock function with given fields: ctx, companyID, userID
 func (_m *CompanyService) GetCompanyByUUID(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.Company, error) {
 	ret := _m.Called(ctx, companyID, userID)
@@ -254,6 +301,63 @@ func (_c *CompanyService_GetCompanyMembersOverview_Call) RunAndReturn(run func(c
 	return _c
 }
 
+// ListCompanyMembers provides a mock function with given fields: ctx, input
+func (_m *CompanyService) ListCompanyMembers(ctx context.Context, input models.ListCompanyMembersInput) (models.CompanyMembersResult, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListCompanyMembers")
+	}
+
+	var r0 models.CompanyMembersResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListCompanyMembersInput) (models.CompanyMembersResult, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListCompanyMembersInput) models.CompanyMembersResult); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.CompanyMembersResult)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.ListCompanyMembersInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CompanyService_ListCompanyMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListCompanyMembers'
+type CompanyService_ListCompanyMembers_Call struct {
+	*mock.Call
+}
+
+// ListCompanyMembers is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ListCompanyMembersInput
+func (_e *CompanyService_Expecter) ListCompanyMembers(ctx interface{}, input interface{}) *CompanyService_ListCompanyMembers_Call {
+	return &CompanyService_ListCompanyMembers_Call{Call: _e.mock.On("ListCompanyMembers", ctx, input)}
+}
+
+func (_c *CompanyService_ListCompanyMembers_Call) Run(run func(ctx context.Context, input models.ListCompanyMembersInput)) *CompanyService_ListCompanyMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ListCompanyMembersInput))
+	})
+	return _c
+}
+
+func (_c *CompanyService_ListCompanyMembers_Call) Return(_a0 models.CompanyMembersResult, _a1 error) *CompanyService_ListCompanyMembers_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CompanyService_ListCompanyMembers_Call) RunAndReturn(run func(context.Context, models.ListCompanyMembersInput) (models.CompanyMembersResult, error)) *CompanyService_ListCompanyMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListUserCompanies provides a mock function with given fields: ctx, userID
 func (_m *CompanyService) ListUserCompanies(ctx context.Context, userID uuid.UUID) ([]models.Company, error) {
 	ret := _m.Called(ctx, userID)
@@ -309,6 +413,63 @@ func (_c *CompanyService_ListUserCompanies_Call) Return(_a0 []models.Company, _a
 }
 
 func (_c *CompanyService_ListUserCompanies_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]models.Company, error)) *CompanyService_ListUserCompanies_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateCompany provides a mock function with given fields: ctx, input
+func (_m *CompanyService) UpdateCompany(ctx context.Context, input models.UpdateCompanyInput) (models.Company, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCompany")
+	}
+
+	var r0 models.Company
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateCompanyInput) (models.Company, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateCompanyInput) models.Company); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.Company)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateCompanyInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CompanyService_UpdateCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCompany'
+type CompanyService_UpdateCompany_Call struct {
+	*mock.Call
+}
+
+// UpdateCompany is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UpdateCompanyInput
+func (_e *CompanyService_Expecter) UpdateCompany(ctx interface{}, input interface{}) *CompanyService_UpdateCompany_Call {
+	return &CompanyService_UpdateCompany_Call{Call: _e.mock.On("UpdateCompany", ctx, input)}
+}
+
+func (_c *CompanyService_UpdateCompany_Call) Run(run func(ctx context.Context, input models.UpdateCompanyInput)) *CompanyService_UpdateCompany_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UpdateCompanyInput))
+	})
+	return _c
+}
+
+func (_c *CompanyService_UpdateCompany_Call) Return(_a0 models.Company, _a1 error) *CompanyService_UpdateCompany_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CompanyService_UpdateCompany_Call) RunAndReturn(run func(context.Context, models.UpdateCompanyInput) (models.Company, error)) *CompanyService_UpdateCompany_Call {
 	_c.Call.Return(run)
 	return _c
 }

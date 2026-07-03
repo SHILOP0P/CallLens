@@ -41,8 +41,12 @@ func (s *APISuite) TestOverviewAdditionalErrors() {
 		{models.ErrSubscriptionRequired, http.StatusPaymentRequired},
 		{errors.New("db"), http.StatusInternalServerError},
 	} {
-		s.service.EXPECT().GetCompanyMembersOverview(mock.Anything, companyID, userID).
-			Return(models.CompanyMembersOverview{}, tt.err).Once()
+		s.service.EXPECT().ListCompanyMembers(mock.Anything, models.ListCompanyMembersInput{
+			CompanyUUID: companyID,
+			RequestUser: userID,
+			Limit:       20,
+			Offset:      0,
+		}).Return(models.CompanyMembersResult{}, tt.err).Once()
 		rec, req := s.request(http.MethodGet, "/", "", userID, map[string]string{"uuid": companyID.String()})
 		s.api.GetCompanyMembersOverview(rec, req)
 		s.Equal(tt.code, rec.Code)

@@ -27,6 +27,7 @@ func (r *Repository) GetDepartmentMember(ctx context.Context, companyID uuid.UUI
 	  AND dm.department_uuid = $2
 	  AND dm.user_uuid = $3
 	  AND dm.status = 'active'
+	  AND d.deleted_at IS NULL
 	`
 
 	row := r.db.QueryRowContext(ctx, query, companyID, departmentID, userID)

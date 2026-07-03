@@ -20,9 +20,11 @@ func (r *Repository) GetManagedCompanyByUserUUID(ctx context.Context, userID uui
 	       name,
 	       manager_user_uuid,
 	       member_limit,
-	       created_at
+	       created_at,
+	       deleted_at
 	FROM companies
 	WHERE manager_user_uuid = $1
+	  AND deleted_at IS NULL
 	`
 
 	row := r.db.QueryRowContext(ctx, query, userID)

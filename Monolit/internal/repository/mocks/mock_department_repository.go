@@ -82,6 +82,54 @@ func (_c *DepartmentRepository_AddDepartmentMember_Call) RunAndReturn(run func(c
 	return _c
 }
 
+// ArchiveDepartment provides a mock function with given fields: ctx, companyID, departmentID
+func (_m *DepartmentRepository) ArchiveDepartment(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID) error {
+	ret := _m.Called(ctx, companyID, departmentID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ArchiveDepartment")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r0 = rf(ctx, companyID, departmentID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DepartmentRepository_ArchiveDepartment_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ArchiveDepartment'
+type DepartmentRepository_ArchiveDepartment_Call struct {
+	*mock.Call
+}
+
+// ArchiveDepartment is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+//   - departmentID uuid.UUID
+func (_e *DepartmentRepository_Expecter) ArchiveDepartment(ctx interface{}, companyID interface{}, departmentID interface{}) *DepartmentRepository_ArchiveDepartment_Call {
+	return &DepartmentRepository_ArchiveDepartment_Call{Call: _e.mock.On("ArchiveDepartment", ctx, companyID, departmentID)}
+}
+
+func (_c *DepartmentRepository_ArchiveDepartment_Call) Run(run func(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID)) *DepartmentRepository_ArchiveDepartment_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *DepartmentRepository_ArchiveDepartment_Call) Return(_a0 error) *DepartmentRepository_ArchiveDepartment_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *DepartmentRepository_ArchiveDepartment_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) error) *DepartmentRepository_ArchiveDepartment_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateDepartment provides a mock function with given fields: ctx, department
 func (_m *DepartmentRepository) CreateDepartment(ctx context.Context, department models.Department) (models.Department, error) {
 	ret := _m.Called(ctx, department)
@@ -314,6 +362,65 @@ func (_c *DepartmentRepository_ListVisibleCompanyDepartments_Call) Return(_a0 []
 }
 
 func (_c *DepartmentRepository_ListVisibleCompanyDepartments_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) ([]models.Department, error)) *DepartmentRepository_ListVisibleCompanyDepartments_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateDepartment provides a mock function with given fields: ctx, companyID, departmentID, name
+func (_m *DepartmentRepository) UpdateDepartment(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID, name string) (models.Department, error) {
+	ret := _m.Called(ctx, companyID, departmentID, name)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateDepartment")
+	}
+
+	var r0 models.Department
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, string) (models.Department, error)); ok {
+		return rf(ctx, companyID, departmentID, name)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, string) models.Department); ok {
+		r0 = rf(ctx, companyID, departmentID, name)
+	} else {
+		r0 = ret.Get(0).(models.Department)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, companyID, departmentID, name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DepartmentRepository_UpdateDepartment_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateDepartment'
+type DepartmentRepository_UpdateDepartment_Call struct {
+	*mock.Call
+}
+
+// UpdateDepartment is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+//   - departmentID uuid.UUID
+//   - name string
+func (_e *DepartmentRepository_Expecter) UpdateDepartment(ctx interface{}, companyID interface{}, departmentID interface{}, name interface{}) *DepartmentRepository_UpdateDepartment_Call {
+	return &DepartmentRepository_UpdateDepartment_Call{Call: _e.mock.On("UpdateDepartment", ctx, companyID, departmentID, name)}
+}
+
+func (_c *DepartmentRepository_UpdateDepartment_Call) Run(run func(ctx context.Context, companyID uuid.UUID, departmentID uuid.UUID, name string)) *DepartmentRepository_UpdateDepartment_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *DepartmentRepository_UpdateDepartment_Call) Return(_a0 models.Department, _a1 error) *DepartmentRepository_UpdateDepartment_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *DepartmentRepository_UpdateDepartment_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID, string) (models.Department, error)) *DepartmentRepository_UpdateDepartment_Call {
 	_c.Call.Return(run)
 	return _c
 }

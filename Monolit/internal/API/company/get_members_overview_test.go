@@ -14,11 +14,45 @@ func (s *APISuite) TestGetCompanyMembersOverviewSuccess() {
 	companyID := uuid.New()
 	userID := uuid.New()
 
-	s.service.On("GetCompanyMembersOverview", mock.Anything, companyID, userID).
-		Return(models.CompanyMembersOverview{CompanyUUID: companyID}, nil).
+	s.service.On("ListCompanyMembers", mock.Anything, models.ListCompanyMembersInput{
+		CompanyUUID: companyID,
+		RequestUser: userID,
+		Limit:       20,
+		Offset:      0,
+	}).
+		Return(models.CompanyMembersResult{Limit: 20}, nil).
 		Once()
 
 	rec, req := s.request(http.MethodGet, "/api/v1/companies/"+companyID.String()+"/members", "", userID, map[string]string{
+		"uuid": companyID.String(),
+	})
+
+	s.api.GetCompanyMembersOverview(rec, req)
+
+	s.Require().Equal(http.StatusOK, rec.Code)
+}
+
+func (s *APISuite) TestGetCompanyMembersOverviewParsesFilters() {
+	companyID := uuid.New()
+	departmentID := uuid.New()
+	userID := uuid.New()
+	status := models.MembershipStatusSuspended
+	role := string(models.DepartmentMemberRoleLeader)
+
+	s.service.On("ListCompanyMembers", mock.Anything, models.ListCompanyMembersInput{
+		CompanyUUID:    companyID,
+		RequestUser:    userID,
+		Status:         &status,
+		Role:           &role,
+		DepartmentUUID: departmentID,
+		Query:          "petrov",
+		Limit:          10,
+		Offset:         20,
+	}).
+		Return(models.CompanyMembersResult{Limit: 10, Offset: 20}, nil).
+		Once()
+
+	rec, req := s.request(http.MethodGet, "/api/v1/companies/"+companyID.String()+"/members?status=suspended&role=department_leader&department_uuid="+departmentID.String()+"&q=petrov&limit=10&offset=20", "", userID, map[string]string{
 		"uuid": companyID.String(),
 	})
 
@@ -55,8 +89,13 @@ func (s *APISuite) TestGetCompanyMembersOverviewMapsCompanyNotFound() {
 	companyID := uuid.New()
 	userID := uuid.New()
 
-	s.service.On("GetCompanyMembersOverview", mock.Anything, companyID, userID).
-		Return(models.CompanyMembersOverview{}, models.ErrCompanyNotFound).
+	s.service.On("ListCompanyMembers", mock.Anything, models.ListCompanyMembersInput{
+		CompanyUUID: companyID,
+		RequestUser: userID,
+		Limit:       20,
+		Offset:      0,
+	}).
+		Return(models.CompanyMembersResult{}, models.ErrCompanyNotFound).
 		Once()
 
 	rec, req := s.request(http.MethodGet, "/api/v1/companies/"+companyID.String()+"/members", "", userID, map[string]string{
@@ -73,8 +112,13 @@ func (s *APISuite) TestGetCompanyMembersOverviewMapsForbidden() {
 	companyID := uuid.New()
 	userID := uuid.New()
 
-	s.service.On("GetCompanyMembersOverview", mock.Anything, companyID, userID).
-		Return(models.CompanyMembersOverview{}, models.ErrForbidden).
+	s.service.On("ListCompanyMembers", mock.Anything, models.ListCompanyMembersInput{
+		CompanyUUID: companyID,
+		RequestUser: userID,
+		Limit:       20,
+		Offset:      0,
+	}).
+		Return(models.CompanyMembersResult{}, models.ErrForbidden).
 		Once()
 
 	rec, req := s.request(http.MethodGet, "/api/v1/companies/"+companyID.String()+"/members", "", userID, map[string]string{

@@ -40,7 +40,8 @@ func (r *Repository) CreateCompany(ctx context.Context, company model.Company, m
 	          name,
 	          manager_user_uuid,
 	          member_limit,
-	          created_at
+	          created_at,
+	          deleted_at
 	`
 
 	row := tx.QueryRowContext(

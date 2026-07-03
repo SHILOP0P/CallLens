@@ -11,6 +11,7 @@ type Department struct {
 	CompanyUUID uuid.UUID
 	Name        string
 	CreatedAt   time.Time
+	DeletedAt   *time.Time
 }
 
 type DepartmentMember struct {
@@ -59,6 +60,19 @@ type UpdateDepartmentMemberStatusInput struct {
 	RequestUser    uuid.UUID
 	UserUUID       uuid.UUID
 	Status         MembershipStatus
+}
+
+type UpdateDepartmentInput struct {
+	CompanyUUID    uuid.UUID
+	DepartmentUUID uuid.UUID
+	RequestUser    uuid.UUID
+	Name           string
+}
+
+type DeleteDepartmentInput struct {
+	CompanyUUID    uuid.UUID
+	DepartmentUUID uuid.UUID
+	RequestUser    uuid.UUID
 }
 
 type DepartmentMembersOverview struct {

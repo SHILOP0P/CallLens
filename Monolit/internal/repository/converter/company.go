@@ -12,6 +12,7 @@ func RepoCompanyToModel(repoCompany repoModel.Company) (model.Company, error) {
 		ManagerUserUUID: repoCompany.ManagerUserUUID,
 		MemberLimit:     repoCompany.MemberLimit,
 		CreatedAt:       repoCompany.CreatedAt,
+		DeletedAt:       repoCompany.DeletedAt,
 	}, nil
 }
 
@@ -31,6 +32,7 @@ func ModelCompanyToRepoCompany(modelCompany model.Company) (repoModel.Company, e
 		ManagerUserUUID: modelCompany.ManagerUserUUID,
 		MemberLimit:     modelCompany.MemberLimit,
 		CreatedAt:       modelCompany.CreatedAt,
+		DeletedAt:       modelCompany.DeletedAt,
 	}, nil
 }
 

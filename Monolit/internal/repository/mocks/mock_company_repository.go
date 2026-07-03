@@ -81,6 +81,111 @@ func (_c *CompanyRepository_AddCompanyMember_Call) RunAndReturn(run func(context
 	return _c
 }
 
+// ArchiveCompany provides a mock function with given fields: ctx, companyID
+func (_m *CompanyRepository) ArchiveCompany(ctx context.Context, companyID uuid.UUID) error {
+	ret := _m.Called(ctx, companyID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ArchiveCompany")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = rf(ctx, companyID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// CompanyRepository_ArchiveCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ArchiveCompany'
+type CompanyRepository_ArchiveCompany_Call struct {
+	*mock.Call
+}
+
+// ArchiveCompany is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+func (_e *CompanyRepository_Expecter) ArchiveCompany(ctx interface{}, companyID interface{}) *CompanyRepository_ArchiveCompany_Call {
+	return &CompanyRepository_ArchiveCompany_Call{Call: _e.mock.On("ArchiveCompany", ctx, companyID)}
+}
+
+func (_c *CompanyRepository_ArchiveCompany_Call) Run(run func(ctx context.Context, companyID uuid.UUID)) *CompanyRepository_ArchiveCompany_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *CompanyRepository_ArchiveCompany_Call) Return(_a0 error) *CompanyRepository_ArchiveCompany_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *CompanyRepository_ArchiveCompany_Call) RunAndReturn(run func(context.Context, uuid.UUID) error) *CompanyRepository_ArchiveCompany_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CountActiveCompanyManagers provides a mock function with given fields: ctx, companyID, exceptUserID
+func (_m *CompanyRepository) CountActiveCompanyManagers(ctx context.Context, companyID uuid.UUID, exceptUserID uuid.UUID) (int, error) {
+	ret := _m.Called(ctx, companyID, exceptUserID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CountActiveCompanyManagers")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) (int, error)); ok {
+		return rf(ctx, companyID, exceptUserID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) int); ok {
+		r0 = rf(ctx, companyID, exceptUserID)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r1 = rf(ctx, companyID, exceptUserID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CompanyRepository_CountActiveCompanyManagers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CountActiveCompanyManagers'
+type CompanyRepository_CountActiveCompanyManagers_Call struct {
+	*mock.Call
+}
+
+// CountActiveCompanyManagers is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+//   - exceptUserID uuid.UUID
+func (_e *CompanyRepository_Expecter) CountActiveCompanyManagers(ctx interface{}, companyID interface{}, exceptUserID interface{}) *CompanyRepository_CountActiveCompanyManagers_Call {
+	return &CompanyRepository_CountActiveCompanyManagers_Call{Call: _e.mock.On("CountActiveCompanyManagers", ctx, companyID, exceptUserID)}
+}
+
+func (_c *CompanyRepository_CountActiveCompanyManagers_Call) Run(run func(ctx context.Context, companyID uuid.UUID, exceptUserID uuid.UUID)) *CompanyRepository_CountActiveCompanyManagers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *CompanyRepository_CountActiveCompanyManagers_Call) Return(_a0 int, _a1 error) *CompanyRepository_CountActiveCompanyManagers_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CompanyRepository_CountActiveCompanyManagers_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) (int, error)) *CompanyRepository_CountActiveCompanyManagers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateCompany provides a mock function with given fields: ctx, company, member
 func (_m *CompanyRepository) CreateCompany(ctx context.Context, company models.Company, member models.CompanyMember) (models.Company, error) {
 	ret := _m.Called(ctx, company, member)
@@ -369,6 +474,63 @@ func (_c *CompanyRepository_GetManagedCompanyByUserUUID_Call) RunAndReturn(run f
 	return _c
 }
 
+// ListCompanyMembers provides a mock function with given fields: ctx, input
+func (_m *CompanyRepository) ListCompanyMembers(ctx context.Context, input models.ListCompanyMembersInput) (models.CompanyMembersResult, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListCompanyMembers")
+	}
+
+	var r0 models.CompanyMembersResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListCompanyMembersInput) (models.CompanyMembersResult, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListCompanyMembersInput) models.CompanyMembersResult); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.CompanyMembersResult)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.ListCompanyMembersInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CompanyRepository_ListCompanyMembers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListCompanyMembers'
+type CompanyRepository_ListCompanyMembers_Call struct {
+	*mock.Call
+}
+
+// ListCompanyMembers is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ListCompanyMembersInput
+func (_e *CompanyRepository_Expecter) ListCompanyMembers(ctx interface{}, input interface{}) *CompanyRepository_ListCompanyMembers_Call {
+	return &CompanyRepository_ListCompanyMembers_Call{Call: _e.mock.On("ListCompanyMembers", ctx, input)}
+}
+
+func (_c *CompanyRepository_ListCompanyMembers_Call) Run(run func(ctx context.Context, input models.ListCompanyMembersInput)) *CompanyRepository_ListCompanyMembers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ListCompanyMembersInput))
+	})
+	return _c
+}
+
+func (_c *CompanyRepository_ListCompanyMembers_Call) Return(_a0 models.CompanyMembersResult, _a1 error) *CompanyRepository_ListCompanyMembers_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CompanyRepository_ListCompanyMembers_Call) RunAndReturn(run func(context.Context, models.ListCompanyMembersInput) (models.CompanyMembersResult, error)) *CompanyRepository_ListCompanyMembers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListUserCompanies provides a mock function with given fields: ctx, userID
 func (_m *CompanyRepository) ListUserCompanies(ctx context.Context, userID uuid.UUID) ([]models.Company, error) {
 	ret := _m.Called(ctx, userID)
@@ -424,6 +586,64 @@ func (_c *CompanyRepository_ListUserCompanies_Call) Return(_a0 []models.Company,
 }
 
 func (_c *CompanyRepository_ListUserCompanies_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]models.Company, error)) *CompanyRepository_ListUserCompanies_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateCompany provides a mock function with given fields: ctx, companyID, name
+func (_m *CompanyRepository) UpdateCompany(ctx context.Context, companyID uuid.UUID, name string) (models.Company, error) {
+	ret := _m.Called(ctx, companyID, name)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCompany")
+	}
+
+	var r0 models.Company
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (models.Company, error)); ok {
+		return rf(ctx, companyID, name)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) models.Company); ok {
+		r0 = rf(ctx, companyID, name)
+	} else {
+		r0 = ret.Get(0).(models.Company)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, companyID, name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CompanyRepository_UpdateCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCompany'
+type CompanyRepository_UpdateCompany_Call struct {
+	*mock.Call
+}
+
+// UpdateCompany is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+//   - name string
+func (_e *CompanyRepository_Expecter) UpdateCompany(ctx interface{}, companyID interface{}, name interface{}) *CompanyRepository_UpdateCompany_Call {
+	return &CompanyRepository_UpdateCompany_Call{Call: _e.mock.On("UpdateCompany", ctx, companyID, name)}
+}
+
+func (_c *CompanyRepository_UpdateCompany_Call) Run(run func(ctx context.Context, companyID uuid.UUID, name string)) *CompanyRepository_UpdateCompany_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *CompanyRepository_UpdateCompany_Call) Return(_a0 models.Company, _a1 error) *CompanyRepository_UpdateCompany_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CompanyRepository_UpdateCompany_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (models.Company, error)) *CompanyRepository_UpdateCompany_Call {
 	_c.Call.Return(run)
 	return _c
 }

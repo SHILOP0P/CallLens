@@ -27,6 +27,12 @@ func (s *ServiceSuite) TestUpdateCompanyMemberStatusSuccess() {
 				GetCompanyMember(mock.Anything, companyID, managerID).
 				Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: managerID, Role: models.CompanyMemberRoleManager}, nil).
 				Once()
+			if status != models.MembershipStatusActive {
+				s.repository.EXPECT().
+					GetCompanyMember(mock.Anything, companyID, userID).
+					Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: userID, Role: models.CompanyMemberRoleEmployee}, nil).
+					Once()
+			}
 			s.repository.EXPECT().
 				UpdateCompanyMemberStatus(mock.Anything, companyID, userID, status).
 				Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: userID, Status: status}, nil).
@@ -80,6 +86,10 @@ func (s *ServiceSuite) TestUpdateCompanyMemberStatusReturnsRepositoryError() {
 		Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: managerID, Role: models.CompanyMemberRoleManager}, nil).
 		Once()
 	s.repository.EXPECT().
+		GetCompanyMember(mock.Anything, companyID, userID).
+		Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: userID, Role: models.CompanyMemberRoleEmployee}, nil).
+		Once()
+	s.repository.EXPECT().
 		UpdateCompanyMemberStatus(mock.Anything, companyID, userID, models.MembershipStatusSuspended).
 		Return(models.CompanyMember{}, repoErr).
 		Once()
@@ -92,4 +102,32 @@ func (s *ServiceSuite) TestUpdateCompanyMemberStatusReturnsRepositoryError() {
 	})
 
 	s.Require().ErrorIs(err, repoErr)
+}
+
+func (s *ServiceSuite) TestUpdateCompanyMemberStatusRejectsLastManagerRemoval() {
+	companyID := uuid.New()
+	managerID := uuid.New()
+	targetManagerID := uuid.New()
+
+	s.repository.EXPECT().
+		GetCompanyMember(mock.Anything, companyID, managerID).
+		Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: managerID, Role: models.CompanyMemberRoleManager}, nil).
+		Once()
+	s.repository.EXPECT().
+		GetCompanyMember(mock.Anything, companyID, targetManagerID).
+		Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: targetManagerID, Role: models.CompanyMemberRoleManager}, nil).
+		Once()
+	s.repository.EXPECT().
+		CountActiveCompanyManagers(mock.Anything, companyID, targetManagerID).
+		Return(0, nil).
+		Once()
+
+	_, err := s.service.UpdateCompanyMemberStatus(s.ctx, models.UpdateCompanyMemberStatusInput{
+		CompanyUUID: companyID,
+		RequestUser: managerID,
+		UserUUID:    targetManagerID,
+		Status:      models.MembershipStatusSuspended,
+	})
+
+	s.Require().ErrorIs(err, models.ErrLastCompanyManager)
 }

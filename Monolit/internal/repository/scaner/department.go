@@ -10,6 +10,7 @@ func ScanDepartment(row rowScanner) (repoModel.Department, error) {
 		&department.CompanyUUID,
 		&department.Name,
 		&department.CreatedAt,
+		&department.DeletedAt,
 	)
 	if err != nil {
 		return repoModel.Department{}, err
