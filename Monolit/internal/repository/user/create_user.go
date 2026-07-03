@@ -26,9 +26,15 @@ func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.Use
 					username,
 					role,
 					post,
+					phone,
+					timezone,
+					avatar_path,
+					avatar_mime_type,
+					avatar_size_bytes,
+					avatar_updated_at,
 					created_at             
 	)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 	RETURNING user_uuid,
 			  email,
 	          password_hash,
@@ -37,6 +43,12 @@ func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.Use
 	          username,
 	          role,
 	          post,
+	          phone,
+	          timezone,
+	          avatar_path,
+	          avatar_mime_type,
+	          avatar_size_bytes,
+	          avatar_updated_at,
 	          created_at
 	`
 	var createdRepoUser repoModel.User
@@ -50,6 +62,12 @@ func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.Use
 		repoUser.Username,
 		repoUser.Role,
 		repoUser.Post,
+		repoUser.Phone,
+		repoUser.Timezone,
+		repoUser.AvatarPath,
+		repoUser.AvatarMime,
+		repoUser.AvatarSize,
+		repoUser.AvatarUpdatedAt,
 		repoUser.CreatedAt,
 	)
 

@@ -8,13 +8,19 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID
-	Email        string
-	PasswordHash string
-	FullName     string
-	FullSurname  string
-	Username     string
-	Role         string
-	Post         sql.NullString
-	CreatedAt    time.Time
+	ID              uuid.UUID
+	Email           string
+	PasswordHash    string
+	FullName        string
+	FullSurname     string
+	Username        string
+	Role            string
+	Post            sql.NullString
+	Phone           sql.NullString
+	Timezone        sql.NullString
+	AvatarPath      sql.NullString
+	AvatarMime      sql.NullString
+	AvatarSize      sql.NullInt64
+	AvatarUpdatedAt sql.NullTime
+	CreatedAt       time.Time
 }

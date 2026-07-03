@@ -7,6 +7,7 @@ import (
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/models"
 	repo "calllens/monolit/internal/repository"
+	"calllens/monolit/internal/storage"
 )
 
 type BillingRepository interface {
@@ -17,6 +18,9 @@ type Service struct {
 	userRepository           repo.UserRepository
 	refreshSessionRepository repo.RefreshSessionRepository
 	billingRepository        BillingRepository
+	companyRepository        repo.CompanyRepository
+	preferencesRepository    repo.UserPreferencesRepository
+	avatarStorage            storage.AvatarStorage
 
 	passwordPepper     string
 	jwtSecret          string
@@ -28,6 +32,18 @@ type Service struct {
 
 func (s *Service) SetBillingRepository(repository BillingRepository) {
 	s.billingRepository = repository
+}
+
+func (s *Service) SetCompanyRepository(repository repo.CompanyRepository) {
+	s.companyRepository = repository
+}
+
+func (s *Service) SetPreferencesRepository(repository repo.UserPreferencesRepository) {
+	s.preferencesRepository = repository
+}
+
+func (s *Service) SetAvatarStorage(avatarStorage storage.AvatarStorage) {
+	s.avatarStorage = avatarStorage
 }
 
 func NewService(

@@ -1,21 +1,28 @@
 package models
 
 import (
+	"io"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type User struct {
-	ID           uuid.UUID
-	Email        string
-	PasswordHash string
-	FullName     string
-	FullSurname  string
-	Username     string
-	Role         UserRole
-	Post         *string
-	CreatedAt    time.Time
+	ID              uuid.UUID
+	Email           string
+	PasswordHash    string
+	FullName        string
+	FullSurname     string
+	Username        string
+	Role            UserRole
+	Post            *string
+	Phone           *string
+	Timezone        *string
+	AvatarPath      *string
+	AvatarMime      *string
+	AvatarSize      *int64
+	AvatarUpdatedAt *time.Time
+	CreatedAt       time.Time
 }
 
 type UserRole string
@@ -39,6 +46,62 @@ type CreateUserInput struct {
 type UpdateUsernameInput struct {
 	UserUUID uuid.UUID
 	Username string
+}
+
+type UpdateUserProfileInput struct {
+	UserUUID    uuid.UUID
+	FullName    *string
+	FullSurname *string
+	Post        *string
+	Phone       *string
+	Timezone    *string
+}
+
+type SaveUserAvatarInput struct {
+	UserUUID         uuid.UUID
+	OriginalFilename string
+	MimeType         string
+	SizeBytes        int64
+	Content          io.Reader
+}
+
+type SavedUserAvatar struct {
+	Path      string
+	MimeType  string
+	SizeBytes int64
+}
+
+type UserAvatarUpdate struct {
+	UserUUID  uuid.UUID
+	Path      *string
+	MimeType  *string
+	SizeBytes *int64
+	UpdatedAt *time.Time
+}
+
+type UserAvatarResponse struct {
+	AvatarURL string
+	UpdatedAt time.Time
+}
+
+type PreferencesDateRange struct {
+	From *string
+	To   *string
+}
+
+type UserPreferences struct {
+	UserUUID          uuid.UUID
+	ActiveCompanyUUID uuid.NullUUID
+	Theme             string
+	DateRange         PreferencesDateRange
+	UpdatedAt         time.Time
+}
+
+type UpdateUserPreferencesInput struct {
+	UserUUID          uuid.UUID
+	ActiveCompanyUUID *uuid.NullUUID
+	Theme             *string
+	DateRange         *PreferencesDateRange
 }
 
 type LoginInput struct {

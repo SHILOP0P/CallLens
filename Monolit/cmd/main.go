@@ -38,6 +38,7 @@ import (
 	reportRepo "calllens/monolit/internal/repository/report"
 	transcriptionRepo "calllens/monolit/internal/repository/transcription"
 	userRepo "calllens/monolit/internal/repository/user"
+	userPreferencesRepo "calllens/monolit/internal/repository/user_preferences"
 	analysisService "calllens/monolit/internal/service/analysis"
 	analysisInstructionService "calllens/monolit/internal/service/analysis_instruction"
 	analyticsService "calllens/monolit/internal/service/analytics"
@@ -51,6 +52,7 @@ import (
 	processingService "calllens/monolit/internal/service/processing"
 	reportService "calllens/monolit/internal/service/report"
 	"calllens/monolit/internal/storage/audio"
+	avatarStorage "calllens/monolit/internal/storage/avatar"
 	"calllens/monolit/internal/storage/instruction"
 	reportStorage "calllens/monolit/internal/storage/report"
 	"calllens/monolit/internal/transcriber"
@@ -65,6 +67,7 @@ const (
 	shutdownTimeout = 10 * time.Second
 
 	audioUploadDirName       = "audio"
+	avatarUploadDirName      = "avatars"
 	instructionUploadDirName = "instructions"
 	reportUploadDirName      = "reports"
 )
@@ -121,10 +124,11 @@ func main() {
 
 	uploadPath := config.AppConfig().Upload.Path()
 	audioUploadPath := filepath.Join(uploadPath, audioUploadDirName)
+	avatarUploadPath := filepath.Join(uploadPath, avatarUploadDirName)
 	instructionUploadPath := filepath.Join(uploadPath, instructionUploadDirName)
 	reportUploadPath := filepath.Join(uploadPath, reportUploadDirName)
 
-	for _, dir := range []string{audioUploadPath, instructionUploadPath, reportUploadPath} {
+	for _, dir := range []string{audioUploadPath, avatarUploadPath, instructionUploadPath, reportUploadPath} {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			appLogger.Error(ctx, "failed to create upload directory", zap.String("path", dir), zap.Error(err))
 			return
@@ -134,12 +138,14 @@ func main() {
 	healthHandler := healthAPI.NewHandler(
 		healthAPI.DatabaseCheck(sqlDB),
 		healthAPI.WritableDirectoryCheck("uploads.audio", audioUploadPath),
+		healthAPI.WritableDirectoryCheck("uploads.avatars", avatarUploadPath),
 		healthAPI.WritableDirectoryCheck("uploads.instructions", instructionUploadPath),
 		healthAPI.WritableDirectoryCheck("uploads.reports", reportUploadPath),
 		healthAPI.BinaryCheck("ffprobe", config.AppConfig().Upload.FFProbePath()),
 	)
 
 	audioStorage := audio.NewLocalStorage(audioUploadPath)
+	avatarsStorage := avatarStorage.NewLocalStorage(avatarUploadPath)
 	instructionStorage := instruction.NewLocalStorage(instructionUploadPath)
 	reportsStorage := reportStorage.NewLocalStorage(reportUploadPath)
 
@@ -147,6 +153,7 @@ func main() {
 	analysisRepository := analysisRepo.NewRepository(sqlDB)
 	callRepository := callRepo.NewRepository(sqlDB)
 	userRepository := userRepo.NewUserRepository(sqlDB)
+	userPreferencesRepository := userPreferencesRepo.NewRepository(sqlDB)
 	refreshRepository := refreshSessionRepo.NewRepository(sqlDB)
 	companyRepository := companyRepo.NewRepository(sqlDB)
 	departmentRepository := departmentRepo.NewRepository(sqlDB)
@@ -210,6 +217,9 @@ func main() {
 		appLogger,
 	)
 	authSvc.SetBillingRepository(billingRepository)
+	authSvc.SetCompanyRepository(companyRepository)
+	authSvc.SetPreferencesRepository(userPreferencesRepository)
+	authSvc.SetAvatarStorage(avatarsStorage)
 	companySvc := companyService.NewService(companyRepository, appLogger)
 	departmentSvc := departmentService.NewService(companyRepository, departmentRepository, appLogger)
 	invitationSvc := invitationService.NewService(invitationRepository, userRepository, companyRepository, departmentRepository, appLogger)

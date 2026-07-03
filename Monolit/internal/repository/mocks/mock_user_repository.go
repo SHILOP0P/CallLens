@@ -81,6 +81,63 @@ func (_c *UserRepository_CreateUser_Call) RunAndReturn(run func(context.Context,
 	return _c
 }
 
+// DeleteAvatar provides a mock function with given fields: ctx, userID
+func (_m *UserRepository) DeleteAvatar(ctx context.Context, userID uuid.UUID) (models.User, error) {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteAvatar")
+	}
+
+	var r0 models.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.User, error)); ok {
+		return rf(ctx, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.User); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Get(0).(models.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UserRepository_DeleteAvatar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteAvatar'
+type UserRepository_DeleteAvatar_Call struct {
+	*mock.Call
+}
+
+// DeleteAvatar is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *UserRepository_Expecter) DeleteAvatar(ctx interface{}, userID interface{}) *UserRepository_DeleteAvatar_Call {
+	return &UserRepository_DeleteAvatar_Call{Call: _e.mock.On("DeleteAvatar", ctx, userID)}
+}
+
+func (_c *UserRepository_DeleteAvatar_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *UserRepository_DeleteAvatar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *UserRepository_DeleteAvatar_Call) Return(_a0 models.User, _a1 error) *UserRepository_DeleteAvatar_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *UserRepository_DeleteAvatar_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.User, error)) *UserRepository_DeleteAvatar_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetUserByEmail provides a mock function with given fields: ctx, email
 func (_m *UserRepository) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
 	ret := _m.Called(ctx, email)
@@ -248,6 +305,120 @@ func (_c *UserRepository_GetUserByUsername_Call) Return(_a0 models.User, _a1 err
 }
 
 func (_c *UserRepository_GetUserByUsername_Call) RunAndReturn(run func(context.Context, string) (models.User, error)) *UserRepository_GetUserByUsername_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateAvatar provides a mock function with given fields: ctx, input
+func (_m *UserRepository) UpdateAvatar(ctx context.Context, input models.UserAvatarUpdate) (models.User, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateAvatar")
+	}
+
+	var r0 models.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UserAvatarUpdate) (models.User, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UserAvatarUpdate) models.User); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UserAvatarUpdate) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UserRepository_UpdateAvatar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateAvatar'
+type UserRepository_UpdateAvatar_Call struct {
+	*mock.Call
+}
+
+// UpdateAvatar is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UserAvatarUpdate
+func (_e *UserRepository_Expecter) UpdateAvatar(ctx interface{}, input interface{}) *UserRepository_UpdateAvatar_Call {
+	return &UserRepository_UpdateAvatar_Call{Call: _e.mock.On("UpdateAvatar", ctx, input)}
+}
+
+func (_c *UserRepository_UpdateAvatar_Call) Run(run func(ctx context.Context, input models.UserAvatarUpdate)) *UserRepository_UpdateAvatar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UserAvatarUpdate))
+	})
+	return _c
+}
+
+func (_c *UserRepository_UpdateAvatar_Call) Return(_a0 models.User, _a1 error) *UserRepository_UpdateAvatar_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *UserRepository_UpdateAvatar_Call) RunAndReturn(run func(context.Context, models.UserAvatarUpdate) (models.User, error)) *UserRepository_UpdateAvatar_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateProfile provides a mock function with given fields: ctx, input
+func (_m *UserRepository) UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProfile")
+	}
+
+	var r0 models.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateUserProfileInput) (models.User, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateUserProfileInput) models.User); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateUserProfileInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UserRepository_UpdateProfile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateProfile'
+type UserRepository_UpdateProfile_Call struct {
+	*mock.Call
+}
+
+// UpdateProfile is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UpdateUserProfileInput
+func (_e *UserRepository_Expecter) UpdateProfile(ctx interface{}, input interface{}) *UserRepository_UpdateProfile_Call {
+	return &UserRepository_UpdateProfile_Call{Call: _e.mock.On("UpdateProfile", ctx, input)}
+}
+
+func (_c *UserRepository_UpdateProfile_Call) Run(run func(ctx context.Context, input models.UpdateUserProfileInput)) *UserRepository_UpdateProfile_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UpdateUserProfileInput))
+	})
+	return _c
+}
+
+func (_c *UserRepository_UpdateProfile_Call) Return(_a0 models.User, _a1 error) *UserRepository_UpdateProfile_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *UserRepository_UpdateProfile_Call) RunAndReturn(run func(context.Context, models.UpdateUserProfileInput) (models.User, error)) *UserRepository_UpdateProfile_Call {
 	_c.Call.Return(run)
 	return _c
 }

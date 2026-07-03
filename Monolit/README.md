@@ -313,8 +313,26 @@ Auth:
 | POST | `/api/v1/auth/login` | Нет | Логин, создание refresh session и установка auth cookies |
 | POST | `/api/v1/auth/refresh` | Нет | Ротация refresh token из cookie |
 | GET | `/api/v1/auth/me` | Да | Получить текущего пользователя |
+| PATCH | `/api/v1/auth/me/profile` | Да | Частично обновить профиль пользователя |
+| POST | `/api/v1/auth/me/avatar` | Да | Загрузить avatar через multipart field `avatar` |
+| DELETE | `/api/v1/auth/me/avatar` | Да | Сбросить avatar к буквенной заглушке |
+| GET | `/api/v1/auth/me/preferences` | Да | Получить UI preferences пользователя |
+| PATCH | `/api/v1/auth/me/preferences` | Да | Частично обновить UI preferences пользователя |
 | POST | `/api/v1/auth/logout` | Да | Отозвать текущую session |
 | POST | `/api/v1/auth/logout-all` | Да | Отозвать все session пользователя |
+
+`PATCH /api/v1/auth/me/profile` принимает частичный JSON с полями `full_name`, `full_surname`, `post`, `phone`, `timezone` и возвращает обновленный `UserResponse`. `timezone` проверяется через IANA timezone database, например `Europe/Moscow`.
+
+`POST /api/v1/auth/me/avatar` принимает multipart upload в поле `avatar`, сохраняет image-файл в локальном storage и возвращает:
+
+```json
+{
+  "avatar_url": "/api/v1/auth/me/avatar",
+  "updated_at": "2026-07-02T10:00:00Z"
+}
+```
+
+`PATCH /api/v1/auth/me/preferences` принимает частичный JSON с `active_company_uuid`, `theme` (`system`, `light`, `dark`) и `date_range.from` / `date_range.to` в формате `YYYY-MM-DD`. `active_company_uuid` разрешен только для компании, где текущий пользователь является активным участником.
 
 Calls:
 

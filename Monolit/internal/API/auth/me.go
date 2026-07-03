@@ -43,6 +43,9 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		Username:    userResponse.Username,
 		Role:        userResponse.Role,
 		Post:        userResponse.Post,
+		Phone:       userResponse.Phone,
+		Timezone:    userResponse.Timezone,
+		AvatarURL:   userResponse.AvatarURL,
 		CreatedAt:   userResponse.CreatedAt,
 	}
 

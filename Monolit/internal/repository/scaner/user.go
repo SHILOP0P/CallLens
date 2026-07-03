@@ -14,6 +14,12 @@ func ScanUser(row rowScanner) (repoModel.User, error) {
 		&user.Username,
 		&user.Role,
 		&user.Post,
+		&user.Phone,
+		&user.Timezone,
+		&user.AvatarPath,
+		&user.AvatarMime,
+		&user.AvatarSize,
+		&user.AvatarUpdatedAt,
 		&user.CreatedAt,
 	)
 	if err != nil {

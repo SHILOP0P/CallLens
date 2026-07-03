@@ -31,6 +31,9 @@ type UserResponse struct {
 	Username    string  `json:"username"`
 	Role        string  `json:"role"`
 	Post        *string `json:"post,omitempty"`
+	Phone       *string `json:"phone,omitempty"`
+	Timezone    *string `json:"timezone,omitempty"`
+	AvatarURL   *string `json:"avatar_url,omitempty"`
 	CreatedAt   string  `json:"created_at"`
 }
 
@@ -40,4 +43,34 @@ type RegisterResponse struct {
 
 type UpdateUsernameRequest struct {
 	Username string `json:"username"`
+}
+
+type UpdateProfileRequest struct {
+	FullName    *string `json:"full_name"`
+	FullSurname *string `json:"full_surname"`
+	Post        *string `json:"post"`
+	Phone       *string `json:"phone"`
+	Timezone    *string `json:"timezone"`
+}
+
+type AvatarResponse struct {
+	AvatarURL string `json:"avatar_url"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type PreferencesDateRange struct {
+	From *string `json:"from,omitempty"`
+	To   *string `json:"to,omitempty"`
+}
+
+type UserPreferencesResponse struct {
+	ActiveCompanyUUID *string              `json:"active_company_uuid"`
+	Theme             string               `json:"theme"`
+	DateRange         PreferencesDateRange `json:"date_range"`
+}
+
+type UpdatePreferencesRequest struct {
+	ActiveCompanyUUID *string               `json:"active_company_uuid"`
+	Theme             *string               `json:"theme"`
+	DateRange         *PreferencesDateRange `json:"date_range"`
 }

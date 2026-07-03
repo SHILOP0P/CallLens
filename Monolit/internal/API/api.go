@@ -37,6 +37,11 @@ type AuthAPI interface {
 	Me(w http.ResponseWriter, r *http.Request)
 	UpdateUsername(w http.ResponseWriter, r *http.Request)
 	LookupUser(w http.ResponseWriter, r *http.Request)
+	UpdateProfile(w http.ResponseWriter, r *http.Request)
+	UploadAvatar(w http.ResponseWriter, r *http.Request)
+	DeleteAvatar(w http.ResponseWriter, r *http.Request)
+	GetPreferences(w http.ResponseWriter, r *http.Request)
+	UpdatePreferences(w http.ResponseWriter, r *http.Request)
 }
 
 type CompanyAPI interface {

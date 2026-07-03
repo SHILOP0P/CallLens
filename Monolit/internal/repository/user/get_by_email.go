@@ -20,6 +20,12 @@ func (r *Repository) GetUserByEmail(ctx context.Context, email string) (model.Us
 	       username,
 	       role,
 	       post,
+	       phone,
+	       timezone,
+	       avatar_path,
+	       avatar_mime_type,
+	       avatar_size_bytes,
+	       avatar_updated_at,
 	       created_at
 	FROM users
 	WHERE lower(email) = lower($1)`

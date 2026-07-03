@@ -23,6 +23,12 @@ func (r *Repository) GetUserByUUID(ctx context.Context, id uuid.UUID) (model.Use
 	       username,
 	       role,
 	       post,
+	       phone,
+	       timezone,
+	       avatar_path,
+	       avatar_mime_type,
+	       avatar_size_bytes,
+	       avatar_updated_at,
 	       created_at
 	FROM users
 	WHERE user_uuid = $1

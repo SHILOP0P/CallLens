@@ -20,6 +20,12 @@ func (r *Repository) GetUserByUsername(ctx context.Context, username string) (mo
 	       username,
 	       role,
 	       post,
+	       phone,
+	       timezone,
+	       avatar_path,
+	       avatar_mime_type,
+	       avatar_size_bytes,
+	       avatar_updated_at,
 	       created_at
 	FROM users
 	WHERE lower(username) = lower($1)`

@@ -24,6 +24,120 @@ func (_m *AuthService) EXPECT() *AuthService_Expecter {
 	return &AuthService_Expecter{mock: &_m.Mock}
 }
 
+// DeleteAvatar provides a mock function with given fields: ctx, userID
+func (_m *AuthService) DeleteAvatar(ctx context.Context, userID uuid.UUID) (models.UserAvatarResponse, error) {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteAvatar")
+	}
+
+	var r0 models.UserAvatarResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.UserAvatarResponse, error)); ok {
+		return rf(ctx, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.UserAvatarResponse); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Get(0).(models.UserAvatarResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AuthService_DeleteAvatar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteAvatar'
+type AuthService_DeleteAvatar_Call struct {
+	*mock.Call
+}
+
+// DeleteAvatar is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *AuthService_Expecter) DeleteAvatar(ctx interface{}, userID interface{}) *AuthService_DeleteAvatar_Call {
+	return &AuthService_DeleteAvatar_Call{Call: _e.mock.On("DeleteAvatar", ctx, userID)}
+}
+
+func (_c *AuthService_DeleteAvatar_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *AuthService_DeleteAvatar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AuthService_DeleteAvatar_Call) Return(_a0 models.UserAvatarResponse, _a1 error) *AuthService_DeleteAvatar_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AuthService_DeleteAvatar_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.UserAvatarResponse, error)) *AuthService_DeleteAvatar_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetPreferences provides a mock function with given fields: ctx, userID
+func (_m *AuthService) GetPreferences(ctx context.Context, userID uuid.UUID) (models.UserPreferences, error) {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPreferences")
+	}
+
+	var r0 models.UserPreferences
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.UserPreferences, error)); ok {
+		return rf(ctx, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.UserPreferences); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Get(0).(models.UserPreferences)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AuthService_GetPreferences_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPreferences'
+type AuthService_GetPreferences_Call struct {
+	*mock.Call
+}
+
+// GetPreferences is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *AuthService_Expecter) GetPreferences(ctx interface{}, userID interface{}) *AuthService_GetPreferences_Call {
+	return &AuthService_GetPreferences_Call{Call: _e.mock.On("GetPreferences", ctx, userID)}
+}
+
+func (_c *AuthService_GetPreferences_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *AuthService_GetPreferences_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AuthService_GetPreferences_Call) Return(_a0 models.UserPreferences, _a1 error) *AuthService_GetPreferences_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AuthService_GetPreferences_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.UserPreferences, error)) *AuthService_GetPreferences_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetUserByUsername provides a mock function with given fields: ctx, username
 func (_m *AuthService) GetUserByUsername(ctx context.Context, username string) (models.User, error) {
 	ret := _m.Called(ctx, username)
@@ -431,6 +545,120 @@ func (_c *AuthService_Register_Call) RunAndReturn(run func(context.Context, mode
 	return _c
 }
 
+// UpdatePreferences provides a mock function with given fields: ctx, input
+func (_m *AuthService) UpdatePreferences(ctx context.Context, input models.UpdateUserPreferencesInput) (models.UserPreferences, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdatePreferences")
+	}
+
+	var r0 models.UserPreferences
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateUserPreferencesInput) (models.UserPreferences, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateUserPreferencesInput) models.UserPreferences); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.UserPreferences)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateUserPreferencesInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AuthService_UpdatePreferences_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdatePreferences'
+type AuthService_UpdatePreferences_Call struct {
+	*mock.Call
+}
+
+// UpdatePreferences is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UpdateUserPreferencesInput
+func (_e *AuthService_Expecter) UpdatePreferences(ctx interface{}, input interface{}) *AuthService_UpdatePreferences_Call {
+	return &AuthService_UpdatePreferences_Call{Call: _e.mock.On("UpdatePreferences", ctx, input)}
+}
+
+func (_c *AuthService_UpdatePreferences_Call) Run(run func(ctx context.Context, input models.UpdateUserPreferencesInput)) *AuthService_UpdatePreferences_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UpdateUserPreferencesInput))
+	})
+	return _c
+}
+
+func (_c *AuthService_UpdatePreferences_Call) Return(_a0 models.UserPreferences, _a1 error) *AuthService_UpdatePreferences_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AuthService_UpdatePreferences_Call) RunAndReturn(run func(context.Context, models.UpdateUserPreferencesInput) (models.UserPreferences, error)) *AuthService_UpdatePreferences_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateProfile provides a mock function with given fields: ctx, input
+func (_m *AuthService) UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateProfile")
+	}
+
+	var r0 models.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateUserProfileInput) (models.User, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateUserProfileInput) models.User); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.User)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateUserProfileInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AuthService_UpdateProfile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateProfile'
+type AuthService_UpdateProfile_Call struct {
+	*mock.Call
+}
+
+// UpdateProfile is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UpdateUserProfileInput
+func (_e *AuthService_Expecter) UpdateProfile(ctx interface{}, input interface{}) *AuthService_UpdateProfile_Call {
+	return &AuthService_UpdateProfile_Call{Call: _e.mock.On("UpdateProfile", ctx, input)}
+}
+
+func (_c *AuthService_UpdateProfile_Call) Run(run func(ctx context.Context, input models.UpdateUserProfileInput)) *AuthService_UpdateProfile_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UpdateUserProfileInput))
+	})
+	return _c
+}
+
+func (_c *AuthService_UpdateProfile_Call) Return(_a0 models.User, _a1 error) *AuthService_UpdateProfile_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AuthService_UpdateProfile_Call) RunAndReturn(run func(context.Context, models.UpdateUserProfileInput) (models.User, error)) *AuthService_UpdateProfile_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateUsername provides a mock function with given fields: ctx, input
 func (_m *AuthService) UpdateUsername(ctx context.Context, input models.UpdateUsernameInput) (models.User, error) {
 	ret := _m.Called(ctx, input)
@@ -484,6 +712,63 @@ func (_c *AuthService_UpdateUsername_Call) Return(_a0 models.User, _a1 error) *A
 }
 
 func (_c *AuthService_UpdateUsername_Call) RunAndReturn(run func(context.Context, models.UpdateUsernameInput) (models.User, error)) *AuthService_UpdateUsername_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UploadAvatar provides a mock function with given fields: ctx, input
+func (_m *AuthService) UploadAvatar(ctx context.Context, input models.SaveUserAvatarInput) (models.UserAvatarResponse, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UploadAvatar")
+	}
+
+	var r0 models.UserAvatarResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.SaveUserAvatarInput) (models.UserAvatarResponse, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.SaveUserAvatarInput) models.UserAvatarResponse); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.UserAvatarResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.SaveUserAvatarInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AuthService_UploadAvatar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UploadAvatar'
+type AuthService_UploadAvatar_Call struct {
+	*mock.Call
+}
+
+// UploadAvatar is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.SaveUserAvatarInput
+func (_e *AuthService_Expecter) UploadAvatar(ctx interface{}, input interface{}) *AuthService_UploadAvatar_Call {
+	return &AuthService_UploadAvatar_Call{Call: _e.mock.On("UploadAvatar", ctx, input)}
+}
+
+func (_c *AuthService_UploadAvatar_Call) Run(run func(ctx context.Context, input models.SaveUserAvatarInput)) *AuthService_UploadAvatar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.SaveUserAvatarInput))
+	})
+	return _c
+}
+
+func (_c *AuthService_UploadAvatar_Call) Return(_a0 models.UserAvatarResponse, _a1 error) *AuthService_UploadAvatar_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AuthService_UploadAvatar_Call) RunAndReturn(run func(context.Context, models.SaveUserAvatarInput) (models.UserAvatarResponse, error)) *AuthService_UploadAvatar_Call {
 	_c.Call.Return(run)
 	return _c
 }

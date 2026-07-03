@@ -44,6 +44,11 @@ type AuthService interface {
 	Me(ctx context.Context, userID uuid.UUID) (models.User, error)
 	UpdateUsername(ctx context.Context, input models.UpdateUsernameInput) (models.User, error)
 	GetUserByUsername(ctx context.Context, username string) (models.User, error)
+	UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error)
+	UploadAvatar(ctx context.Context, input models.SaveUserAvatarInput) (models.UserAvatarResponse, error)
+	DeleteAvatar(ctx context.Context, userID uuid.UUID) (models.UserAvatarResponse, error)
+	GetPreferences(ctx context.Context, userID uuid.UUID) (models.UserPreferences, error)
+	UpdatePreferences(ctx context.Context, input models.UpdateUserPreferencesInput) (models.UserPreferences, error)
 }
 
 type CompanyService interface {

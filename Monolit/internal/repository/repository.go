@@ -40,6 +40,14 @@ type UserRepository interface {
 	//POST
 	CreateUser(ctx context.Context, user models.User) (models.User, error)
 	UpdateUsername(ctx context.Context, input models.UpdateUsernameInput) (models.User, error)
+	UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error)
+	UpdateAvatar(ctx context.Context, input models.UserAvatarUpdate) (models.User, error)
+	DeleteAvatar(ctx context.Context, userID uuid.UUID) (models.User, error)
+}
+
+type UserPreferencesRepository interface {
+	Get(ctx context.Context, userID uuid.UUID) (models.UserPreferences, error)
+	Upsert(ctx context.Context, input models.UpdateUserPreferencesInput) (models.UserPreferences, error)
 }
 
 type CompanyRepository interface {

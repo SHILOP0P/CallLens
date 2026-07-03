@@ -201,6 +201,50 @@ func (f *serviceFixture) UpdateUsername(ctx context.Context, input models.Update
 	return user, nil
 }
 
+func (f *serviceFixture) UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error) {
+	user, ok := f.users[input.UserUUID]
+	if !ok {
+		return models.User{}, models.ErrUserNotFound
+	}
+	if input.FullName != nil {
+		user.FullName = *input.FullName
+	}
+	if input.FullSurname != nil {
+		user.FullSurname = *input.FullSurname
+	}
+	user.Post = input.Post
+	user.Phone = input.Phone
+	user.Timezone = input.Timezone
+	f.users[input.UserUUID] = user
+	return user, nil
+}
+
+func (f *serviceFixture) UpdateAvatar(ctx context.Context, input models.UserAvatarUpdate) (models.User, error) {
+	user, ok := f.users[input.UserUUID]
+	if !ok {
+		return models.User{}, models.ErrUserNotFound
+	}
+	user.AvatarPath = input.Path
+	user.AvatarMime = input.MimeType
+	user.AvatarSize = input.SizeBytes
+	user.AvatarUpdatedAt = input.UpdatedAt
+	f.users[input.UserUUID] = user
+	return user, nil
+}
+
+func (f *serviceFixture) DeleteAvatar(ctx context.Context, userID uuid.UUID) (models.User, error) {
+	user, ok := f.users[userID]
+	if !ok {
+		return models.User{}, models.ErrUserNotFound
+	}
+	user.AvatarPath = nil
+	user.AvatarMime = nil
+	user.AvatarSize = nil
+	user.AvatarUpdatedAt = nil
+	f.users[userID] = user
+	return user, nil
+}
+
 func (f *serviceFixture) CreateInvitation(ctx context.Context, invitation models.MembershipInvitation) (models.MembershipInvitation, error) {
 	f.invitations[invitation.ID] = invitation
 	return invitation, nil
