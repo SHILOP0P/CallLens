@@ -449,6 +449,10 @@ func (r *analysisInstructionRepository) GetByUUID(ctx context.Context, id uuid.U
 	panic("not implemented")
 }
 
+func (r *analysisInstructionRepository) GetByUUIDIncludingInactive(ctx context.Context, id uuid.UUID) (models.AnalysisInstruction, error) {
+	panic("not implemented")
+}
+
 func (r *analysisInstructionRepository) List(ctx context.Context, input models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error) {
 	instructions := r.instructions[input.Scope]
 	result := make([]models.AnalysisInstruction, 0, len(instructions))
@@ -466,6 +470,14 @@ func (r *analysisInstructionRepository) List(ctx context.Context, input models.L
 }
 
 func (r *analysisInstructionRepository) CountActive(ctx context.Context, input models.ListAnalysisInstructionsInput) (int, error) {
+	panic("not implemented")
+}
+
+func (r *analysisInstructionRepository) Update(ctx context.Context, input models.UpdateAnalysisInstructionRepositoryInput) (models.AnalysisInstruction, error) {
+	panic("not implemented")
+}
+
+func (r *analysisInstructionRepository) Reorder(ctx context.Context, items []models.ReorderAnalysisInstructionItem) error {
 	panic("not implemented")
 }
 

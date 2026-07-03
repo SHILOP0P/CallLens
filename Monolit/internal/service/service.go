@@ -75,8 +75,12 @@ type DepartmentService interface {
 
 type AnalysisInstructionService interface {
 	Create(ctx context.Context, input models.CreateAnalysisInstructionInput) (models.AnalysisInstruction, error)
+	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.AnalysisInstruction, error)
 	List(ctx context.Context, input models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error)
+	Update(ctx context.Context, input models.UpdateAnalysisInstructionInput) (models.AnalysisInstruction, error)
+	ReplaceFile(ctx context.Context, input models.ReplaceAnalysisInstructionFileInput) (models.AnalysisInstruction, error)
 	GetFile(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.File, error)
+	Reorder(ctx context.Context, input models.ReorderAnalysisInstructionsInput) error
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
 

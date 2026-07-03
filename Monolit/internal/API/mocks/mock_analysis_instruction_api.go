@@ -60,6 +60,11 @@ func (_m *AnalysisInstructionAPI) Delete(w http.ResponseWriter, r *http.Request)
 	_m.Called(w, r)
 }
 
+// Get provides a mock function with given fields: w, r
+func (_m *AnalysisInstructionAPI) Get(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
 // AnalysisInstructionAPI_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
 type AnalysisInstructionAPI_Delete_Call struct {
 	*mock.Call
@@ -91,6 +96,21 @@ func (_c *AnalysisInstructionAPI_Delete_Call) RunAndReturn(run func(http.Respons
 
 // GetFile provides a mock function with given fields: w, r
 func (_m *AnalysisInstructionAPI) GetFile(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// Reorder provides a mock function with given fields: w, r
+func (_m *AnalysisInstructionAPI) Reorder(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// ReplaceFile provides a mock function with given fields: w, r
+func (_m *AnalysisInstructionAPI) ReplaceFile(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// Update provides a mock function with given fields: w, r
+func (_m *AnalysisInstructionAPI) Update(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
 }
 

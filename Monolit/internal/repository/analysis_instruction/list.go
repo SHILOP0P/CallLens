@@ -3,6 +3,7 @@ package analysis_instruction
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	model "calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository/converter"
@@ -11,11 +12,16 @@ import (
 )
 
 func (r *Repository) List(ctx context.Context, input model.ListAnalysisInstructionsInput) ([]model.AnalysisInstruction, error) {
+	args := []any{
+		input.Scope,
+		input.UserUUID,
+		input.CompanyUUID,
+		input.DepartmentUUID,
+	}
 	query := `
 	SELECT ` + analysisInstructionReturningColumns + `
 	FROM analysis_instructions
-	WHERE is_active = true
-	  AND scope = $1
+	WHERE scope = $1
 	  AND (
 	      ($1 = 'personal' AND user_uuid = $2)
 	      OR
@@ -23,16 +29,28 @@ func (r *Repository) List(ctx context.Context, input model.ListAnalysisInstructi
 	      OR
 	      ($1 = 'department' AND company_uuid = $3 AND department_uuid = $4)
 	  )
-	ORDER BY sort_order ASC, created_at ASC
 	`
+	if !input.IncludeInactive {
+		query += "\n  AND is_active = true"
+	}
+	if strings.TrimSpace(input.Query) != "" {
+		args = append(args, "%"+strings.TrimSpace(input.Query)+"%")
+		query += fmt.Sprintf("\n  AND (title ILIKE $%d OR original_filename ILIKE $%d)", len(args), len(args))
+	}
+	query += "\nORDER BY sort_order ASC, created_at ASC"
+	if input.Limit > 0 {
+		args = append(args, input.Limit)
+		query += fmt.Sprintf("\nLIMIT $%d", len(args))
+	}
+	if input.Offset > 0 {
+		args = append(args, input.Offset)
+		query += fmt.Sprintf("\nOFFSET $%d", len(args))
+	}
 
 	rows, err := r.db.QueryContext(
 		ctx,
 		query,
-		input.Scope,
-		input.UserUUID,
-		input.CompanyUUID,
-		input.DepartmentUUID,
+		args...,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("list analysis instructions: %w", err)

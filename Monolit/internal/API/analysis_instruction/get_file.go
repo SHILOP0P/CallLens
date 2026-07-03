@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"calllens/monolit/internal/API/response"
@@ -40,7 +41,7 @@ func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{
-		"filename": file.OriginalFilename,
+		"filename": safeDownloadFilename(file.OriginalFilename),
 	}))
 
 	if file.SizeBytes > 0 {
@@ -48,6 +49,14 @@ func (h *Handler) GetFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, _ = io.Copy(w, file.Content)
+}
+
+func safeDownloadFilename(name string) string {
+	base := filepath.Base(name)
+	if base == "." || base == string(filepath.Separator) {
+		return "instruction.md"
+	}
+	return base
 }
 
 func writeInstructionFileError(w http.ResponseWriter, err error) {

@@ -118,7 +118,12 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 			//ANALYSIS INSTRUCTIONS
 			r.With(authGuard).Post("/instructions", instructionAPI.Create)
 			r.With(authGuard).Get("/instructions", instructionAPI.List)
+			r.With(authGuard).Patch("/instructions/reorder", instructionAPI.Reorder)
+			r.With(authGuard).Get("/instructions/{uuid}", instructionAPI.Get)
+			r.With(authGuard).Patch("/instructions/{uuid}", instructionAPI.Update)
+			r.With(authGuard).Put("/instructions/{uuid}/file", instructionAPI.ReplaceFile)
 			r.With(authGuard).Get("/instructions/{uuid}/file", instructionAPI.GetFile)
+			r.With(authGuard).Get("/instructions/{uuid}/download", instructionAPI.GetFile)
 			r.With(authGuard).Delete("/instructions/{uuid}", instructionAPI.Delete)
 		})
 	})

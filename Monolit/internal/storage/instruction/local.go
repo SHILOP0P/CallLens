@@ -41,7 +41,7 @@ func (l *LocalStorage) Save(ctx context.Context, input models.SaveInstructionInp
 	relativePath := filepath.Join(relativeDir, input.InstructionUUID.String()+ext)
 	fullPath := filepath.Join(l.baseDir, relativePath)
 
-	dst, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	dst, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return models.SavedInstructionFile{}, fmt.Errorf("create instruction file failed: %w", err)
 	}

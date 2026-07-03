@@ -16,7 +16,7 @@ func AnalysisInstructionModelToAPI(instruction models.AnalysisInstruction) (dto.
 		DepartmentUUID:    nullUUIDToStringPtr(instruction.DepartmentUUID),
 		Title:             instruction.Title,
 		OriginalFilename:  instruction.OriginalFilename,
-		FilePath:          instruction.FilePath,
+		DownloadURL:       "/api/v1/instructions/" + instruction.ID.String() + "/download",
 		MimeType:          instruction.MimeType,
 		SizeBytes:         instruction.SizeBytes,
 		ContentSHA256:     instruction.ContentSHA256,

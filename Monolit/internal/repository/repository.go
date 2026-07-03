@@ -137,8 +137,11 @@ type MonitoringRepository interface {
 type AnalysisInstructionRepository interface {
 	Create(ctx context.Context, instruction models.AnalysisInstruction) (models.AnalysisInstruction, error)
 	GetByUUID(ctx context.Context, id uuid.UUID) (models.AnalysisInstruction, error)
+	GetByUUIDIncludingInactive(ctx context.Context, id uuid.UUID) (models.AnalysisInstruction, error)
 	List(ctx context.Context, input models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error)
 	CountActive(ctx context.Context, input models.ListAnalysisInstructionsInput) (int, error)
+	Update(ctx context.Context, input models.UpdateAnalysisInstructionRepositoryInput) (models.AnalysisInstruction, error)
+	Reorder(ctx context.Context, items []models.ReorderAnalysisInstructionItem) error
 	Deactivate(ctx context.Context, id uuid.UUID) error
 }
 

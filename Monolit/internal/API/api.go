@@ -69,7 +69,11 @@ type DepartmentAPI interface {
 type AnalysisInstructionAPI interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	List(w http.ResponseWriter, r *http.Request)
+	Get(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
+	ReplaceFile(w http.ResponseWriter, r *http.Request)
 	GetFile(w http.ResponseWriter, r *http.Request)
+	Reorder(w http.ResponseWriter, r *http.Request)
 	Delete(w http.ResponseWriter, r *http.Request)
 }
 

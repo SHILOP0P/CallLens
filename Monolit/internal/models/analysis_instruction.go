@@ -54,10 +54,56 @@ type CreateAnalysisInstructionInput struct {
 }
 
 type ListAnalysisInstructionsInput struct {
+	Scope           AnalysisInstructionScope
+	UserUUID        uuid.UUID
+	CompanyUUID     uuid.NullUUID
+	DepartmentUUID  uuid.NullUUID
+	IncludeInactive bool
+	Query           string
+	Limit           int
+	Offset          int
+}
+
+type UpdateAnalysisInstructionInput struct {
+	ID        uuid.UUID
+	UserUUID  uuid.UUID
+	Title     *string
+	IsActive  *bool
+	SortOrder *int
+}
+
+type ReplaceAnalysisInstructionFileInput struct {
+	ID               uuid.UUID
+	UserUUID         uuid.UUID
+	OriginalFilename string
+	MimeType         string
+	SizeBytes        int64
+	Content          io.Reader
+}
+
+type ReorderAnalysisInstructionItem struct {
+	ID        uuid.UUID
+	SortOrder int
+}
+
+type ReorderAnalysisInstructionsInput struct {
 	Scope          AnalysisInstructionScope
 	UserUUID       uuid.UUID
 	CompanyUUID    uuid.NullUUID
 	DepartmentUUID uuid.NullUUID
+	Items          []ReorderAnalysisInstructionItem
+}
+
+type UpdateAnalysisInstructionRepositoryInput struct {
+	ID               uuid.UUID
+	Title            *string
+	IsActive         *bool
+	SortOrder        *int
+	OriginalFilename *string
+	FilePath         *string
+	MimeType         *string
+	SizeBytes        *int64
+	ContentSHA256    *string
 }
 
 type SaveInstructionInput struct {

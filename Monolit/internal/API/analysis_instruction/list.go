@@ -2,6 +2,7 @@ package analysis_instruction
 
 import (
 	"net/http"
+	"strconv"
 
 	"calllens/monolit/internal/API/response"
 	"calllens/monolit/internal/converter"
@@ -28,11 +29,31 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	includeInactive, err := parseOptionalBool(r.URL.Query().Get("include_inactive"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidAnalysisInstructionInput, "invalid include_inactive")
+		return
+	}
+	limit, err := parseOptionalNonNegativeInt(r.URL.Query().Get("limit"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidAnalysisInstructionInput, "invalid limit")
+		return
+	}
+	offset, err := parseOptionalNonNegativeInt(r.URL.Query().Get("offset"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidAnalysisInstructionInput, "invalid offset")
+		return
+	}
+
 	instructions, err := h.service.List(r.Context(), models.ListAnalysisInstructionsInput{
-		Scope:          scope,
-		UserUUID:       userID,
-		CompanyUUID:    companyUUID,
-		DepartmentUUID: departmentUUID,
+		Scope:           scope,
+		UserUUID:        userID,
+		CompanyUUID:     companyUUID,
+		DepartmentUUID:  departmentUUID,
+		IncludeInactive: includeInactive,
+		Query:           r.URL.Query().Get("q"),
+		Limit:           limit,
+		Offset:          offset,
 	})
 	if err != nil {
 		writeInstructionError(w, err, response.CodeFailedToListInstructions, "failed to list instructions")
@@ -55,4 +76,22 @@ func parseInstructionUUID(value string) (uuid.UUID, error) {
 	}
 
 	return id, nil
+}
+
+func parseOptionalBool(value string) (bool, error) {
+	if value == "" {
+		return false, nil
+	}
+	return strconv.ParseBool(value)
+}
+
+func parseOptionalNonNegativeInt(value string) (int, error) {
+	if value == "" {
+		return 0, nil
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed < 0 {
+		return 0, models.ErrInvalidAnalysisInstructionInput
+	}
+	return parsed, nil
 }

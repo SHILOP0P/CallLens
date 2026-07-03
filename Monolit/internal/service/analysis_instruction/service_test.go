@@ -465,3 +465,79 @@ func TestCreateRepositoryFailureDeletesSavedFile(t *testing.T) {
 		t.Fatal("expected repository error")
 	}
 }
+
+func TestUpdateReplaceAndReorderManagement(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	instructionID := uuid.New()
+	repo := repositoryMocks.NewAnalysisInstructionRepository(t)
+	storage := storageMocks.NewInstructionStorage(t)
+	service := NewService(
+		repo,
+		repositoryMocks.NewCompanyRepository(t),
+		repositoryMocks.NewDepartmentRepository(t),
+		storage,
+		nil,
+	)
+
+	inactive := models.AnalysisInstruction{
+		ID: instructionID, Scope: models.AnalysisInstructionScopePersonal,
+		UserUUID: uuid.NullUUID{UUID: userID, Valid: true}, IsActive: false,
+		OriginalFilename: "old.md", FilePath: "old.md",
+	}
+	active := true
+	title := "Updated title"
+	sortOrder := 7
+	repo.On("GetByUUIDIncludingInactive", mock.Anything, instructionID).Return(inactive, nil).Once()
+	repo.EXPECT().CountActive(mock.Anything, mock.MatchedBy(func(input models.ListAnalysisInstructionsInput) bool {
+		return input.Scope == models.AnalysisInstructionScopePersonal && input.UserUUID == userID
+	})).Return(0, nil).Once()
+	repo.On("Update", mock.Anything, mock.MatchedBy(func(input models.UpdateAnalysisInstructionRepositoryInput) bool {
+		return input.ID == instructionID && input.Title != nil && *input.Title == title &&
+			input.IsActive != nil && *input.IsActive && input.SortOrder != nil && *input.SortOrder == sortOrder
+	})).Return(models.AnalysisInstruction{ID: instructionID, Title: title, IsActive: true, SortOrder: sortOrder}, nil).Once()
+	updated, err := service.Update(ctx, models.UpdateAnalysisInstructionInput{
+		ID: instructionID, UserUUID: userID, Title: &title, IsActive: &active, SortOrder: &sortOrder,
+	})
+	if err != nil || updated.Title != title || !updated.IsActive {
+		t.Fatalf("Update = %+v, %v", updated, err)
+	}
+
+	repo.On("GetByUUIDIncludingInactive", mock.Anything, instructionID).Return(inactive, nil).Once()
+	storage.EXPECT().Save(mock.Anything, mock.MatchedBy(func(input models.SaveInstructionInput) bool {
+		return input.InstructionUUID == instructionID && input.OriginalFilename == "new.md"
+	})).Return(models.SavedInstructionFile{
+		Path: "new.md", MimeType: "text/plain", SizeBytes: 11, ContentSHA256: "hash",
+	}, nil).Once()
+	repo.On("Update", mock.Anything, mock.MatchedBy(func(input models.UpdateAnalysisInstructionRepositoryInput) bool {
+		return input.OriginalFilename != nil && *input.OriginalFilename == "new.md" &&
+			input.FilePath != nil && *input.FilePath == "new.md" &&
+			input.SizeBytes != nil && *input.SizeBytes == 11 &&
+			input.ContentSHA256 != nil && *input.ContentSHA256 == "hash"
+	})).Return(models.AnalysisInstruction{ID: instructionID, OriginalFilename: "new.md", SizeBytes: 11, ContentSHA256: "hash"}, nil).Once()
+	replaced, err := service.ReplaceFile(ctx, models.ReplaceAnalysisInstructionFileInput{
+		ID: instructionID, UserUUID: userID, OriginalFilename: "new.md", MimeType: "text/plain", Content: strings.NewReader("hello"),
+	})
+	if err != nil || replaced.OriginalFilename != "new.md" || replaced.ContentSHA256 != "hash" {
+		t.Fatalf("ReplaceFile = %+v, %v", replaced, err)
+	}
+
+	repo.On("GetByUUIDIncludingInactive", mock.Anything, instructionID).Return(inactive, nil).Once()
+	repo.On("Reorder", mock.Anything, []models.ReorderAnalysisInstructionItem{{ID: instructionID, SortOrder: 20}}).Return(nil).Once()
+	if err := service.Reorder(ctx, models.ReorderAnalysisInstructionsInput{
+		Scope: models.AnalysisInstructionScopePersonal, UserUUID: userID,
+		Items: []models.ReorderAnalysisInstructionItem{{ID: instructionID, SortOrder: 20}},
+	}); err != nil {
+		t.Fatalf("Reorder: %v", err)
+	}
+
+	other := inactive
+	other.UserUUID = uuid.NullUUID{UUID: uuid.New(), Valid: true}
+	repo.On("GetByUUIDIncludingInactive", mock.Anything, instructionID).Return(other, nil).Once()
+	if err := service.Reorder(ctx, models.ReorderAnalysisInstructionsInput{
+		Scope: models.AnalysisInstructionScopePersonal, UserUUID: userID,
+		Items: []models.ReorderAnalysisInstructionItem{{ID: instructionID, SortOrder: 30}},
+	}); !errors.Is(err, models.ErrInvalidAnalysisInstructionInput) {
+		t.Fatalf("cross-scope reorder error = %v", err)
+	}
+}

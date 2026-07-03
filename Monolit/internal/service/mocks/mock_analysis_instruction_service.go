@@ -99,6 +99,34 @@ func (_m *AnalysisInstructionService) Delete(ctx context.Context, id uuid.UUID, 
 	return r0
 }
 
+// Get provides a mock function with given fields: ctx, id, userID
+func (_m *AnalysisInstructionService) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.AnalysisInstruction, error) {
+	ret := _m.Called(ctx, id, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Get")
+	}
+
+	var r0 models.AnalysisInstruction
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) (models.AnalysisInstruction, error)); ok {
+		return rf(ctx, id, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) models.AnalysisInstruction); ok {
+		r0 = rf(ctx, id, userID)
+	} else {
+		r0 = ret.Get(0).(models.AnalysisInstruction)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r1 = rf(ctx, id, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AnalysisInstructionService_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
 type AnalysisInstructionService_Delete_Call struct {
 	*mock.Call
@@ -209,6 +237,80 @@ func (_m *AnalysisInstructionService) List(ctx context.Context, input models.Lis
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, models.ListAnalysisInstructionsInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Reorder provides a mock function with given fields: ctx, input
+func (_m *AnalysisInstructionService) Reorder(ctx context.Context, input models.ReorderAnalysisInstructionsInput) error {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Reorder")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ReorderAnalysisInstructionsInput) error); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ReplaceFile provides a mock function with given fields: ctx, input
+func (_m *AnalysisInstructionService) ReplaceFile(ctx context.Context, input models.ReplaceAnalysisInstructionFileInput) (models.AnalysisInstruction, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ReplaceFile")
+	}
+
+	var r0 models.AnalysisInstruction
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ReplaceAnalysisInstructionFileInput) (models.AnalysisInstruction, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.ReplaceAnalysisInstructionFileInput) models.AnalysisInstruction); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.AnalysisInstruction)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.ReplaceAnalysisInstructionFileInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Update provides a mock function with given fields: ctx, input
+func (_m *AnalysisInstructionService) Update(ctx context.Context, input models.UpdateAnalysisInstructionInput) (models.AnalysisInstruction, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 models.AnalysisInstruction
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateAnalysisInstructionInput) (models.AnalysisInstruction, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateAnalysisInstructionInput) models.AnalysisInstruction); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.AnalysisInstruction)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateAnalysisInstructionInput) error); ok {
 		r1 = rf(ctx, input)
 	} else {
 		r1 = ret.Error(1)

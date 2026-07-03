@@ -619,11 +619,17 @@ Analysis instructions:
 | Method | Path | Auth | Описание |
 | --- | --- | --- | --- |
 | POST | `/api/v1/instructions` | Да | Загрузить markdown-инструкцию анализа |
-| GET | `/api/v1/instructions` | Да | Получить список активных инструкций по scope |
-| GET | `/api/v1/instructions/{uuid}/file` | Да | Скачать файл инструкции |
+| GET | `/api/v1/instructions` | Да | Получить список инструкций по scope; поддерживает `include_inactive`, `q`, `limit`, `offset` |
+| GET | `/api/v1/instructions/{uuid}` | Да | Получить одну активную инструкцию при наличии права чтения |
+| PATCH | `/api/v1/instructions/{uuid}` | Да | Частично обновить `title`, `is_active`, `sort_order`; scope, владельца, путь и hash менять нельзя |
+| PUT | `/api/v1/instructions/{uuid}/file` | Да | Заменить markdown-файл инструкции |
+| GET | `/api/v1/instructions/{uuid}/download` | Да | Скачать файл инструкции с безопасным `Content-Disposition`; `/file` оставлен как совместимый alias |
+| PATCH | `/api/v1/instructions/reorder` | Да | Переупорядочить инструкции внутри одного редактируемого scope |
 | DELETE | `/api/v1/instructions/{uuid}` | Да | Деактивировать инструкцию |
 
 Company-инструкции доступны `company_manager` и активным участникам компании, которые уже состоят хотя бы в одном отделе. Активный участник компании без отдела считается находящимся на распределении и не может читать список или файл company-инструкции.
+
+Публичный DTO инструкции не отдаёт локальный `file_path`; для скачивания используется `download_url`.
 
 Billing:
 

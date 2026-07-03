@@ -55,6 +55,10 @@ func (s *Service) authorizeList(ctx context.Context, input models.ListAnalysisIn
 }
 
 func (s *Service) authorizeDelete(ctx context.Context, instruction models.AnalysisInstruction, userID uuid.UUID) error {
+	return s.authorizeEdit(ctx, instruction, userID)
+}
+
+func (s *Service) authorizeEdit(ctx context.Context, instruction models.AnalysisInstruction, userID uuid.UUID) error {
 	switch instruction.Scope {
 	case models.AnalysisInstructionScopePersonal:
 		if !instruction.UserUUID.Valid || instruction.UserUUID.UUID != userID {
@@ -72,6 +76,26 @@ func (s *Service) authorizeDelete(ctx context.Context, instruction models.Analys
 		return nil
 	case models.AnalysisInstructionScopeDepartment:
 		return s.authorizeDepartmentManage(ctx, instruction.CompanyUUID.UUID, instruction.DepartmentUUID.UUID, userID)
+	default:
+		return models.ErrInvalidAnalysisInstructionInput
+	}
+}
+
+func (s *Service) authorizeEditScope(ctx context.Context, input models.ReorderAnalysisInstructionsInput) error {
+	switch input.Scope {
+	case models.AnalysisInstructionScopePersonal:
+		return nil
+	case models.AnalysisInstructionScopeCompany:
+		member, err := s.companyRepository.GetCompanyMember(ctx, input.CompanyUUID.UUID, input.UserUUID)
+		if err != nil {
+			return err
+		}
+		if member.Role != models.CompanyMemberRoleManager {
+			return models.ErrForbidden
+		}
+		return nil
+	case models.AnalysisInstructionScopeDepartment:
+		return s.authorizeDepartmentManage(ctx, input.CompanyUUID.UUID, input.DepartmentUUID.UUID, input.UserUUID)
 	default:
 		return models.ErrInvalidAnalysisInstructionInput
 	}

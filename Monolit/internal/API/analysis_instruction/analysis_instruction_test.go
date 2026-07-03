@@ -3,6 +3,7 @@ package analysis_instruction
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"mime/multipart"
@@ -12,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"calllens/monolit/internal/converter"
 	"calllens/monolit/internal/httpserver/middleware"
 	"calllens/monolit/internal/models"
 	serviceMocks "calllens/monolit/internal/service/mocks"
@@ -32,11 +34,23 @@ func TestHandlersSuccess(t *testing.T) {
 	}
 	service := serviceMocks.NewAnalysisInstructionService(t)
 	service.EXPECT().Create(mock.Anything, mock.Anything).Return(item, nil).Once()
-	service.EXPECT().List(mock.Anything, mock.Anything).Return([]models.AnalysisInstruction{item}, nil).Once()
+	service.EXPECT().List(mock.Anything, mock.MatchedBy(func(input models.ListAnalysisInstructionsInput) bool {
+		return input.IncludeInactive && input.Query == "guide" && input.Limit == 10 && input.Offset == 5
+	})).Return([]models.AnalysisInstruction{item}, nil).Once()
+	service.On("Get", mock.Anything, instructionID, userID).Return(item, nil).Once()
+	service.On("Update", mock.Anything, mock.MatchedBy(func(input models.UpdateAnalysisInstructionInput) bool {
+		return input.ID == instructionID && input.Title != nil && *input.Title == "New title"
+	})).Return(item, nil).Once()
+	service.On("ReplaceFile", mock.Anything, mock.MatchedBy(func(input models.ReplaceAnalysisInstructionFileInput) bool {
+		return input.ID == instructionID && input.OriginalFilename == "guide.md"
+	})).Return(item, nil).Once()
 	service.EXPECT().GetFile(mock.Anything, mock.Anything, mock.Anything).Return(models.File{
 		Content: io.NopCloser(strings.NewReader("guide")), OriginalFilename: "guide.md",
 		MimeType: "text/markdown", SizeBytes: 5,
 	}, nil).Once()
+	service.On("Reorder", mock.Anything, mock.MatchedBy(func(input models.ReorderAnalysisInstructionsInput) bool {
+		return input.Scope == models.AnalysisInstructionScopePersonal && len(input.Items) == 1 && input.Items[0].ID == instructionID
+	})).Return(nil).Once()
 	service.EXPECT().Delete(mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 	handler := NewHandler(service)
 
@@ -48,16 +62,47 @@ func TestHandlersSuccess(t *testing.T) {
 		t.Fatalf("Create status = %d body=%s", rec.Code, rec.Body.String())
 	}
 
-	rec, req = instructionRequest(http.MethodGet, "/?scope=personal", "", userID, nil)
+	rec, req = instructionRequest(http.MethodGet, "/?scope=personal&include_inactive=true&q=guide&limit=10&offset=5", "", userID, nil)
 	handler.List(rec, req)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("List status = %d", rec.Code)
 	}
 
 	rec, req = instructionRequest(http.MethodGet, "/", "", userID, map[string]string{"uuid": instructionID.String()})
+	handler.Get(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Get status=%d body=%q", rec.Code, rec.Body.String())
+	}
+
+	updateBody := `{"title":"New title","is_active":true,"sort_order":10}`
+	rec, req = instructionRequest(http.MethodPatch, "/", updateBody, userID, map[string]string{"uuid": instructionID.String()})
+	handler.Update(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Update status=%d body=%q", rec.Code, rec.Body.String())
+	}
+
+	body, contentType = instructionMultipart(t, nil, "guide.md", "updated")
+	rec, req = instructionRequest(http.MethodPut, "/", body.String(), userID, map[string]string{"uuid": instructionID.String()})
+	req.Header.Set("Content-Type", contentType)
+	handler.ReplaceFile(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("ReplaceFile status=%d body=%q", rec.Code, rec.Body.String())
+	}
+
+	rec, req = instructionRequest(http.MethodGet, "/", "", userID, map[string]string{"uuid": instructionID.String()})
 	handler.GetFile(rec, req)
 	if rec.Code != http.StatusOK || rec.Body.String() != "guide" {
 		t.Fatalf("GetFile status=%d body=%q", rec.Code, rec.Body.String())
+	}
+	if disposition := rec.Header().Get("Content-Disposition"); !strings.Contains(disposition, "guide.md") {
+		t.Fatalf("Content-Disposition = %q", disposition)
+	}
+
+	reorderBody := `{"scope":"personal","items":[{"id":"` + instructionID.String() + `","sort_order":10}]}`
+	rec, req = instructionRequest(http.MethodPatch, "/", reorderBody, userID, nil)
+	handler.Reorder(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("Reorder status=%d body=%q", rec.Code, rec.Body.String())
 	}
 
 	rec, req = instructionRequest(http.MethodDelete, "/", "", userID, map[string]string{"uuid": instructionID.String()})
@@ -141,7 +186,7 @@ func TestValidationHelpersAndErrorMappings(t *testing.T) {
 
 func TestHandlersRejectInvalidRequests(t *testing.T) {
 	handler := NewHandler(serviceMocks.NewAnalysisInstructionService(t))
-	for _, method := range []func(http.ResponseWriter, *http.Request){handler.Create, handler.List, handler.GetFile, handler.Delete} {
+	for _, method := range []func(http.ResponseWriter, *http.Request){handler.Create, handler.List, handler.Get, handler.Update, handler.ReplaceFile, handler.GetFile, handler.Reorder, handler.Delete} {
 		rec, req := instructionRequest(http.MethodGet, "/", "", uuid.Nil, nil)
 		method(rec, req)
 		if rec.Code != http.StatusUnauthorized {
@@ -162,12 +207,24 @@ func TestHandlersRejectInvalidRequests(t *testing.T) {
 		t.Fatalf("invalid list status = %d", rec.Code)
 	}
 
-	for _, method := range []func(http.ResponseWriter, *http.Request){handler.GetFile, handler.Delete} {
+	for _, method := range []func(http.ResponseWriter, *http.Request){handler.Get, handler.Update, handler.ReplaceFile, handler.GetFile, handler.Delete} {
 		rec, req = instructionRequest(http.MethodGet, "/", "", uuid.New(), map[string]string{"uuid": "bad"})
 		method(rec, req)
 		if rec.Code != http.StatusBadRequest {
 			t.Fatalf("invalid UUID status = %d", rec.Code)
 		}
+	}
+
+	rec, req = instructionRequest(http.MethodPatch, "/", `{"scope":"personal"}`, uuid.New(), map[string]string{"uuid": uuid.New().String()})
+	handler.Update(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("unknown update field status = %d", rec.Code)
+	}
+
+	rec, req = instructionRequest(http.MethodPatch, "/", `{"scope":"personal","items":[{"id":"bad","sort_order":1}]}`, uuid.New(), nil)
+	handler.Reorder(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("bad reorder uuid status = %d", rec.Code)
 	}
 }
 
@@ -200,4 +257,31 @@ func instructionMultipart(t *testing.T, fields map[string]string, name, content 
 	_, _ = part.Write([]byte(content))
 	_ = writer.Close()
 	return body, writer.FormDataContentType()
+}
+
+func TestAnalysisInstructionResponseDoesNotContainFilePath(t *testing.T) {
+	item := models.AnalysisInstruction{ID: uuid.New(), FilePath: "local/path.md"}
+	resp, err := json.Marshal(mustInstructionResponse(t, item))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fields map[string]any
+	if err := json.Unmarshal(resp, &fields); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := fields["file_path"]; ok {
+		t.Fatalf("response leaked file_path: %s", resp)
+	}
+	if fields["download_url"] == "" {
+		t.Fatalf("missing download_url: %s", resp)
+	}
+}
+
+func mustInstructionResponse(t *testing.T, item models.AnalysisInstruction) any {
+	t.Helper()
+	resp, err := converter.AnalysisInstructionModelToAPI(item)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return resp
 }

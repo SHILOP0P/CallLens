@@ -61,10 +61,29 @@ func TestCoreConverters(t *testing.T) {
 	if err != nil || instructionResponse.CompanyUUID == nil || instructionResponse.UserUUID != nil {
 		t.Fatalf("AnalysisInstructionModelToAPI = %+v, %v", instructionResponse, err)
 	}
+	rawInstruction, err := json.Marshal(instructionResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(rawInstruction) == "" || json.Valid(rawInstruction) && containsJSONField(rawInstruction, "file_path") {
+		t.Fatalf("instruction response leaked file_path: %s", rawInstruction)
+	}
+	if instructionResponse.DownloadURL != "/api/v1/instructions/"+id.String()+"/download" {
+		t.Fatalf("download_url = %q", instructionResponse.DownloadURL)
+	}
 	instructions, err := AnalysisInstructionModelsToAPI([]models.AnalysisInstruction{instruction})
 	if err != nil || len(instructions) != 1 {
 		t.Fatalf("AnalysisInstructionModelsToAPI = %+v, %v", instructions, err)
 	}
+}
+
+func containsJSONField(raw []byte, field string) bool {
+	var fields map[string]any
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		return false
+	}
+	_, ok := fields[field]
+	return ok
 }
 
 func TestBillingCompanyInvitationAndReportConverters(t *testing.T) {

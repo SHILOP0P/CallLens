@@ -8,7 +8,7 @@ type AnalysisInstruction struct {
 	DepartmentUUID    *string `json:"department_uuid"`
 	Title             string  `json:"title"`
 	OriginalFilename  string  `json:"original_filename"`
-	FilePath          string  `json:"file_path"`
+	DownloadURL       string  `json:"download_url"`
 	MimeType          string  `json:"mime_type"`
 	SizeBytes         int64   `json:"size_bytes"`
 	ContentSHA256     string  `json:"content_sha256"`

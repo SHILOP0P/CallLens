@@ -213,6 +213,34 @@ func (_m *AnalysisInstructionRepository) GetByUUID(ctx context.Context, id uuid.
 	return r0, r1
 }
 
+// GetByUUIDIncludingInactive provides a mock function with given fields: ctx, id
+func (_m *AnalysisInstructionRepository) GetByUUIDIncludingInactive(ctx context.Context, id uuid.UUID) (models.AnalysisInstruction, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByUUIDIncludingInactive")
+	}
+
+	var r0 models.AnalysisInstruction
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.AnalysisInstruction, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.AnalysisInstruction); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(models.AnalysisInstruction)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AnalysisInstructionRepository_GetByUUID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByUUID'
 type AnalysisInstructionRepository_GetByUUID_Call struct {
 	*mock.Call
@@ -264,6 +292,52 @@ func (_m *AnalysisInstructionRepository) List(ctx context.Context, input models.
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, models.ListAnalysisInstructionsInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Reorder provides a mock function with given fields: ctx, items
+func (_m *AnalysisInstructionRepository) Reorder(ctx context.Context, items []models.ReorderAnalysisInstructionItem) error {
+	ret := _m.Called(ctx, items)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Reorder")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []models.ReorderAnalysisInstructionItem) error); ok {
+		r0 = rf(ctx, items)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Update provides a mock function with given fields: ctx, input
+func (_m *AnalysisInstructionRepository) Update(ctx context.Context, input models.UpdateAnalysisInstructionRepositoryInput) (models.AnalysisInstruction, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 models.AnalysisInstruction
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateAnalysisInstructionRepositoryInput) (models.AnalysisInstruction, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateAnalysisInstructionRepositoryInput) models.AnalysisInstruction); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.AnalysisInstruction)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateAnalysisInstructionRepositoryInput) error); ok {
 		r1 = rf(ctx, input)
 	} else {
 		r1 = ret.Error(1)
