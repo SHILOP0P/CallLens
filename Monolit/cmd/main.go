@@ -11,6 +11,7 @@ import (
 
 	analysisAPI "calllens/monolit/internal/API/analysis"
 	instructionAPI "calllens/monolit/internal/API/analysis_instruction"
+	analyticsAPI "calllens/monolit/internal/API/analytics"
 	authAPI "calllens/monolit/internal/API/auth"
 	billingAPI "calllens/monolit/internal/API/billing"
 	"calllens/monolit/internal/API/call"
@@ -18,6 +19,7 @@ import (
 	departmentAPI "calllens/monolit/internal/API/department"
 	healthAPI "calllens/monolit/internal/API/health"
 	invitationAPI "calllens/monolit/internal/API/invitation"
+	monitoringAPI "calllens/monolit/internal/API/monitoring"
 	reportAPI "calllens/monolit/internal/API/report"
 	"calllens/monolit/internal/analyzer"
 	"calllens/monolit/internal/config"
@@ -38,12 +40,14 @@ import (
 	userRepo "calllens/monolit/internal/repository/user"
 	analysisService "calllens/monolit/internal/service/analysis"
 	analysisInstructionService "calllens/monolit/internal/service/analysis_instruction"
+	analyticsService "calllens/monolit/internal/service/analytics"
 	authService "calllens/monolit/internal/service/auth"
 	billingService "calllens/monolit/internal/service/billing"
 	callService "calllens/monolit/internal/service/call"
 	companyService "calllens/monolit/internal/service/company"
 	departmentService "calllens/monolit/internal/service/department"
 	invitationService "calllens/monolit/internal/service/invitation"
+	monitoringService "calllens/monolit/internal/service/monitoring"
 	processingService "calllens/monolit/internal/service/processing"
 	reportService "calllens/monolit/internal/service/report"
 	"calllens/monolit/internal/storage/audio"
@@ -212,6 +216,8 @@ func main() {
 	instructionSvc := analysisInstructionService.NewService(analysisInstructionRepository, companyRepository, departmentRepository, instructionStorage, appLogger)
 	billingSvc := billingService.NewService(billingRepository)
 	reportSvc := reportService.NewService(callRepository, analysisRepository, transcriptionRepository, reportRepository, reportsStorage)
+	analyticsSvc := analyticsService.NewService(callRepository)
+	monitoringSvc := monitoringService.NewService(processingJobRepository, companyRepository)
 	billingSvc.SetCompanyRepository(companyRepository)
 	callSvc.SetBillingLimiter(billingSvc)
 	companySvc.SetBillingLimiter(billingSvc)
@@ -229,8 +235,10 @@ func main() {
 	analysisHandler := analysisAPI.NewHandler(analysisSvc)
 	reportHandler := reportAPI.NewHandler(reportSvc)
 	billingHandler := billingAPI.NewHandler(billingSvc)
+	analyticsHandler := analyticsAPI.NewHandler(analyticsSvc)
+	monitoringHandler := monitoringAPI.NewHandler(monitoringSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, healthHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, analyticsHandler, monitoringHandler, healthHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

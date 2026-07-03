@@ -240,6 +240,8 @@ sequenceDiagram
 - Принять или отклонить приглашение.
 - Отменить pending-приглашение.
 - Получить структурированный обзор участников компании.
+- Получить агрегированный analytics overview по видимым звонкам.
+- Получить monitoring summary очереди обработки для admin/superadmin или manager своей компании.
 - Получить участников отдела.
 - Изменить роль участника компании.
 - Изменить статус участника компании.
@@ -406,6 +408,94 @@ Calls:
 Reports:
 
 `POST /api/v1/calls/{uuid}/reports` и `POST /api/v1/reports` с `scope=call` используют один и тот же генератор отчета по звонку. Поддерживаемые форматы: `pdf`, `docx`, `md`, `xlsx`. Для `scope=company`, `department`, `manager`, `period` API возвращает `501 not_implemented`, пока в backend нет реального агрегированного генератора.
+
+Analytics and monitoring:
+
+| Method | Path | Auth | Описание |
+| --- | --- | --- | --- |
+| GET | `/api/v1/analytics/overview` | Да | KPI summary по видимым текущему пользователю звонкам |
+| GET | `/api/v1/monitoring/processing` | Да | Summary очереди обработки для `admin`/`superadmin` или `company_manager` своей компании |
+
+`GET /api/v1/analytics/overview` принимает query-параметры:
+
+| Параметр | Значение |
+| --- | --- |
+| `from` | ISO date/datetime, нижняя граница `calls.created_at` |
+| `to` | ISO date/datetime, верхняя граница `calls.created_at`; дата `YYYY-MM-DD` считается до конца этого дня |
+| `scope` | `personal`, `company`, `department` |
+| `company_uuid` | UUID компании |
+| `department_uuid` | UUID отдела |
+
+Все analytics-фильтры применяются только поверх звонков, которые видны текущему пользователю по общей модели видимости. Backend считает `calls_total`, breakdown по статусам и `average_duration_seconds` SQL-агрегацией, без загрузки всех звонков в память.
+
+Ответ:
+
+```json
+{
+  "calls_total": 31,
+  "calls_new": 2,
+  "calls_processing": 1,
+  "calls_transcribed": 8,
+  "calls_analyzed": 20,
+  "calls_failed": 0,
+  "average_duration_seconds": 438,
+  "average_quality_score": null,
+  "quality_score_scale": 5,
+  "top_topics": [],
+  "risks_count": null,
+  "recommendations_count": null,
+  "conversion_to_deal": null,
+  "conversion_reason": "deal data is not tracked"
+}
+```
+
+`average_quality_score`, `top_topics`, `risks_count` и `recommendations_count` не вычисляются из произвольного `call_analyses.result_json`, потому что сейчас backend не хранит подтвержденную стабильную схему этих полей. `conversion_to_deal` всегда `null`, потому что сделки/CRM-сущности в backend не хранятся.
+
+`GET /api/v1/monitoring/processing` принимает query-параметры:
+
+| Параметр | Значение |
+| --- | --- |
+| `company_uuid` | optional UUID компании |
+| `from` | ISO date/datetime, нижняя граница `processing_jobs.created_at` |
+| `to` | ISO date/datetime, верхняя граница `processing_jobs.created_at`; дата `YYYY-MM-DD` считается до конца этого дня |
+
+Доступ:
+
+- `admin` и `superadmin` могут смотреть общий monitoring; optional `company_uuid` ограничивает выборку компанией.
+- `company_manager` может смотреть только свою компанию. Если `company_uuid` не передан, backend использует компанию, которой управляет текущий пользователь.
+- Другие пользователи получают `403 forbidden`.
+
+Ответ:
+
+```json
+{
+  "queue": {
+    "pending": 3,
+    "running": 1,
+    "done": 120,
+    "failed": 2,
+    "retry": 4
+  },
+  "average_processing_seconds": 52,
+  "last_failed_jobs": [
+    {
+      "job_uuid": "uuid",
+      "type": "analyze_call",
+      "entity_uuid": "call_uuid",
+      "attempts": 3,
+      "last_error": "message",
+      "updated_at": "2026-07-02T10:00:00Z"
+    }
+  ],
+  "services": {
+    "transcriber": "ok",
+    "analyzer": "ok",
+    "storage": "ok"
+  }
+}
+```
+
+`queue.retry` считается как `pending` jobs с `attempts > 0`. `average_processing_seconds` считается по завершенным (`done`) jobs как разница `updated_at - created_at`. `services` отражает наличие локально сконфигурированных backend-компонентов на уровне приложения; это не внешний health-check провайдеров.
 
 `POST /api/v1/reports`:
 

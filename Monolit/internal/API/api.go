@@ -20,6 +20,14 @@ type CallAPI interface {
 	DeleteCall(w http.ResponseWriter, r *http.Request)
 }
 
+type AnalyticsAPI interface {
+	GetOverview(w http.ResponseWriter, r *http.Request)
+}
+
+type MonitoringAPI interface {
+	GetProcessing(w http.ResponseWriter, r *http.Request)
+}
+
 type AuthAPI interface {
 	Register(w http.ResponseWriter, r *http.Request)
 	Login(w http.ResponseWriter, r *http.Request)

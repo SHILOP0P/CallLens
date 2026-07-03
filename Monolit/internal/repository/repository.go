@@ -28,6 +28,10 @@ type CallRepository interface {
 	TakeNextForProcessing(ctx context.Context) (models.Call, error)
 }
 
+type AnalyticsRepository interface {
+	GetAnalyticsOverview(ctx context.Context, input models.AnalyticsOverviewInput) (models.AnalyticsOverview, error)
+}
+
 type UserRepository interface {
 	//GET
 	GetUserByUUID(ctx context.Context, id uuid.UUID) (models.User, error)
@@ -112,6 +116,10 @@ type ProcessingJobRepository interface {
 	MarkDone(ctx context.Context, id uuid.UUID) (models.ProcessingJob, error)
 	MarkRetry(ctx context.Context, id uuid.UUID, lastError string, delay time.Duration) (models.ProcessingJob, error)
 	MarkFailed(ctx context.Context, id uuid.UUID, lastError string) (models.ProcessingJob, error)
+}
+
+type MonitoringRepository interface {
+	GetMonitoring(ctx context.Context, input models.ProcessingMonitoringInput) (models.ProcessingMonitoring, error)
 }
 
 type AnalysisInstructionRepository interface {

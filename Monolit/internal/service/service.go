@@ -27,6 +27,14 @@ type CallService interface {
 	DeleteCall(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 }
 
+type AnalyticsService interface {
+	GetOverview(ctx context.Context, input models.AnalyticsOverviewInput) (models.AnalyticsOverview, error)
+}
+
+type MonitoringService interface {
+	GetProcessing(ctx context.Context, input models.ProcessingMonitoringInput) (models.ProcessingMonitoring, error)
+}
+
 type AuthService interface {
 	Register(ctx context.Context, input models.CreateUserInput) (models.User, error)
 	Login(ctx context.Context, input models.LoginInput) (models.User, string, string, error)

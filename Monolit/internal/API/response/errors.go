@@ -49,6 +49,8 @@ const (
 	CodeFailedToUpdateCallTitle          = "failed_to_update_call_title"
 	CodeFailedToDeleteCall               = "failed_to_delete_call"
 	CodeFailedToListCalls                = "failed_to_list_calls"
+	CodeFailedToGetAnalyticsOverview     = "failed_to_get_analytics_overview"
+	CodeFailedToGetProcessingMonitoring  = "failed_to_get_processing_monitoring"
 	CodeFailedToProcessCall              = "failed_to_process_call"
 	CodeInvalidMultipartForm             = "invalid_multipart_form"
 	CodeCallTitleRequired                = "call_title_required"

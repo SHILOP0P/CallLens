@@ -23,6 +23,8 @@ func TestNewRouterRegistersPublicAndProtectedRoutes(t *testing.T) {
 		apiMocks.NewReportAPI(t),
 		apiMocks.NewBillingAPI(t),
 		apiMocks.NewInvitationAPI(t),
+		apiMocks.NewAnalyticsAPI(t),
+		apiMocks.NewMonitoringAPI(t),
 		nil,
 		"test-secret",
 		repositoryMocks.NewRefreshSessionRepository(t),
