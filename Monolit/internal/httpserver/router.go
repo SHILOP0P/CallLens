@@ -59,8 +59,10 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 			//BILLING
 			r.Get("/plans", billingAPI.ListPlans)
 			r.With(authGuard).Get("/subscription", billingAPI.GetPersonalSubscription)
+			r.With(authGuard).Get("/subscription/usage", billingAPI.GetPersonalSubscriptionUsage)
 			r.With(authGuard).Post("/subscription/activate", billingAPI.ActivatePersonalSubscription)
 			r.With(authGuard).Get("/companies/{uuid}/subscription", billingAPI.GetCompanySubscription)
+			r.With(authGuard).Get("/companies/{uuid}/subscription/usage", billingAPI.GetCompanySubscriptionUsage)
 			r.With(authGuard).Post("/companies/{uuid}/subscription/activate", billingAPI.ActivateCompanySubscription)
 			r.With(authGuard).Post("/companies/{uuid}/subscription/cancel", billingAPI.CancelCompanySubscription)
 

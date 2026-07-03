@@ -80,6 +80,22 @@ type UsageCounter struct {
 	UpdatedAt        time.Time
 }
 
+type SubscriptionUsage struct {
+	Subscription            Subscription
+	PeriodStart             time.Time
+	PeriodEnd               time.Time
+	UsedMinutes             int
+	LimitMinutes            int
+	RemainingMinutes        int
+	Percent                 float64
+	MembersLimit            *int
+	MembersUsed             *int
+	DepartmentsLimit        *int
+	DepartmentsUsed         *int
+	ActiveInstructionsLimit *int
+	ActiveInstructionsUsed  *int
+}
+
 type UpsertSubscriptionInput struct {
 	ID          uuid.UUID
 	PlanCode    PlanCode
@@ -109,4 +125,15 @@ type CancelCompanySubscriptionInput struct {
 type GetCompanySubscriptionInput struct {
 	CompanyUUID uuid.UUID
 	RequestUser uuid.UUID
+}
+
+type GetPersonalSubscriptionUsageInput struct {
+	UserUUID    uuid.UUID
+	PeriodStart *time.Time
+}
+
+type GetCompanySubscriptionUsageInput struct {
+	CompanyUUID uuid.UUID
+	RequestUser uuid.UUID
+	PeriodStart *time.Time
 }

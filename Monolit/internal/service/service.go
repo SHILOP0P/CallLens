@@ -78,6 +78,8 @@ type BillingService interface {
 	ListPlans(ctx context.Context) ([]models.Plan, error)
 	GetPersonalSubscription(ctx context.Context, userID uuid.UUID) (models.Subscription, error)
 	GetCompanySubscription(ctx context.Context, input models.GetCompanySubscriptionInput) (models.Subscription, error)
+	GetPersonalSubscriptionUsage(ctx context.Context, input models.GetPersonalSubscriptionUsageInput) (models.SubscriptionUsage, error)
+	GetCompanySubscriptionUsage(ctx context.Context, input models.GetCompanySubscriptionUsageInput) (models.SubscriptionUsage, error)
 	ActivatePersonalSubscription(ctx context.Context, input models.ActivatePersonalSubscriptionInput) (models.Subscription, error)
 	ActivateCompanySubscription(ctx context.Context, input models.ActivateCompanySubscriptionInput) (models.Subscription, error)
 	CancelCompanySubscription(ctx context.Context, input models.CancelCompanySubscriptionInput) (models.Subscription, error)

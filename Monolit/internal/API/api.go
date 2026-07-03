@@ -72,6 +72,8 @@ type BillingAPI interface {
 	ListPlans(w http.ResponseWriter, r *http.Request)
 	GetPersonalSubscription(w http.ResponseWriter, r *http.Request)
 	GetCompanySubscription(w http.ResponseWriter, r *http.Request)
+	GetPersonalSubscriptionUsage(w http.ResponseWriter, r *http.Request)
+	GetCompanySubscriptionUsage(w http.ResponseWriter, r *http.Request)
 	ActivatePersonalSubscription(w http.ResponseWriter, r *http.Request)
 	ActivateCompanySubscription(w http.ResponseWriter, r *http.Request)
 	CancelCompanySubscription(w http.ResponseWriter, r *http.Request)

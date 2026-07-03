@@ -64,6 +64,29 @@ func SubscriptionModelToAPI(subscription models.Subscription) (dto.SubscriptionR
 	}, nil
 }
 
+func SubscriptionUsageModelToAPI(usage models.SubscriptionUsage) (dto.SubscriptionUsageResponse, error) {
+	subscription, err := SubscriptionModelToAPI(usage.Subscription)
+	if err != nil {
+		return dto.SubscriptionUsageResponse{}, err
+	}
+
+	return dto.SubscriptionUsageResponse{
+		Subscription:            subscription,
+		PeriodStart:             formatBillingTime(usage.PeriodStart),
+		PeriodEnd:               formatBillingTime(usage.PeriodEnd),
+		UsedMinutes:             usage.UsedMinutes,
+		LimitMinutes:            usage.LimitMinutes,
+		RemainingMinutes:        usage.RemainingMinutes,
+		Percent:                 usage.Percent,
+		MembersLimit:            usage.MembersLimit,
+		MembersUsed:             usage.MembersUsed,
+		DepartmentsLimit:        usage.DepartmentsLimit,
+		DepartmentsUsed:         usage.DepartmentsUsed,
+		ActiveInstructionsLimit: usage.ActiveInstructionsLimit,
+		ActiveInstructionsUsed:  usage.ActiveInstructionsUsed,
+	}, nil
+}
+
 func formatBillingTime(value time.Time) string {
 	return value.UTC().Format(time.RFC3339Nano)
 }

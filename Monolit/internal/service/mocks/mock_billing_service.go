@@ -252,6 +252,63 @@ func (_c *BillingService_GetCompanySubscription_Call) RunAndReturn(run func(cont
 	return _c
 }
 
+// GetCompanySubscriptionUsage provides a mock function with given fields: ctx, input
+func (_m *BillingService) GetCompanySubscriptionUsage(ctx context.Context, input models.GetCompanySubscriptionUsageInput) (models.SubscriptionUsage, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCompanySubscriptionUsage")
+	}
+
+	var r0 models.SubscriptionUsage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.GetCompanySubscriptionUsageInput) (models.SubscriptionUsage, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.GetCompanySubscriptionUsageInput) models.SubscriptionUsage); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.SubscriptionUsage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.GetCompanySubscriptionUsageInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// BillingService_GetCompanySubscriptionUsage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCompanySubscriptionUsage'
+type BillingService_GetCompanySubscriptionUsage_Call struct {
+	*mock.Call
+}
+
+// GetCompanySubscriptionUsage is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.GetCompanySubscriptionUsageInput
+func (_e *BillingService_Expecter) GetCompanySubscriptionUsage(ctx interface{}, input interface{}) *BillingService_GetCompanySubscriptionUsage_Call {
+	return &BillingService_GetCompanySubscriptionUsage_Call{Call: _e.mock.On("GetCompanySubscriptionUsage", ctx, input)}
+}
+
+func (_c *BillingService_GetCompanySubscriptionUsage_Call) Run(run func(ctx context.Context, input models.GetCompanySubscriptionUsageInput)) *BillingService_GetCompanySubscriptionUsage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.GetCompanySubscriptionUsageInput))
+	})
+	return _c
+}
+
+func (_c *BillingService_GetCompanySubscriptionUsage_Call) Return(_a0 models.SubscriptionUsage, _a1 error) *BillingService_GetCompanySubscriptionUsage_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *BillingService_GetCompanySubscriptionUsage_Call) RunAndReturn(run func(context.Context, models.GetCompanySubscriptionUsageInput) (models.SubscriptionUsage, error)) *BillingService_GetCompanySubscriptionUsage_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetPersonalSubscription provides a mock function with given fields: ctx, userID
 func (_m *BillingService) GetPersonalSubscription(ctx context.Context, userID uuid.UUID) (models.Subscription, error) {
 	ret := _m.Called(ctx, userID)
@@ -305,6 +362,63 @@ func (_c *BillingService_GetPersonalSubscription_Call) Return(_a0 models.Subscri
 }
 
 func (_c *BillingService_GetPersonalSubscription_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.Subscription, error)) *BillingService_GetPersonalSubscription_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetPersonalSubscriptionUsage provides a mock function with given fields: ctx, input
+func (_m *BillingService) GetPersonalSubscriptionUsage(ctx context.Context, input models.GetPersonalSubscriptionUsageInput) (models.SubscriptionUsage, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPersonalSubscriptionUsage")
+	}
+
+	var r0 models.SubscriptionUsage
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.GetPersonalSubscriptionUsageInput) (models.SubscriptionUsage, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.GetPersonalSubscriptionUsageInput) models.SubscriptionUsage); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.SubscriptionUsage)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.GetPersonalSubscriptionUsageInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// BillingService_GetPersonalSubscriptionUsage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPersonalSubscriptionUsage'
+type BillingService_GetPersonalSubscriptionUsage_Call struct {
+	*mock.Call
+}
+
+// GetPersonalSubscriptionUsage is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.GetPersonalSubscriptionUsageInput
+func (_e *BillingService_Expecter) GetPersonalSubscriptionUsage(ctx interface{}, input interface{}) *BillingService_GetPersonalSubscriptionUsage_Call {
+	return &BillingService_GetPersonalSubscriptionUsage_Call{Call: _e.mock.On("GetPersonalSubscriptionUsage", ctx, input)}
+}
+
+func (_c *BillingService_GetPersonalSubscriptionUsage_Call) Run(run func(ctx context.Context, input models.GetPersonalSubscriptionUsageInput)) *BillingService_GetPersonalSubscriptionUsage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.GetPersonalSubscriptionUsageInput))
+	})
+	return _c
+}
+
+func (_c *BillingService_GetPersonalSubscriptionUsage_Call) Return(_a0 models.SubscriptionUsage, _a1 error) *BillingService_GetPersonalSubscriptionUsage_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *BillingService_GetPersonalSubscriptionUsage_Call) RunAndReturn(run func(context.Context, models.GetPersonalSubscriptionUsageInput) (models.SubscriptionUsage, error)) *BillingService_GetPersonalSubscriptionUsage_Call {
 	_c.Call.Return(run)
 	return _c
 }

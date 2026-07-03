@@ -37,3 +37,19 @@ type SubscriptionResponse struct {
 	CreatedAt   string       `json:"created_at"`
 	UpdatedAt   string       `json:"updated_at"`
 }
+
+type SubscriptionUsageResponse struct {
+	Subscription            SubscriptionResponse `json:"subscription"`
+	PeriodStart             string               `json:"period_start"`
+	PeriodEnd               string               `json:"period_end"`
+	UsedMinutes             int                  `json:"used_minutes"`
+	LimitMinutes            int                  `json:"limit_minutes"`
+	RemainingMinutes        int                  `json:"remaining_minutes"`
+	Percent                 float64              `json:"percent"`
+	MembersLimit            *int                 `json:"members_limit,omitempty"`
+	MembersUsed             *int                 `json:"members_used,omitempty"`
+	DepartmentsLimit        *int                 `json:"departments_limit,omitempty"`
+	DepartmentsUsed         *int                 `json:"departments_used,omitempty"`
+	ActiveInstructionsLimit *int                 `json:"active_instructions_limit,omitempty"`
+	ActiveInstructionsUsed  *int                 `json:"active_instructions_used,omitempty"`
+}

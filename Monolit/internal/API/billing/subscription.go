@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"time"
 
 	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/API/response"
@@ -53,6 +54,60 @@ func (h *Handler) GetCompanySubscription(w http.ResponseWriter, r *http.Request)
 	}
 
 	writeSubscriptionResponse(w, subscription)
+}
+
+func (h *Handler) GetPersonalSubscriptionUsage(w http.ResponseWriter, r *http.Request) {
+	requestUserID, ok := userIDFromRequest(r)
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+
+	periodStart, ok := periodFromRequest(w, r)
+	if !ok {
+		return
+	}
+
+	usage, err := h.service.GetPersonalSubscriptionUsage(r.Context(), models.GetPersonalSubscriptionUsageInput{
+		UserUUID:    requestUserID,
+		PeriodStart: periodStart,
+	})
+	if err != nil {
+		writeBillingError(w, err, response.CodeSubscriptionNotFound, "subscription not found")
+		return
+	}
+
+	writeSubscriptionUsageResponse(w, usage)
+}
+
+func (h *Handler) GetCompanySubscriptionUsage(w http.ResponseWriter, r *http.Request) {
+	requestUserID, ok := userIDFromRequest(r)
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+
+	companyID, ok := companyIDFromRequest(w, r)
+	if !ok {
+		return
+	}
+
+	periodStart, ok := periodFromRequest(w, r)
+	if !ok {
+		return
+	}
+
+	usage, err := h.service.GetCompanySubscriptionUsage(r.Context(), models.GetCompanySubscriptionUsageInput{
+		CompanyUUID: companyID,
+		RequestUser: requestUserID,
+		PeriodStart: periodStart,
+	})
+	if err != nil {
+		writeBillingError(w, err, response.CodeSubscriptionNotFound, "subscription not found")
+		return
+	}
+
+	writeSubscriptionUsageResponse(w, usage)
 }
 
 func (h *Handler) ActivateCompanySubscription(w http.ResponseWriter, r *http.Request) {
@@ -159,8 +214,36 @@ func companyIDFromRequest(w http.ResponseWriter, r *http.Request) (uuid.UUID, bo
 	return companyID, true
 }
 
+func periodFromRequest(w http.ResponseWriter, r *http.Request) (*time.Time, bool) {
+	period := r.URL.Query().Get("period")
+	if period == "" {
+		return nil, true
+	}
+
+	parsed, err := time.Parse("2006-01", period)
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidBillingInput, "invalid period")
+		return nil, false
+	}
+
+	parsed = time.Date(parsed.Year(), parsed.Month(), 1, 0, 0, 0, 0, time.UTC)
+	return &parsed, true
+}
+
 func writeSubscriptionResponse(w http.ResponseWriter, subscription models.Subscription) {
 	resp, err := converter.SubscriptionModelToAPI(subscription)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertSubscription, "failed to convert subscription")
+		return
+	}
+
+	if err := response.WriteJSON(w, http.StatusOK, resp); err != nil {
+		return
+	}
+}
+
+func writeSubscriptionUsageResponse(w http.ResponseWriter, usage models.SubscriptionUsage) {
+	resp, err := converter.SubscriptionUsageModelToAPI(usage)
 	if err != nil {
 		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertSubscription, "failed to convert subscription")
 		return

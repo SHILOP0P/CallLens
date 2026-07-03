@@ -157,6 +157,40 @@ func (_c *BillingAPI_GetCompanySubscription_Call) RunAndReturn(run func(http.Res
 	return _c
 }
 
+// GetCompanySubscriptionUsage provides a mock function with given fields: w, r
+func (_m *BillingAPI) GetCompanySubscriptionUsage(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// BillingAPI_GetCompanySubscriptionUsage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCompanySubscriptionUsage'
+type BillingAPI_GetCompanySubscriptionUsage_Call struct {
+	*mock.Call
+}
+
+// GetCompanySubscriptionUsage is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *BillingAPI_Expecter) GetCompanySubscriptionUsage(w interface{}, r interface{}) *BillingAPI_GetCompanySubscriptionUsage_Call {
+	return &BillingAPI_GetCompanySubscriptionUsage_Call{Call: _e.mock.On("GetCompanySubscriptionUsage", w, r)}
+}
+
+func (_c *BillingAPI_GetCompanySubscriptionUsage_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *BillingAPI_GetCompanySubscriptionUsage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *BillingAPI_GetCompanySubscriptionUsage_Call) Return() *BillingAPI_GetCompanySubscriptionUsage_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *BillingAPI_GetCompanySubscriptionUsage_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *BillingAPI_GetCompanySubscriptionUsage_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetPersonalSubscription provides a mock function with given fields: w, r
 func (_m *BillingAPI) GetPersonalSubscription(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -187,6 +221,40 @@ func (_c *BillingAPI_GetPersonalSubscription_Call) Return() *BillingAPI_GetPerso
 }
 
 func (_c *BillingAPI_GetPersonalSubscription_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *BillingAPI_GetPersonalSubscription_Call {
+	_c.Run(run)
+	return _c
+}
+
+// GetPersonalSubscriptionUsage provides a mock function with given fields: w, r
+func (_m *BillingAPI) GetPersonalSubscriptionUsage(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// BillingAPI_GetPersonalSubscriptionUsage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPersonalSubscriptionUsage'
+type BillingAPI_GetPersonalSubscriptionUsage_Call struct {
+	*mock.Call
+}
+
+// GetPersonalSubscriptionUsage is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *BillingAPI_Expecter) GetPersonalSubscriptionUsage(w interface{}, r interface{}) *BillingAPI_GetPersonalSubscriptionUsage_Call {
+	return &BillingAPI_GetPersonalSubscriptionUsage_Call{Call: _e.mock.On("GetPersonalSubscriptionUsage", w, r)}
+}
+
+func (_c *BillingAPI_GetPersonalSubscriptionUsage_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *BillingAPI_GetPersonalSubscriptionUsage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *BillingAPI_GetPersonalSubscriptionUsage_Call) Return() *BillingAPI_GetPersonalSubscriptionUsage_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *BillingAPI_GetPersonalSubscriptionUsage_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *BillingAPI_GetPersonalSubscriptionUsage_Call {
 	_c.Run(run)
 	return _c
 }

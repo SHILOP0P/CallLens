@@ -298,6 +298,112 @@ func TestActivateCompanySubscriptionRejectsPersonalPlan(t *testing.T) {
 	require.ErrorIs(t, err, models.ErrInvalidBillingInput)
 }
 
+func TestGetPersonalSubscriptionUsageCalculatesPeriodAndRemaining(t *testing.T) {
+	userID := uuid.New()
+	subscriptionID := uuid.New()
+	repository := &fakeRepository{
+		personalSubscription: models.Subscription{
+			ID: subscriptionID,
+			Plan: models.Plan{
+				MonthlyMinutesLimit: 7200,
+			},
+		},
+		usedMinutes: 86,
+	}
+	service := NewService(repository)
+
+	period := time.Date(2026, 7, 19, 12, 0, 0, 0, time.FixedZone("MSK", 3*60*60))
+	usage, err := service.GetPersonalSubscriptionUsage(context.Background(), models.GetPersonalSubscriptionUsageInput{
+		UserUUID:    userID,
+		PeriodStart: &period,
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, subscriptionID, repository.countUsedSubscriptionID)
+	require.Equal(t, time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC), repository.countUsedPeriodStart)
+	require.Equal(t, time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC), usage.PeriodStart)
+	require.Equal(t, time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC), usage.PeriodEnd)
+	require.Equal(t, 86, usage.UsedMinutes)
+	require.Equal(t, 7200, usage.LimitMinutes)
+	require.Equal(t, 7114, usage.RemainingMinutes)
+	require.Equal(t, 1.19, usage.Percent)
+}
+
+func TestGetPersonalSubscriptionUsageUsesCurrentMonthByDefault(t *testing.T) {
+	repository := &fakeRepository{
+		personalSubscription: models.Subscription{
+			ID: uuid.New(),
+			Plan: models.Plan{
+				MonthlyMinutesLimit: 3,
+			},
+		},
+		usedMinutes: 4,
+	}
+	service := NewService(repository)
+	service.now = func() time.Time {
+		return time.Date(2026, 8, 25, 15, 0, 0, 0, time.UTC)
+	}
+
+	usage, err := service.GetPersonalSubscriptionUsage(context.Background(), models.GetPersonalSubscriptionUsageInput{
+		UserUUID: uuid.New(),
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC), usage.PeriodStart)
+	require.Equal(t, 0, usage.RemainingMinutes)
+	require.Equal(t, 133.33, usage.Percent)
+}
+
+func TestGetCompanySubscriptionUsageIncludesCounters(t *testing.T) {
+	companyID := uuid.New()
+	managerID := uuid.New()
+	membersLimit := 15
+	departmentsLimit := 5
+	instructionsLimit := 10
+	repository := &fakeRepository{
+		businessSubscription: models.Subscription{
+			ID: uuid.New(),
+			Plan: models.Plan{
+				MonthlyMinutesLimit:            1000,
+				MembersPerCompanyLimit:         &membersLimit,
+				DepartmentsPerCompanyLimit:     &departmentsLimit,
+				InstructionsPerDepartmentLimit: &instructionsLimit,
+			},
+		},
+		membersCount:      8,
+		departmentsCount:  2,
+		instructionsCount: 4,
+	}
+	service := NewService(repository)
+	service.SetCompanyRepository(&fakeCompanyRepository{
+		member: models.CompanyMember{
+			CompanyUUID: companyID,
+			UserUUID:    managerID,
+			Role:        models.CompanyMemberRoleManager,
+			Status:      models.MembershipStatusActive,
+		},
+	})
+
+	usage, err := service.GetCompanySubscriptionUsage(context.Background(), models.GetCompanySubscriptionUsageInput{
+		CompanyUUID: companyID,
+		RequestUser: managerID,
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, usage.MembersLimit)
+	require.NotNil(t, usage.MembersUsed)
+	require.NotNil(t, usage.DepartmentsLimit)
+	require.NotNil(t, usage.DepartmentsUsed)
+	require.NotNil(t, usage.ActiveInstructionsLimit)
+	require.NotNil(t, usage.ActiveInstructionsUsed)
+	require.Equal(t, 15, *usage.MembersLimit)
+	require.Equal(t, 8, *usage.MembersUsed)
+	require.Equal(t, 5, *usage.DepartmentsLimit)
+	require.Equal(t, 2, *usage.DepartmentsUsed)
+	require.Equal(t, 10, *usage.ActiveInstructionsLimit)
+	require.Equal(t, 4, *usage.ActiveInstructionsUsed)
+}
+
 type fakeRepository struct {
 	personalSubscription         models.Subscription
 	businessSubscription         models.Subscription
@@ -322,6 +428,8 @@ type fakeRepository struct {
 	cancelCompanyID              uuid.UUID
 	cancelSubscription           models.Subscription
 	cancelErr                    error
+	countUsedSubscriptionID      uuid.UUID
+	countUsedPeriodStart         time.Time
 }
 
 func (f *fakeRepository) GetPlanByCode(_ context.Context, code models.PlanCode) (models.Plan, error) {
@@ -400,7 +508,9 @@ func (f *fakeRepository) CancelCompanySubscription(_ context.Context, companyID 
 	return f.cancelSubscription, nil
 }
 
-func (f *fakeRepository) CountUsedMinutes(context.Context, uuid.UUID, time.Time) (int, error) {
+func (f *fakeRepository) CountUsedMinutes(_ context.Context, subscriptionID uuid.UUID, periodStart time.Time) (int, error) {
+	f.countUsedSubscriptionID = subscriptionID
+	f.countUsedPeriodStart = periodStart
 	return f.usedMinutes, nil
 }
 
