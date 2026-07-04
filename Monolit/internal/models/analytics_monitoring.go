@@ -33,8 +33,30 @@ type AnalyticsOverview struct {
 	TopTopics              []AnalyticsTopicCount
 	RisksCount             *int
 	RecommendationsCount   *int
-	ConversionToDeal       *float64
-	ConversionReason       string
+	Charts                 AnalyticsCharts
+}
+
+type AnalyticsCharts struct {
+	CallsByDay    []AnalyticsCountPoint
+	AnalyzedByDay []AnalyticsCountPoint
+	QualityByDay  []AnalyticsQualityPoint
+	DurationByDay []AnalyticsDurationPoint
+	RisksByDay    []AnalyticsCountPoint
+}
+
+type AnalyticsCountPoint struct {
+	Date  string
+	Count int
+}
+
+type AnalyticsQualityPoint struct {
+	Date                string
+	AverageQualityScore float64
+}
+
+type AnalyticsDurationPoint struct {
+	Date                   string
+	AverageDurationSeconds int
 }
 
 type ProcessingMonitoringInput struct {

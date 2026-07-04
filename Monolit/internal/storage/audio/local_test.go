@@ -41,6 +41,12 @@ func TestLocalStorageLifecycle(t *testing.T) {
 	if string(data) != "audio" {
 		t.Fatalf("content = %q", data)
 	}
+	windowsStylePath := strings.ReplaceAll(saved.Path, string(filepath.Separator), "\\")
+	content, err = storage.Open(context.Background(), windowsStylePath)
+	if err != nil {
+		t.Fatalf("Open windows-style path: %v", err)
+	}
+	_ = content.Close()
 
 	seekable, err := storage.OpenReadSeeker(context.Background(), saved.Path)
 	if err != nil {

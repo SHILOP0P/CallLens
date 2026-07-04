@@ -56,6 +56,45 @@ func TestAuthAcceptsAccessTokenCookie(t *testing.T) {
 	}
 }
 
+func TestAuthFallsBackToCookieWhenAuthorizationHeaderIsMalformed(t *testing.T) {
+	userID := uuid.New()
+	sessionID := uuid.New()
+	secret := "test-secret"
+
+	rawToken, err := token.GenerateAccessTokenWithSession(userID, sessionID, string(models.UserRoleUser), secret, time.Minute)
+	if err != nil {
+		t.Fatalf("generate access token: %v", err)
+	}
+
+	repo := &authRefreshSessionRepository{
+		session: models.RefreshSession{
+			ID:        sessionID,
+			UserID:    userID,
+			ExpiresAt: time.Now().UTC().Add(time.Hour),
+		},
+	}
+
+	handler := Auth(secret, repo)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotUserID, ok := UserIDFromContext(r.Context())
+		if !ok || gotUserID != userID {
+			t.Fatalf("user id in context = %v, %v", gotUserID, ok)
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me/sessions", nil)
+	req.Header.Set("Authorization", "Bearer ")
+	req.AddCookie(&http.Cookie{Name: accessTokenCookieName, Value: rawToken, Path: "/"})
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want %d; body=%s", rec.Code, http.StatusNoContent, rec.Body.String())
+	}
+}
+
 type authRefreshSessionRepository struct {
 	session models.RefreshSession
 	err     error

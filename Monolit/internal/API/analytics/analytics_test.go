@@ -33,7 +33,9 @@ func (s fakeAnalyticsService) GetOverview(ctx context.Context, input models.Anal
 		AverageDurationSeconds: &avgDuration,
 		QualityScoreScale:      5,
 		TopTopics:              []models.AnalyticsTopicCount{},
-		ConversionReason:       "deal data is not tracked",
+		Charts: models.AnalyticsCharts{
+			CallsByDay: []models.AnalyticsCountPoint{{Date: "2026-07-01", Count: 4}},
+		},
 	}, nil
 }
 
@@ -73,8 +75,8 @@ func TestGetOverviewParsesFiltersAndReturnsNoUnsupportedMetrics(t *testing.T) {
 	require.Empty(t, resp.TopTopics)
 	require.Nil(t, resp.RisksCount)
 	require.Nil(t, resp.RecommendationsCount)
-	require.Nil(t, resp.ConversionToDeal)
-	require.Equal(t, "deal data is not tracked", resp.ConversionReason)
+	require.Len(t, resp.Charts.CallsByDay, 1)
+	require.Empty(t, resp.Charts.AnalyzedByDay)
 }
 
 func TestGetOverviewRejectsInvalidScope(t *testing.T) {

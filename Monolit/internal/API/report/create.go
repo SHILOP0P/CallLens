@@ -106,7 +106,7 @@ func writeReportError(w http.ResponseWriter, err error, fallbackCode string) {
 		return
 	}
 	if errors.Is(err, models.ErrReportFileNotFound) {
-		response.WriteError(w, http.StatusNotFound, response.CodeReportFileNotFound, "report file not found")
+		response.WriteError(w, http.StatusGone, response.CodeReportFileNotFound, "report file not found")
 		return
 	}
 

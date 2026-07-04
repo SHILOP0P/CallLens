@@ -1,7 +1,5 @@
 package dto
 
-import "time"
-
 type AnalyticsOverviewResponse struct {
 	CallsTotal             int                  `json:"calls_total"`
 	CallsNew               int                  `json:"calls_new"`
@@ -15,8 +13,7 @@ type AnalyticsOverviewResponse struct {
 	TopTopics              []AnalyticsTopicItem `json:"top_topics"`
 	RisksCount             *int                 `json:"risks_count"`
 	RecommendationsCount   *int                 `json:"recommendations_count"`
-	ConversionToDeal       *float64             `json:"conversion_to_deal"`
-	ConversionReason       string               `json:"conversion_reason"`
+	Charts                 AnalyticsCharts      `json:"charts"`
 }
 
 type AnalyticsTopicItem struct {
@@ -25,10 +22,8 @@ type AnalyticsTopicItem struct {
 }
 
 type ProcessingMonitoringResponse struct {
-	Queue                    ProcessingQueueResponse       `json:"queue"`
-	AverageProcessingSeconds *int                          `json:"average_processing_seconds"`
-	LastFailedJobs           []FailedProcessingJobResponse `json:"last_failed_jobs"`
-	Services                 ProcessingServicesResponse    `json:"services"`
+	Queue                    ProcessingQueueResponse `json:"queue"`
+	AverageProcessingSeconds *int                    `json:"average_processing_seconds"`
 }
 
 type ProcessingQueueResponse struct {
@@ -39,17 +34,25 @@ type ProcessingQueueResponse struct {
 	Retry   int `json:"retry"`
 }
 
-type FailedProcessingJobResponse struct {
-	JobUUID    string    `json:"job_uuid"`
-	Type       string    `json:"type"`
-	EntityUUID string    `json:"entity_uuid"`
-	Attempts   int       `json:"attempts"`
-	LastError  *string   `json:"last_error"`
-	UpdatedAt  time.Time `json:"updated_at"`
+type AnalyticsCharts struct {
+	CallsByDay    []AnalyticsCountPoint    `json:"calls_by_day"`
+	AnalyzedByDay []AnalyticsCountPoint    `json:"analyzed_by_day"`
+	QualityByDay  []AnalyticsQualityPoint  `json:"quality_by_day"`
+	DurationByDay []AnalyticsDurationPoint `json:"duration_by_day"`
+	RisksByDay    []AnalyticsCountPoint    `json:"risks_by_day"`
 }
 
-type ProcessingServicesResponse struct {
-	Transcriber string `json:"transcriber"`
-	Analyzer    string `json:"analyzer"`
-	Storage     string `json:"storage"`
+type AnalyticsCountPoint struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
+type AnalyticsQualityPoint struct {
+	Date                string  `json:"date"`
+	AverageQualityScore float64 `json:"average_quality_score"`
+}
+
+type AnalyticsDurationPoint struct {
+	Date                   string `json:"date"`
+	AverageDurationSeconds int    `json:"average_duration_seconds"`
 }

@@ -314,34 +314,6 @@ func (_c *ProcessingJobRepository_MarkRetry_Call) RunAndReturn(run func(context.
 	return _c
 }
 
-// GetMonitoring provides a mock function with given fields: ctx, input
-func (_m *ProcessingJobRepository) GetMonitoring(ctx context.Context, input models.ProcessingMonitoringInput) (models.ProcessingMonitoring, error) {
-	ret := _m.Called(ctx, input)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetMonitoring")
-	}
-
-	var r0 models.ProcessingMonitoring
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.ProcessingMonitoringInput) (models.ProcessingMonitoring, error)); ok {
-		return rf(ctx, input)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, models.ProcessingMonitoringInput) models.ProcessingMonitoring); ok {
-		r0 = rf(ctx, input)
-	} else {
-		r0 = ret.Get(0).(models.ProcessingMonitoring)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, models.ProcessingMonitoringInput) error); ok {
-		r1 = rf(ctx, input)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // TakeNext provides a mock function with given fields: ctx, workerID, staleAfter
 func (_m *ProcessingJobRepository) TakeNext(ctx context.Context, workerID string, staleAfter time.Duration) (models.ProcessingJob, error) {
 	ret := _m.Called(ctx, workerID, staleAfter)

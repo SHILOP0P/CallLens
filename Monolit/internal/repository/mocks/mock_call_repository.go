@@ -359,34 +359,6 @@ func (_c *CallRepository_GetFilterOptions_Call) RunAndReturn(run func(context.Co
 	return _c
 }
 
-// GetAnalyticsOverview provides a mock function with given fields: ctx, input
-func (_m *CallRepository) GetAnalyticsOverview(ctx context.Context, input models.AnalyticsOverviewInput) (models.AnalyticsOverview, error) {
-	ret := _m.Called(ctx, input)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetAnalyticsOverview")
-	}
-
-	var r0 models.AnalyticsOverview
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.AnalyticsOverviewInput) (models.AnalyticsOverview, error)); ok {
-		return rf(ctx, input)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, models.AnalyticsOverviewInput) models.AnalyticsOverview); ok {
-		r0 = rf(ctx, input)
-	} else {
-		r0 = ret.Get(0).(models.AnalyticsOverview)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, models.AnalyticsOverviewInput) error); ok {
-		r1 = rf(ctx, input)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // List provides a mock function with given fields: ctx, userID
 func (_m *CallRepository) List(ctx context.Context, userID uuid.UUID) ([]models.Call, error) {
 	ret := _m.Called(ctx, userID)

@@ -130,7 +130,8 @@ func instructionRelativeDir(input models.SaveInstructionInput) (string, error) {
 }
 
 func safeLocalPath(baseDir string, path string) (string, error) {
-	cleanPath := filepath.Clean(path)
+	normalizedPath := filepath.FromSlash(strings.ReplaceAll(path, "\\", "/"))
+	cleanPath := filepath.Clean(normalizedPath)
 
 	if cleanPath == "." || cleanPath == ".." || filepath.IsAbs(cleanPath) {
 		return "", models.ErrInvalidInstructionPath

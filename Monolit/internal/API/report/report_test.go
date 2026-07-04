@@ -182,7 +182,7 @@ func TestReportHandlersValidationAndErrors(t *testing.T) {
 		{models.ErrForbidden, http.StatusForbidden},
 		{models.ErrReportNotReady, http.StatusConflict},
 		{models.ErrReportExpired, http.StatusGone},
-		{models.ErrReportFileNotFound, http.StatusNotFound},
+		{models.ErrReportFileNotFound, http.StatusGone},
 		{errors.New("db"), http.StatusInternalServerError},
 	}
 	for _, tt := range errorsToMap {

@@ -99,9 +99,51 @@ func overviewToAPI(overview models.AnalyticsOverview) dto.AnalyticsOverviewRespo
 		TopTopics:              topics,
 		RisksCount:             overview.RisksCount,
 		RecommendationsCount:   overview.RecommendationsCount,
-		ConversionToDeal:       overview.ConversionToDeal,
-		ConversionReason:       overview.ConversionReason,
+		Charts:                 analyticsChartsToAPI(overview.Charts),
 	}
+}
+
+func analyticsChartsToAPI(charts models.AnalyticsCharts) dto.AnalyticsCharts {
+	return dto.AnalyticsCharts{
+		CallsByDay:    countPointsToAPI(charts.CallsByDay),
+		AnalyzedByDay: countPointsToAPI(charts.AnalyzedByDay),
+		QualityByDay:  qualityPointsToAPI(charts.QualityByDay),
+		DurationByDay: durationPointsToAPI(charts.DurationByDay),
+		RisksByDay:    countPointsToAPI(charts.RisksByDay),
+	}
+}
+
+func countPointsToAPI(points []models.AnalyticsCountPoint) []dto.AnalyticsCountPoint {
+	resp := make([]dto.AnalyticsCountPoint, len(points))
+	for i, point := range points {
+		resp[i] = dto.AnalyticsCountPoint{Date: point.Date, Count: point.Count}
+	}
+	if resp == nil {
+		return []dto.AnalyticsCountPoint{}
+	}
+	return resp
+}
+
+func qualityPointsToAPI(points []models.AnalyticsQualityPoint) []dto.AnalyticsQualityPoint {
+	resp := make([]dto.AnalyticsQualityPoint, len(points))
+	for i, point := range points {
+		resp[i] = dto.AnalyticsQualityPoint{Date: point.Date, AverageQualityScore: point.AverageQualityScore}
+	}
+	if resp == nil {
+		return []dto.AnalyticsQualityPoint{}
+	}
+	return resp
+}
+
+func durationPointsToAPI(points []models.AnalyticsDurationPoint) []dto.AnalyticsDurationPoint {
+	resp := make([]dto.AnalyticsDurationPoint, len(points))
+	for i, point := range points {
+		resp[i] = dto.AnalyticsDurationPoint{Date: point.Date, AverageDurationSeconds: point.AverageDurationSeconds}
+	}
+	if resp == nil {
+		return []dto.AnalyticsDurationPoint{}
+	}
+	return resp
 }
 
 func parseOptionalUUID(value string) (uuid.NullUUID, error) {

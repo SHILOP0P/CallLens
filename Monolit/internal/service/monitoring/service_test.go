@@ -16,7 +16,7 @@ import (
 func TestGetProcessingAllowsAdminWithoutCompanyFilter(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()
-	monitoringRepository := repositoryMocks.NewProcessingJobRepository(t)
+	monitoringRepository := repositoryMocks.NewMonitoringRepository(t)
 	service := NewService(monitoringRepository, nil)
 
 	monitoringRepository.On("GetMonitoring", mock.Anything, mock.MatchedBy(func(input models.ProcessingMonitoringInput) bool {
@@ -35,7 +35,7 @@ func TestGetProcessingAllowsOnlyOwnManagedCompany(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()
 	companyID := uuid.New()
-	monitoringRepository := repositoryMocks.NewProcessingJobRepository(t)
+	monitoringRepository := repositoryMocks.NewMonitoringRepository(t)
 	companyRepository := repositoryMocks.NewCompanyRepository(t)
 	service := NewService(monitoringRepository, companyRepository)
 
@@ -62,7 +62,7 @@ func TestGetProcessingDeniesForeignCompany(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()
 	companyID := uuid.New()
-	monitoringRepository := repositoryMocks.NewProcessingJobRepository(t)
+	monitoringRepository := repositoryMocks.NewMonitoringRepository(t)
 	companyRepository := repositoryMocks.NewCompanyRepository(t)
 	service := NewService(monitoringRepository, companyRepository)
 

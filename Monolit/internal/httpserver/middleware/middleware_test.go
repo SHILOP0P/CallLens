@@ -46,18 +46,19 @@ func TestContextValues(t *testing.T) {
 
 func TestAccessTokenFromRequest(t *testing.T) {
 	tests := []struct {
-		name   string
-		header string
-		cookie string
-		want   string
-		ok     bool
+		name          string
+		header        string
+		cookie        string
+		want          []string
+		wantMalformed bool
 	}{
-		{name: "bearer", header: "Bearer token", want: "token", ok: true},
-		{name: "empty bearer", header: "Bearer  ", ok: false},
-		{name: "invalid scheme", header: "Basic token", ok: false},
-		{name: "cookie", cookie: "cookie-token", want: "cookie-token", ok: true},
-		{name: "empty cookie", cookie: " ", ok: false},
-		{name: "missing", ok: false},
+		{name: "bearer", header: "Bearer token", want: []string{"token"}},
+		{name: "empty bearer", header: "Bearer  ", wantMalformed: true},
+		{name: "invalid scheme", header: "Basic token", wantMalformed: true},
+		{name: "cookie", cookie: "cookie-token", want: []string{"cookie-token"}},
+		{name: "malformed header with cookie", header: "Basic token", cookie: "cookie-token", want: []string{"cookie-token"}, wantMalformed: true},
+		{name: "empty cookie", cookie: " ", want: []string{}},
+		{name: "missing", want: []string{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -68,9 +69,14 @@ func TestAccessTokenFromRequest(t *testing.T) {
 			if tt.cookie != "" {
 				req.AddCookie(&http.Cookie{Name: accessTokenCookieName, Value: tt.cookie})
 			}
-			got, ok := accessTokenFromRequest(req)
-			if got != tt.want || ok != tt.ok {
-				t.Fatalf("accessTokenFromRequest = %q, %v; want %q, %v", got, ok, tt.want, tt.ok)
+			got, malformed := accessTokensFromRequest(req)
+			if len(got) != len(tt.want) || malformed != tt.wantMalformed {
+				t.Fatalf("accessTokensFromRequest = %v, %v; want %v, %v", got, malformed, tt.want, tt.wantMalformed)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Fatalf("accessTokensFromRequest[%d] = %q; want %q", i, got[i], tt.want[i])
+				}
 			}
 		})
 	}

@@ -108,7 +108,8 @@ func (l *LocalStorage) safePath(path string) (string, error) {
 }
 
 func safeLocalPath(baseDir string, path string) (string, error) {
-	cleanPath := filepath.Clean(path)
+	normalizedPath := filepath.FromSlash(strings.ReplaceAll(path, "\\", "/"))
+	cleanPath := filepath.Clean(normalizedPath)
 
 	if cleanPath == "." || cleanPath == ".." || filepath.IsAbs(cleanPath) {
 		return "", models.ErrInvalidAudioPath

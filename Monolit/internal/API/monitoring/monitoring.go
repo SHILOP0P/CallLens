@@ -80,21 +80,6 @@ func parseProcessingInput(r *http.Request, userID uuid.UUID, role models.UserRol
 }
 
 func monitoringToAPI(monitoring models.ProcessingMonitoring) dto.ProcessingMonitoringResponse {
-	jobs := make([]dto.FailedProcessingJobResponse, len(monitoring.LastFailedJobs))
-	for i, job := range monitoring.LastFailedJobs {
-		jobs[i] = dto.FailedProcessingJobResponse{
-			JobUUID:    job.ID.String(),
-			Type:       string(job.Type),
-			EntityUUID: job.EntityUUID.String(),
-			Attempts:   job.Attempts,
-			LastError:  job.LastError,
-			UpdatedAt:  job.UpdatedAt,
-		}
-	}
-	if jobs == nil {
-		jobs = []dto.FailedProcessingJobResponse{}
-	}
-
 	return dto.ProcessingMonitoringResponse{
 		Queue: dto.ProcessingQueueResponse{
 			Pending: monitoring.Queue.Pending,
@@ -104,12 +89,6 @@ func monitoringToAPI(monitoring models.ProcessingMonitoring) dto.ProcessingMonit
 			Retry:   monitoring.Queue.Retry,
 		},
 		AverageProcessingSeconds: monitoring.AverageProcessingSeconds,
-		LastFailedJobs:           jobs,
-		Services: dto.ProcessingServicesResponse{
-			Transcriber: monitoring.Services.Transcriber,
-			Analyzer:    monitoring.Services.Analyzer,
-			Storage:     monitoring.Services.Storage,
-		},
 	}
 }
 
