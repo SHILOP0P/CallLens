@@ -54,6 +54,8 @@ type managerQuality struct {
 type criteriaResult struct {
 	InstructionTitle string   `json:"instruction_title"`
 	Result           string   `json:"result"`
+	Title            string   `json:"title"`
+	Status           string   `json:"status"`
 	EvidenceQuotes   []string `json:"evidence_quotes"`
 }
 
@@ -193,12 +195,19 @@ func criteriaSection(criteria []criteriaResult) reportSection {
 
 	rows := make([]reportRow, 0, len(criteria)*3)
 	for index, criterion := range criteria {
-		title := criterion.InstructionTitle
+		title := criterion.Title
+		if title == "" {
+			title = criterion.InstructionTitle
+		}
 		if title == "" {
 			title = fmt.Sprintf("Критерий %d", index+1)
 		}
+		result := criterion.Result
+		if result == "" {
+			result = criterionStatusLabel(criterion.Status)
+		}
 		rows = append(rows,
-			reportRow{Label: title, Value: withFallback(criterion.Result)},
+			reportRow{Label: title, Value: withFallback(result)},
 			reportRow{Label: "Цитаты", List: withFallbackList(criterion.EvidenceQuotes)},
 		)
 	}
@@ -226,6 +235,23 @@ func withFallbackList(values []string) []string {
 		return []string{"Не указано"}
 	}
 	return out
+}
+
+func criterionStatusLabel(status string) string {
+	switch status {
+	case "met":
+		return "Выполнено"
+	case "partially_met":
+		return "Частично выполнено"
+	case "missed":
+		return "Не выполнено"
+	case "not_applicable":
+		return "Не применимо"
+	case "unclear":
+		return "Неясно"
+	default:
+		return status
+	}
 }
 
 func answerStatusLabel(status string) string {

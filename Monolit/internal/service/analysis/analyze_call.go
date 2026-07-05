@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"strings"
 	"time"
 
@@ -365,6 +366,7 @@ func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResul
 	summary = normalizeRussianAnalysisText(summary)
 	payload["summary"] = summary
 
+	payload["schema_version"] = float64(2)
 	ensureArrayField(payload, "topics")
 	ensureObjectFields(payload, "dialogue_tone", map[string]any{
 		"overall":         "",
@@ -384,13 +386,33 @@ func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResul
 		"recommendations": []any{},
 	})
 	ensureStringField(payload, "call_outcome")
-	ensureNumberField(payload, "score")
-	ensureArrayField(payload, "criteria_results")
 	ensureArrayField(payload, "customer_objections")
 	ensureArrayField(payload, "risks")
 	ensureArrayField(payload, "next_steps")
+	ensureObjectFields(payload, "next_step_quality", map[string]any{
+		"has_next_step":          false,
+		"specific":               false,
+		"has_deadline":           false,
+		"has_responsible_person": false,
+	})
+	ensureObjectFields(payload, "business_outcome", map[string]any{
+		"status":      "unclear",
+		"summary":     "",
+		"lost_reason": "not_applicable",
+	})
+	ensureObjectFields(payload, "customer_signals", map[string]any{
+		"intent":                 "unclear",
+		"urgency":                "unclear",
+		"budget_discussed":       false,
+		"decision_maker_present": false,
+	})
+	normalizeBusinessOutcome(payload)
+	normalizeCustomerSignals(payload)
+	normalizeNextStepQuality(payload)
+	normalizeIssueCodes(payload)
 	ensureArrayField(payload, "evidence_quotes")
 	ensureConfidenceField(payload)
+	normalizeCriteriaAndScore(payload)
 
 	if stringField(payload, "next_step") == "" {
 		payload["next_step"] = firstStringFromArray(payload["next_steps"])
@@ -411,6 +433,185 @@ func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResul
 	result.ResultJSON = resultJSON
 
 	return result, nil
+}
+
+func normalizeCriteriaAndScore(payload map[string]any) {
+	inputScore := normalizeScore(payload["score"], payload["score_scale"])
+	payload["score_scale"] = float64(100)
+
+	rawCriteria, _ := payload["criteria_results"].([]any)
+	criteria := make([]any, 0, len(rawCriteria))
+	pointsAwarded := 0.0
+	pointsPossible := 0.0
+	applicableCount := 0
+
+	for _, raw := range rawCriteria {
+		item, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		normalized := normalizeCriterionResult(item)
+		criteria = append(criteria, normalized)
+
+		status := stringField(normalized, "status")
+		pointsMax := numberField(normalized, "points_max")
+		if status == "not_applicable" || pointsMax <= 0 {
+			continue
+		}
+		pointsAwarded += numberField(normalized, "points_awarded")
+		pointsPossible += pointsMax
+		applicableCount++
+	}
+
+	payload["criteria_results"] = criteria
+	score := inputScore
+	if pointsPossible > 0 {
+		score = clampScore(math.Round(pointsAwarded / pointsPossible * 100))
+	}
+	payload["score"] = score
+	payload["score_breakdown"] = map[string]any{
+		"points_awarded":            pointsAwarded,
+		"points_possible":           pointsPossible,
+		"applicable_criteria_count": float64(applicableCount),
+		"total_criteria_count":      float64(len(criteria)),
+	}
+}
+
+func normalizeCriterionResult(item map[string]any) map[string]any {
+	out := copyStringMap(item)
+	code := stringField(out, "code")
+	legacyInstructionCriterion := code == "" && (stringField(out, "instruction_title") != "" || stringField(out, "result") != "")
+	if legacyInstructionCriterion {
+		code = "custom_instruction_match"
+	}
+	if code == "" {
+		code = "custom_instruction_match"
+	}
+	out["code"] = code
+
+	criterion, known := analysisCriterionByCode(code)
+	if stringField(out, "title") == "" {
+		if known {
+			out["title"] = criterion.Title
+		} else if title := stringField(out, "instruction_title"); title != "" {
+			out["title"] = title
+		} else {
+			out["title"] = code
+		}
+	}
+
+	status := stringField(out, "status")
+	if status == "" && stringField(out, "result") != "" {
+		status = "unclear"
+	}
+	out["status"] = normalizeCriterionStatus(status)
+
+	if _, ok := out["points_awarded"]; !ok {
+		out["points_awarded"] = float64(0)
+	} else {
+		out["points_awarded"] = math.Max(0, numberField(out, "points_awarded"))
+	}
+	if _, ok := out["points_max"]; !ok {
+		if legacyInstructionCriterion {
+			out["points_max"] = float64(0)
+		} else if known {
+			out["points_max"] = float64(criterion.PointsMax)
+		} else {
+			out["points_max"] = float64(0)
+		}
+	} else {
+		out["points_max"] = math.Max(0, numberField(out, "points_max"))
+	}
+
+	ensureArrayField(out, "evidence_quotes")
+	ensureStringField(out, "issue")
+	ensureStringField(out, "recommendation")
+	return out
+}
+
+func normalizeCriterionStatus(status string) string {
+	switch status {
+	case "met", "partially_met", "missed", "not_applicable", "unclear":
+		return status
+	default:
+		return "unclear"
+	}
+}
+
+func normalizeScore(scoreValue, scaleValue any) float64 {
+	score, ok := numericValue(scoreValue)
+	if !ok {
+		return 0
+	}
+	if scale, ok := numericValue(scaleValue); ok && scale > 0 {
+		return clampScore(math.Round(score / scale * 100))
+	}
+	switch {
+	case score <= 5:
+		return clampScore(math.Round(score * 20))
+	case score <= 10:
+		return clampScore(math.Round(score * 10))
+	default:
+		return clampScore(math.Round(score))
+	}
+}
+
+func clampScore(score float64) float64 {
+	if score < 0 {
+		return 0
+	}
+	if score > 100 {
+		return 100
+	}
+	return score
+}
+
+func normalizeBusinessOutcome(payload map[string]any) {
+	value, _ := payload["business_outcome"].(map[string]any)
+	if !allowedString(value, "status", []string{"success", "follow_up_needed", "no_decision", "lost", "support_resolved", "not_call", "unclear"}) {
+		value["status"] = "unclear"
+	}
+	if !allowedString(value, "lost_reason", []string{"price", "timing", "no_need", "competitor", "no_next_step", "unclear_value", "bad_fit", "not_applicable", "unclear"}) {
+		value["lost_reason"] = "not_applicable"
+	}
+}
+
+func normalizeCustomerSignals(payload map[string]any) {
+	value, _ := payload["customer_signals"].(map[string]any)
+	for _, key := range []string{"intent", "urgency"} {
+		if !allowedString(value, key, []string{"high", "medium", "low", "unclear"}) {
+			value[key] = "unclear"
+		}
+	}
+	ensureBoolField(value, "budget_discussed")
+	ensureBoolField(value, "decision_maker_present")
+}
+
+func normalizeNextStepQuality(payload map[string]any) {
+	value, _ := payload["next_step_quality"].(map[string]any)
+	for _, key := range []string{"has_next_step", "specific", "has_deadline", "has_responsible_person"} {
+		ensureBoolField(value, key)
+	}
+}
+
+func normalizeIssueCodes(payload map[string]any) {
+	values, ok := payload["issue_codes"].([]any)
+	if !ok {
+		payload["issue_codes"] = []any{}
+		return
+	}
+	out := make([]any, 0, len(values))
+	for _, value := range values {
+		text, ok := value.(string)
+		if !ok {
+			continue
+		}
+		text = strings.TrimSpace(text)
+		if text != "" {
+			out = append(out, text)
+		}
+	}
+	payload["issue_codes"] = out
 }
 
 func normalizePayloadRussianText(value any) {
@@ -448,7 +649,7 @@ func normalizePayloadRussianTextValue(key string, value any) {
 
 func isSchemaEnumKey(key string) bool {
 	switch key {
-	case "answer_status", "confidence", "status":
+	case "answer_status", "confidence", "status", "code", "lost_reason", "intent", "urgency":
 		return true
 	default:
 		return false
@@ -555,6 +756,13 @@ func ensureNumberField(payload map[string]any, key string) {
 	}
 }
 
+func ensureBoolField(payload map[string]any, key string) {
+	if _, ok := payload[key].(bool); ok {
+		return
+	}
+	payload[key] = false
+}
+
 func ensureConfidenceField(payload map[string]any) {
 	switch stringField(payload, "confidence") {
 	case "low", "medium", "high":
@@ -562,4 +770,47 @@ func ensureConfidenceField(payload map[string]any) {
 	default:
 		payload["confidence"] = "low"
 	}
+}
+
+func allowedString(payload map[string]any, key string, allowed []string) bool {
+	value := stringField(payload, key)
+	for _, item := range allowed {
+		if value == item {
+			return true
+		}
+	}
+	return false
+}
+
+func numberField(payload map[string]any, key string) float64 {
+	value, _ := numericValue(payload[key])
+	return value
+}
+
+func numericValue(value any) (float64, bool) {
+	switch typed := value.(type) {
+	case float64:
+		return typed, true
+	case float32:
+		return float64(typed), true
+	case int:
+		return float64(typed), true
+	case int64:
+		return float64(typed), true
+	case int32:
+		return float64(typed), true
+	case json.Number:
+		parsed, err := typed.Float64()
+		return parsed, err == nil
+	default:
+		return 0, false
+	}
+}
+
+func copyStringMap(input map[string]any) map[string]any {
+	out := make(map[string]any, len(input))
+	for key, value := range input {
+		out[key] = value
+	}
+	return out
 }

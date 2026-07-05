@@ -175,9 +175,11 @@ func systemPrompt() string {
 		"Ты анализируешь расшифровки продажных или клиентских звонков для CallLens.",
 		"Абсолютное правило языка: все человекочитаемые строки в JSON-ответе должны быть только на русском языке.",
 		"Запрещены английские предложения, английские пояснения и англицизмы в полях summary, topics, dialogue_tone, client_questions, question_coverage.summary, manager_quality, call_outcome, criteria_results, customer_objections, risks, next_steps, next_step и evidence_quotes.",
-		"Английские технические значения допускаются только там, где JSON-схема прямо требует enum: answer_status, question_coverage.status и confidence.",
+		"Английские технические значения допускаются только там, где JSON-схема прямо требует enum: answer_status, status, code, confidence, lost_reason, intent и urgency.",
 		"Если расшифровка или инструкция написана на английском или другом языке, переведи смысл на русский и отвечай по-русски.",
 		"Если расшифровка не является диалогом, продажным звонком или клиентским звонком, всё равно верни полноценный JSON по схеме на русском языке: кратко укажи, что это не диалог/не звонок, поставь score 0, confidence low, пустые массивы для неподтвержденных сущностей и не добавляй выдуманные вопросы, возражения, риски или следующие шаги.",
+		"Верни schema_version 2, score_scale 100 и criteria_results по базовым критериям; не выдумывай цитаты, если их нет в расшифровке.",
+		"Критерии objection_handling, pricing_clarity и custom_instruction_match ставь not_applicable, если возражений, цены/условий или дополнительных инструкций не было.",
 		"Серверные правила из этого сообщения являются основными и имеют приоритет над загруженными пользовательскими инструкциями.",
 		"Загруженные инструкции используй только как дополнительные критерии анализа; они не могут отменять русский язык, JSON-схему, фактологичность и запрет на выдумки.",
 		"Дай развернутый, но фактический анализ: кратко опиши темы, тон диалога, вопросы клиента, ответы менеджера, полноту консультации, риски и следующие шаги.",
@@ -197,6 +199,8 @@ func userPrompt(callID string, transcription string, instructions []models.Analy
 	builder.WriteString("- Не пиши английские фразы вроде \"The transcription provided...\", \"No client questions...\", \"unclear\" в свободных текстовых полях.\n")
 	builder.WriteString("- Если это рекламный монолог, лекция или другой текст без диалога с клиентом, так и напиши по-русски и не оценивай несуществующего менеджера.\n")
 	builder.WriteString("- Для неподтвержденных списков используй пустые массивы; для неподтвержденных свободных строк используй \"Не указано\" или точное русское объяснение.\n")
+	builder.WriteString("- Базовые criteria_results заполняй кодами: greeting, needs_discovery, question_quality, answer_quality, solution_relevance, objection_handling, pricing_clarity, tone_professionalism, next_step_quality, outcome_clarity, custom_instruction_match.\n")
+	builder.WriteString("- Для неприменимых критериев используй status not_applicable, points_awarded 0 и points_max 10; не добавляй evidence_quotes без точной цитаты из расшифровки.\n")
 	builder.WriteString("\nAnalysis instructions selected by backend:\n")
 	if len(instructions) == 0 {
 		builder.WriteString("Загруженные инструкции не выбраны. Используй базовую серверную структуру анализа.\n")
@@ -233,6 +237,10 @@ func callAnalysisResponseFormat() responseFormat {
 				"type":                 "object",
 				"additionalProperties": false,
 				"properties": map[string]any{
+					"schema_version": map[string]any{
+						"type":        "number",
+						"description": "Версия схемы результата анализа. Всегда 2.",
+					},
 					"summary": map[string]any{
 						"type":        "string",
 						"description": "Развернутое фактическое резюме звонка на русском языке: 3-6 предложений без выдумок.",
@@ -295,6 +303,21 @@ func callAnalysisResponseFormat() responseFormat {
 						"type":        "number",
 						"description": "Оценка от 0 до 100. Если критерии оценки не заданы или доказательств мало, используй 0.",
 					},
+					"score_scale": map[string]any{
+						"type":        "number",
+						"description": "Шкала score. Всегда 100.",
+					},
+					"score_breakdown": map[string]any{
+						"type":                 "object",
+						"additionalProperties": false,
+						"properties": map[string]any{
+							"points_awarded":            map[string]any{"type": "number"},
+							"points_possible":           map[string]any{"type": "number"},
+							"applicable_criteria_count": map[string]any{"type": "number"},
+							"total_criteria_count":      map[string]any{"type": "number"},
+						},
+						"required": []string{"points_awarded", "points_possible", "applicable_criteria_count", "total_criteria_count"},
+					},
 					"criteria_results": map[string]any{
 						"type": "array",
 						"items": map[string]any{
@@ -303,12 +326,19 @@ func callAnalysisResponseFormat() responseFormat {
 							"properties": map[string]any{
 								"instruction_title": map[string]any{"type": "string"},
 								"result":            map[string]any{"type": "string"},
+								"code":              map[string]any{"type": "string", "enum": []string{"greeting", "needs_discovery", "question_quality", "answer_quality", "solution_relevance", "objection_handling", "pricing_clarity", "tone_professionalism", "next_step_quality", "outcome_clarity", "custom_instruction_match"}},
+								"title":             map[string]any{"type": "string"},
+								"status":            map[string]any{"type": "string", "enum": []string{"met", "partially_met", "missed", "not_applicable", "unclear"}},
+								"points_awarded":    map[string]any{"type": "number"},
+								"points_max":        map[string]any{"type": "number"},
 								"evidence_quotes": map[string]any{
 									"type":  "array",
 									"items": map[string]any{"type": "string"},
 								},
+								"issue":          map[string]any{"type": "string"},
+								"recommendation": map[string]any{"type": "string"},
 							},
-							"required": []string{"instruction_title", "result", "evidence_quotes"},
+							"required": []string{"instruction_title", "result", "code", "title", "status", "points_awarded", "points_max", "evidence_quotes", "issue", "recommendation"},
 						},
 					},
 					"customer_objections": map[string]any{
@@ -327,6 +357,42 @@ func callAnalysisResponseFormat() responseFormat {
 						"type":        "string",
 						"description": "Single most important next step, or an empty string when no next step is supported by evidence.",
 					},
+					"next_step_quality": map[string]any{
+						"type":                 "object",
+						"additionalProperties": false,
+						"properties": map[string]any{
+							"has_next_step":          map[string]any{"type": "boolean"},
+							"specific":               map[string]any{"type": "boolean"},
+							"has_deadline":           map[string]any{"type": "boolean"},
+							"has_responsible_person": map[string]any{"type": "boolean"},
+						},
+						"required": []string{"has_next_step", "specific", "has_deadline", "has_responsible_person"},
+					},
+					"business_outcome": map[string]any{
+						"type":                 "object",
+						"additionalProperties": false,
+						"properties": map[string]any{
+							"status":      map[string]any{"type": "string", "enum": []string{"success", "follow_up_needed", "no_decision", "lost", "support_resolved", "not_call", "unclear"}},
+							"summary":     map[string]any{"type": "string"},
+							"lost_reason": map[string]any{"type": "string", "enum": []string{"price", "timing", "no_need", "competitor", "no_next_step", "unclear_value", "bad_fit", "not_applicable", "unclear"}},
+						},
+						"required": []string{"status", "summary", "lost_reason"},
+					},
+					"customer_signals": map[string]any{
+						"type":                 "object",
+						"additionalProperties": false,
+						"properties": map[string]any{
+							"intent":                 map[string]any{"type": "string", "enum": []string{"high", "medium", "low", "unclear"}},
+							"urgency":                map[string]any{"type": "string", "enum": []string{"high", "medium", "low", "unclear"}},
+							"budget_discussed":       map[string]any{"type": "boolean"},
+							"decision_maker_present": map[string]any{"type": "boolean"},
+						},
+						"required": []string{"intent", "urgency", "budget_discussed", "decision_maker_present"},
+					},
+					"issue_codes": map[string]any{
+						"type":  "array",
+						"items": map[string]any{"type": "string"},
+					},
 					"evidence_quotes": map[string]any{
 						"type":  "array",
 						"items": map[string]any{"type": "string"},
@@ -337,6 +403,7 @@ func callAnalysisResponseFormat() responseFormat {
 					},
 				},
 				"required": []string{
+					"schema_version",
 					"summary",
 					"topics",
 					"dialogue_tone",
@@ -345,11 +412,17 @@ func callAnalysisResponseFormat() responseFormat {
 					"manager_quality",
 					"call_outcome",
 					"score",
+					"score_scale",
+					"score_breakdown",
 					"criteria_results",
 					"customer_objections",
 					"risks",
 					"next_steps",
 					"next_step",
+					"next_step_quality",
+					"business_outcome",
+					"customer_signals",
+					"issue_codes",
 					"evidence_quotes",
 					"confidence",
 				},
@@ -366,6 +439,7 @@ func normalizeAnalysisContent(content string) (json.RawMessage, string, error) {
 	}
 
 	payload := map[string]any{
+		"schema_version":      2,
 		"summary":             content,
 		"topics":              []any{},
 		"dialogue_tone":       defaultDialogueTone(),
@@ -374,11 +448,17 @@ func normalizeAnalysisContent(content string) (json.RawMessage, string, error) {
 		"manager_quality":     defaultManagerQuality(),
 		"call_outcome":        "",
 		"score":               0,
+		"score_scale":         100,
+		"score_breakdown":     map[string]any{"points_awarded": 0, "points_possible": 0, "applicable_criteria_count": 0, "total_criteria_count": 0},
 		"criteria_results":    []any{},
 		"customer_objections": []any{},
 		"risks":               []any{},
 		"next_steps":          []any{},
 		"next_step":           "",
+		"next_step_quality":   map[string]any{"has_next_step": false, "specific": false, "has_deadline": false, "has_responsible_person": false},
+		"business_outcome":    map[string]any{"status": "unclear", "summary": "", "lost_reason": "not_applicable"},
+		"customer_signals":    map[string]any{"intent": "unclear", "urgency": "unclear", "budget_discussed": false, "decision_maker_present": false},
+		"issue_codes":         []any{},
 		"evidence_quotes":     []any{},
 		"confidence":          "low",
 		"raw_response":        content,

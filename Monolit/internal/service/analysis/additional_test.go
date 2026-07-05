@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	mockAnalyzer "calllens/monolit/internal/analyzer/mock"
 	analyzerMocks "calllens/monolit/internal/analyzer/mocks"
 	"calllens/monolit/internal/models"
 	repositoryMocks "calllens/monolit/internal/repository/mocks"
@@ -173,6 +174,121 @@ func TestNormalizeAnalysisResultRewritesKnownEnglishFallbacks(t *testing.T) {
 	if len(nextSteps) != 1 || nextSteps[0] != "Неясно" {
 		t.Fatalf("next steps = %#v", nextSteps)
 	}
+}
+
+func TestNormalizeAnalysisResultV2ContractAndScoreScaling(t *testing.T) {
+	for name, tc := range map[string]struct {
+		json      string
+		wantScore float64
+	}{
+		"five point scale": {json: `{"summary":"ok","score":4.5}`, wantScore: 90},
+		"ten point scale":  {json: `{"summary":"ok","score":8}`, wantScore: 80},
+		"hundred scale":    {json: `{"summary":"ok","score":76}`, wantScore: 76},
+	} {
+		t.Run(name, func(t *testing.T) {
+			result, err := normalizeAnalysisResult(models.AnalysisResult{ResultJSON: []byte(tc.json)})
+			if err != nil {
+				t.Fatal(err)
+			}
+			payload := decodeAnalysisPayload(t, result)
+			if payload["schema_version"] != float64(2) || payload["score_scale"] != float64(100) {
+				t.Fatalf("version/scale = %#v", payload)
+			}
+			if payload["score"] != tc.wantScore {
+				t.Fatalf("score = %v, want %v", payload["score"], tc.wantScore)
+			}
+			if _, ok := payload["business_outcome"].(map[string]any); !ok {
+				t.Fatalf("missing business_outcome: %#v", payload)
+			}
+		})
+	}
+}
+
+func TestNormalizeAnalysisResultCriteriaOverrideScore(t *testing.T) {
+	result, err := normalizeAnalysisResult(models.AnalysisResult{ResultJSON: []byte(`{
+		"summary":"ok",
+		"score":10,
+		"criteria_results":[
+			{"code":"greeting","status":"met","points_awarded":10,"points_max":10,"evidence_quotes":["Здравствуйте"]},
+			{"code":"needs_discovery","status":"missed","points_awarded":0,"points_max":10},
+			{"code":"pricing_clarity","status":"not_applicable","points_awarded":10,"points_max":10},
+			{"code":"tone_professionalism","status":"bad","points_awarded":5,"points_max":10}
+		],
+		"issue_codes":["","late_followup",123],
+		"business_outcome":{"status":"bad","lost_reason":"wrong"},
+		"customer_signals":{"intent":"hot","urgency":"medium","budget_discussed":"yes"},
+		"question_coverage":{"status":"unclear","summary":"unclear"}
+	}`)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload := decodeAnalysisPayload(t, result)
+	if payload["score"] != float64(50) {
+		t.Fatalf("score = %v", payload["score"])
+	}
+	breakdown := payload["score_breakdown"].(map[string]any)
+	if breakdown["points_awarded"] != float64(15) || breakdown["points_possible"] != float64(30) || breakdown["applicable_criteria_count"] != float64(3) {
+		t.Fatalf("breakdown = %#v", breakdown)
+	}
+	criteria := payload["criteria_results"].([]any)
+	if len(criteria) != 4 {
+		t.Fatalf("criteria len = %d", len(criteria))
+	}
+	if criteria[3].(map[string]any)["status"] != "unclear" {
+		t.Fatalf("unknown status was not normalized: %#v", criteria[3])
+	}
+	coverage := payload["question_coverage"].(map[string]any)
+	if coverage["status"] != "unclear" {
+		t.Fatalf("enum was translated: %#v", coverage)
+	}
+	issueCodes := payload["issue_codes"].([]any)
+	if len(issueCodes) != 1 || issueCodes[0] != "late_followup" {
+		t.Fatalf("issue_codes = %#v", issueCodes)
+	}
+}
+
+func TestNormalizeAnalysisResultLegacyCriteriaCompatibility(t *testing.T) {
+	result, err := normalizeAnalysisResult(models.AnalysisResult{ResultJSON: []byte(`{
+		"summary":"ok",
+		"topics":"bad",
+		"criteria_results":[{"instruction_title":"Приветствие","result":"Выполнено","evidence_quotes":["Здравствуйте"]}]
+	}`)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload := decodeAnalysisPayload(t, result)
+	if len(payload["topics"].([]any)) != 0 {
+		t.Fatalf("topics = %#v", payload["topics"])
+	}
+	criterion := payload["criteria_results"].([]any)[0].(map[string]any)
+	if criterion["code"] != "custom_instruction_match" || criterion["status"] != "unclear" || criterion["points_max"] != float64(0) {
+		t.Fatalf("legacy criterion = %#v", criterion)
+	}
+}
+
+func TestMockAnalyzerReturnsV2JSON(t *testing.T) {
+	analyzer := mockAnalyzer.New("test-model")
+	result, err := analyzer.Analyze(context.Background(), models.AnalysisRequest{CallUUID: uuid.New(), Transcription: "text"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload := decodeAnalysisPayload(t, result)
+	if payload["schema_version"] != float64(2) || payload["score_scale"] != float64(100) {
+		t.Fatalf("mock payload = %#v", payload)
+	}
+	criteria, ok := payload["criteria_results"].([]any)
+	if !ok || len(criteria) < 2 {
+		t.Fatalf("mock criteria = %#v", payload["criteria_results"])
+	}
+}
+
+func decodeAnalysisPayload(t *testing.T, result models.AnalysisResult) map[string]any {
+	t.Helper()
+	var payload map[string]any
+	if err := json.Unmarshal(result.ResultJSON, &payload); err != nil {
+		t.Fatal(err)
+	}
+	return payload
 }
 
 func TestServiceConfigurationAndInstructionSelection(t *testing.T) {
