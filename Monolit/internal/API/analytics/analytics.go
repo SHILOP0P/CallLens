@@ -82,9 +82,6 @@ func overviewToAPI(overview models.AnalyticsOverview) dto.AnalyticsOverviewRespo
 	for i, topic := range overview.TopTopics {
 		topics[i] = dto.AnalyticsTopicItem{Title: topic.Title, Count: topic.Count}
 	}
-	if topics == nil {
-		topics = []dto.AnalyticsTopicItem{}
-	}
 
 	return dto.AnalyticsOverviewResponse{
 		CallsTotal:             overview.CallsTotal,
@@ -118,9 +115,6 @@ func countPointsToAPI(points []models.AnalyticsCountPoint) []dto.AnalyticsCountP
 	for i, point := range points {
 		resp[i] = dto.AnalyticsCountPoint{Date: point.Date, Count: point.Count}
 	}
-	if resp == nil {
-		return []dto.AnalyticsCountPoint{}
-	}
 	return resp
 }
 
@@ -129,9 +123,6 @@ func qualityPointsToAPI(points []models.AnalyticsQualityPoint) []dto.AnalyticsQu
 	for i, point := range points {
 		resp[i] = dto.AnalyticsQualityPoint{Date: point.Date, AverageQualityScore: point.AverageQualityScore}
 	}
-	if resp == nil {
-		return []dto.AnalyticsQualityPoint{}
-	}
 	return resp
 }
 
@@ -139,9 +130,6 @@ func durationPointsToAPI(points []models.AnalyticsDurationPoint) []dto.Analytics
 	resp := make([]dto.AnalyticsDurationPoint, len(points))
 	for i, point := range points {
 		resp[i] = dto.AnalyticsDurationPoint{Date: point.Date, AverageDurationSeconds: point.AverageDurationSeconds}
-	}
-	if resp == nil {
-		return []dto.AnalyticsDurationPoint{}
 	}
 	return resp
 }

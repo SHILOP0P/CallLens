@@ -35,7 +35,7 @@ func (r *Repository) ListActiveUserRefreshSessions(ctx context.Context, userID u
 	if err != nil {
 		return nil, fmt.Errorf("list active user refresh sessions: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var sessions []model.RefreshSession
 	for rows.Next() {
