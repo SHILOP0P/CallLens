@@ -55,6 +55,7 @@ func (r *Repository) GetAnalyticsOverview(ctx context.Context, input model.Analy
 		overview.AverageDurationSeconds = &rounded
 	}
 	overview.QualityScoreScale = 5
+	overview.ScoreScale = 100
 	overview.TopTopics = []model.AnalyticsTopicCount{}
 
 	if err := r.fillAnalysisAggregates(ctx, &overview, where, args); err != nil {
@@ -65,6 +66,7 @@ func (r *Repository) GetAnalyticsOverview(ctx context.Context, input model.Analy
 }
 
 type analyticsCallRow struct {
+	CallUUID        string
 	Status          model.CallStatus
 	DurationSeconds int
 	CreatedAt       time.Time
@@ -76,18 +78,37 @@ type analyticsAccumulator struct {
 	analyzedByDay map[string]int
 	durationByDay map[string][]int
 	qualityByDay  map[string][]float64
+	scoreByDay    map[string][]float64
 	risksByDay    map[string]int
 	topicCounts   map[string]int
+	criteria      map[string]*criterionAccumulator
+	issueCodes    map[string]int
+	outcomes      map[string]int
 
-	qualityScores []float64
-	risksCount    int
-	recsCount     int
-	analysisSeen  bool
+	scores            []float64
+	scoreDistribution model.AnalyticsScoreDistribution
+	risksCount        int
+	recsCount         int
+	analysisSeen      bool
+	nextStep          model.AnalyticsNextStepSummary
+}
+
+type criterionAccumulator struct {
+	code          string
+	title         string
+	scores        []float64
+	met           int
+	partiallyMet  int
+	missed        int
+	unclear       int
+	notApplicable int
+	calls         map[string]struct{}
 }
 
 func (r *Repository) fillAnalysisAggregates(ctx context.Context, overview *model.AnalyticsOverview, where string, args []any) error {
 	query := fmt.Sprintf(`
-	SELECT c.status,
+	SELECT c.call_uuid::text,
+	       c.status,
 	       c.duration_seconds,
 	       c.created_at,
 	       ca.result_json::text
@@ -109,13 +130,17 @@ func (r *Repository) fillAnalysisAggregates(ctx context.Context, overview *model
 		analyzedByDay: map[string]int{},
 		durationByDay: map[string][]int{},
 		qualityByDay:  map[string][]float64{},
+		scoreByDay:    map[string][]float64{},
 		risksByDay:    map[string]int{},
 		topicCounts:   map[string]int{},
+		criteria:      map[string]*criterionAccumulator{},
+		issueCodes:    map[string]int{},
+		outcomes:      map[string]int{},
 	}
 
 	for rows.Next() {
 		var row analyticsCallRow
-		if err := rows.Scan(&row.Status, &row.DurationSeconds, &row.CreatedAt, &row.ResultJSON); err != nil {
+		if err := rows.Scan(&row.CallUUID, &row.Status, &row.DurationSeconds, &row.CreatedAt, &row.ResultJSON); err != nil {
 			return fmt.Errorf("scan analytics details: %w", err)
 		}
 		acc.addCall(row)
@@ -147,9 +172,17 @@ func (a *analyticsAccumulator) addCall(row analyticsCallRow) {
 	}
 	a.analysisSeen = true
 
-	if score, ok := extractQualityScore(payload); ok {
-		a.qualityScores = append(a.qualityScores, score)
-		a.qualityByDay[day] = append(a.qualityByDay[day], score)
+	if row.Status == model.CallStatusAnalyzed {
+		if score, ok := extractScore(payload); ok {
+			a.scores = append(a.scores, score)
+			a.scoreByDay[day] = append(a.scoreByDay[day], score)
+			a.qualityByDay[day] = append(a.qualityByDay[day], score/20)
+			a.addScoreDistribution(score)
+		}
+		a.addCriteria(row.CallUUID, payload)
+		a.addIssueCodes(payload["issue_codes"])
+		a.addBusinessOutcome(payload["business_outcome"])
+		a.addNextStepQuality(payload)
 	}
 
 	risks := countListValues(payload["risks"]) +
@@ -171,14 +204,23 @@ func (a *analyticsAccumulator) apply(overview *model.AnalyticsOverview) {
 		CallsByDay:    countMapToPoints(a.callsByDay),
 		AnalyzedByDay: countMapToPoints(a.analyzedByDay),
 		QualityByDay:  averageFloatMapToQualityPoints(a.qualityByDay),
+		ScoreByDay:    averageFloatMapToScorePoints(a.scoreByDay),
 		DurationByDay: averageIntMapToDurationPoints(a.durationByDay),
 		RisksByDay:    countMapToPoints(a.risksByDay),
 	}
 
-	if len(a.qualityScores) > 0 {
-		average := roundFloat(averageFloat(a.qualityScores), 1)
-		overview.AverageQualityScore = &average
+	if len(a.scores) > 0 {
+		averageScore := roundFloat(averageFloat(a.scores), 1)
+		averageQuality := roundFloat(averageScore/20, 1)
+		overview.AverageScore = &averageScore
+		overview.AverageQualityScore = &averageQuality
 	}
+	overview.ScoreDistribution = a.scoreDistribution
+	overview.CriteriaSummary = criteriaSummary(a.criteria)
+	overview.TopWeakCriteria = topWeakCriteria(a.criteria, 5)
+	overview.TopIssueCodes = codeCountMapToCounts(a.issueCodes, 10)
+	overview.BusinessOutcomes = statusCountMapToCounts(a.outcomes)
+	overview.NextStepSummary = a.nextStep
 	if a.analysisSeen {
 		risks := a.risksCount
 		recs := a.recsCount
@@ -188,24 +230,303 @@ func (a *analyticsAccumulator) apply(overview *model.AnalyticsOverview) {
 	overview.TopTopics = topicMapToCounts(a.topicCounts, 10)
 }
 
-func extractQualityScore(payload map[string]any) (float64, bool) {
-	for _, key := range []string{"quality_score", "score", "overall_score", "manager_score"} {
+func (a *analyticsAccumulator) addScoreDistribution(score float64) {
+	switch {
+	case score < 50:
+		a.scoreDistribution.Critical++
+	case score < 65:
+		a.scoreDistribution.Weak++
+	case score < 80:
+		a.scoreDistribution.Normal++
+	case score < 90:
+		a.scoreDistribution.Good++
+	default:
+		a.scoreDistribution.Excellent++
+	}
+}
+
+func extractScore(payload map[string]any) (float64, bool) {
+	if score, ok := numberValue(payload["score"]); ok && score >= 0 {
+		scale, scaleOK := numberValue(payload["score_scale"])
+		if scaleOK && scale > 0 {
+			return clampScore(score / scale * 100), true
+		}
+	}
+	for _, key := range []string{"quality_score", "overall_score", "manager_score", "score"} {
 		score, ok := numberValue(payload[key])
-		if !ok || score <= 0 {
+		if !ok || score < 0 {
 			continue
 		}
 		if score > 5 {
-			score = score / 20
+			return clampScore(score), true
 		}
-		if score < 1 {
-			score = 1
-		}
-		if score > 5 {
-			score = 5
-		}
-		return roundFloat(score, 1), true
+		return clampScore(score * 20), true
 	}
 	return 0, false
+}
+
+func clampScore(score float64) float64 {
+	if score < 0 {
+		return 0
+	}
+	if score > 100 {
+		return 100
+	}
+	return roundFloat(score, 1)
+}
+
+func (a *analyticsAccumulator) addCriteria(callKey string, payload map[string]any) {
+	items, ok := payload["criteria_results"].([]any)
+	if !ok {
+		return
+	}
+	for _, item := range items {
+		criterion, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		code, _ := criterion["code"].(string)
+		code = strings.TrimSpace(code)
+		if code == "" {
+			continue
+		}
+		status, _ := criterion["status"].(string)
+		status = strings.TrimSpace(status)
+		if !isAllowedCriterionStatus(status) {
+			continue
+		}
+		acc := a.criteria[code]
+		if acc == nil {
+			acc = &criterionAccumulator{code: code, calls: map[string]struct{}{}}
+			a.criteria[code] = acc
+		}
+		if title, ok := criterion["title"].(string); ok && strings.TrimSpace(title) != "" {
+			acc.title = strings.TrimSpace(title)
+		}
+		acc.calls[callKey] = struct{}{}
+		acc.addStatus(status)
+		if status == "not_applicable" {
+			continue
+		}
+		if score, ok := criterionScore(criterion, status); ok {
+			acc.scores = append(acc.scores, score)
+		}
+	}
+}
+
+func (a *criterionAccumulator) addStatus(status string) {
+	switch status {
+	case "met":
+		a.met++
+	case "partially_met":
+		a.partiallyMet++
+	case "missed":
+		a.missed++
+	case "unclear":
+		a.unclear++
+	case "not_applicable":
+		a.notApplicable++
+	}
+}
+
+func criterionScore(criterion map[string]any, status string) (float64, bool) {
+	pointsMax, maxOK := numberValue(criterion["points_max"])
+	pointsAwarded, awardedOK := numberValue(criterion["points_awarded"])
+	if maxOK && awardedOK && pointsMax > 0 {
+		return clampScore(pointsAwarded / pointsMax * 100), true
+	}
+	switch status {
+	case "met":
+		return 100, true
+	case "partially_met":
+		return 50, true
+	case "missed", "unclear":
+		return 0, true
+	default:
+		return 0, false
+	}
+}
+
+func isAllowedCriterionStatus(status string) bool {
+	switch status {
+	case "met", "partially_met", "missed", "unclear", "not_applicable":
+		return true
+	default:
+		return false
+	}
+}
+
+func (a *analyticsAccumulator) addIssueCodes(value any) {
+	items, ok := value.([]any)
+	if !ok {
+		return
+	}
+	for _, item := range items {
+		code, ok := item.(string)
+		if !ok {
+			continue
+		}
+		code = normalizeIssueCode(code)
+		if code != "" {
+			a.issueCodes[code]++
+		}
+	}
+}
+
+func normalizeIssueCode(code string) string {
+	code = strings.ToLower(strings.TrimSpace(code))
+	code = strings.ReplaceAll(code, "-", "_")
+	code = strings.Join(strings.Fields(code), "_")
+	return code
+}
+
+func (a *analyticsAccumulator) addBusinessOutcome(value any) {
+	object, ok := value.(map[string]any)
+	if !ok {
+		return
+	}
+	status, _ := object["status"].(string)
+	status = strings.TrimSpace(status)
+	if !isAllowedBusinessOutcome(status) {
+		status = "unclear"
+	}
+	a.outcomes[status]++
+}
+
+func isAllowedBusinessOutcome(status string) bool {
+	switch status {
+	case "success", "follow_up_needed", "no_decision", "lost", "support_resolved", "not_call", "unclear":
+		return true
+	default:
+		return false
+	}
+}
+
+func (a *analyticsAccumulator) addNextStepQuality(payload map[string]any) {
+	object, ok := payload["next_step_quality"].(map[string]any)
+	if ok {
+		hasNext := boolValue(object["has_next_step"])
+		if hasNext {
+			a.nextStep.WithNextStep++
+		} else {
+			a.nextStep.Missing++
+		}
+		if boolValue(object["specific"]) {
+			a.nextStep.Specific++
+		}
+		if boolValue(object["has_deadline"]) {
+			a.nextStep.WithDeadline++
+		}
+		if boolValue(object["has_responsible_person"]) {
+			a.nextStep.WithResponsiblePerson++
+		}
+		return
+	}
+	if hasFallbackNextStep(payload) {
+		a.nextStep.WithNextStep++
+	} else {
+		a.nextStep.Missing++
+	}
+}
+
+func boolValue(value any) bool {
+	v, _ := value.(bool)
+	return v
+}
+
+func hasFallbackNextStep(payload map[string]any) bool {
+	if nextStep, ok := payload["next_step"].(string); ok && strings.TrimSpace(nextStep) != "" {
+		return true
+	}
+	return countListValues(payload["next_steps"]) > 0
+}
+
+func criteriaSummary(values map[string]*criterionAccumulator) []model.AnalyticsCriterionSummary {
+	keys := sortedKeys(values)
+	items := make([]model.AnalyticsCriterionSummary, 0, len(keys))
+	for _, key := range keys {
+		acc := values[key]
+		items = append(items, model.AnalyticsCriterionSummary{
+			Code:          acc.code,
+			Title:         acc.title,
+			AverageScore:  averageScorePtr(acc.scores),
+			Met:           acc.met,
+			PartiallyMet:  acc.partiallyMet,
+			Missed:        acc.missed,
+			Unclear:       acc.unclear,
+			NotApplicable: acc.notApplicable,
+			CallsCount:    len(acc.calls),
+		})
+	}
+	return items
+}
+
+func topWeakCriteria(values map[string]*criterionAccumulator, limit int) []model.AnalyticsWeakCriterion {
+	items := make([]model.AnalyticsWeakCriterion, 0, len(values))
+	for _, acc := range values {
+		avg := averageScorePtr(acc.scores)
+		if avg == nil {
+			continue
+		}
+		items = append(items, model.AnalyticsWeakCriterion{
+			Code:              acc.code,
+			Title:             acc.title,
+			AverageScore:      avg,
+			MissedCount:       acc.missed,
+			PartiallyMetCount: acc.partiallyMet,
+		})
+	}
+	sort.Slice(items, func(i, j int) bool {
+		left, right := *items[i].AverageScore, *items[j].AverageScore
+		if left != right {
+			return left < right
+		}
+		if items[i].MissedCount != items[j].MissedCount {
+			return items[i].MissedCount > items[j].MissedCount
+		}
+		if items[i].PartiallyMetCount != items[j].PartiallyMetCount {
+			return items[i].PartiallyMetCount > items[j].PartiallyMetCount
+		}
+		return items[i].Code < items[j].Code
+	})
+	if limit > 0 && len(items) > limit {
+		return items[:limit]
+	}
+	return items
+}
+
+func averageScorePtr(values []float64) *float64 {
+	if len(values) == 0 {
+		return nil
+	}
+	average := roundFloat(averageFloat(values), 1)
+	return &average
+}
+
+func codeCountMapToCounts(values map[string]int, limit int) []model.AnalyticsCodeCount {
+	items := make([]model.AnalyticsCodeCount, 0, len(values))
+	for code, count := range values {
+		items = append(items, model.AnalyticsCodeCount{Code: code, Count: count})
+	}
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].Count == items[j].Count {
+			return items[i].Code < items[j].Code
+		}
+		return items[i].Count > items[j].Count
+	})
+	if limit > 0 && len(items) > limit {
+		return items[:limit]
+	}
+	return items
+}
+
+func statusCountMapToCounts(values map[string]int) []model.AnalyticsStatusCount {
+	keys := sortedKeys(values)
+	items := make([]model.AnalyticsStatusCount, 0, len(keys))
+	for _, status := range keys {
+		items = append(items, model.AnalyticsStatusCount{Status: status, Count: values[status]})
+	}
+	return items
 }
 
 func numberValue(value any) (float64, bool) {
@@ -285,6 +606,18 @@ func averageFloatMapToQualityPoints(values map[string][]float64) []model.Analyti
 		points = append(points, model.AnalyticsQualityPoint{
 			Date:                date,
 			AverageQualityScore: roundFloat(averageFloat(values[date]), 1),
+		})
+	}
+	return points
+}
+
+func averageFloatMapToScorePoints(values map[string][]float64) []model.AnalyticsScorePoint {
+	dates := sortedKeys(values)
+	points := make([]model.AnalyticsScorePoint, 0, len(dates))
+	for _, date := range dates {
+		points = append(points, model.AnalyticsScorePoint{
+			Date:         date,
+			AverageScore: roundFloat(averageFloat(values[date]), 1),
 		})
 	}
 	return points

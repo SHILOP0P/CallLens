@@ -93,10 +93,30 @@ func overviewToAPI(overview models.AnalyticsOverview) dto.AnalyticsOverviewRespo
 		AverageDurationSeconds: overview.AverageDurationSeconds,
 		AverageQualityScore:    overview.AverageQualityScore,
 		QualityScoreScale:      overview.QualityScoreScale,
-		TopTopics:              topics,
-		RisksCount:             overview.RisksCount,
-		RecommendationsCount:   overview.RecommendationsCount,
-		Charts:                 analyticsChartsToAPI(overview.Charts),
+		AverageScore:           overview.AverageScore,
+		ScoreScale:             overview.ScoreScale,
+		ScoreDistribution: dto.AnalyticsScoreDistribution{
+			Critical:  overview.ScoreDistribution.Critical,
+			Weak:      overview.ScoreDistribution.Weak,
+			Normal:    overview.ScoreDistribution.Normal,
+			Good:      overview.ScoreDistribution.Good,
+			Excellent: overview.ScoreDistribution.Excellent,
+		},
+		CriteriaSummary:  criteriaSummaryToAPI(overview.CriteriaSummary),
+		TopWeakCriteria:  weakCriteriaToAPI(overview.TopWeakCriteria),
+		TopIssueCodes:    codeCountsToAPI(overview.TopIssueCodes),
+		BusinessOutcomes: statusCountsToAPI(overview.BusinessOutcomes),
+		NextStepSummary: dto.AnalyticsNextStepSummary{
+			WithNextStep:          overview.NextStepSummary.WithNextStep,
+			Specific:              overview.NextStepSummary.Specific,
+			WithDeadline:          overview.NextStepSummary.WithDeadline,
+			WithResponsiblePerson: overview.NextStepSummary.WithResponsiblePerson,
+			Missing:               overview.NextStepSummary.Missing,
+		},
+		TopTopics:            topics,
+		RisksCount:           overview.RisksCount,
+		RecommendationsCount: overview.RecommendationsCount,
+		Charts:               analyticsChartsToAPI(overview.Charts),
 	}
 }
 
@@ -105,9 +125,58 @@ func analyticsChartsToAPI(charts models.AnalyticsCharts) dto.AnalyticsCharts {
 		CallsByDay:    countPointsToAPI(charts.CallsByDay),
 		AnalyzedByDay: countPointsToAPI(charts.AnalyzedByDay),
 		QualityByDay:  qualityPointsToAPI(charts.QualityByDay),
+		ScoreByDay:    scorePointsToAPI(charts.ScoreByDay),
 		DurationByDay: durationPointsToAPI(charts.DurationByDay),
 		RisksByDay:    countPointsToAPI(charts.RisksByDay),
 	}
+}
+
+func criteriaSummaryToAPI(items []models.AnalyticsCriterionSummary) []dto.AnalyticsCriterionSummary {
+	resp := make([]dto.AnalyticsCriterionSummary, len(items))
+	for i, item := range items {
+		resp[i] = dto.AnalyticsCriterionSummary{
+			Code:          item.Code,
+			Title:         item.Title,
+			AverageScore:  item.AverageScore,
+			Met:           item.Met,
+			PartiallyMet:  item.PartiallyMet,
+			Missed:        item.Missed,
+			Unclear:       item.Unclear,
+			NotApplicable: item.NotApplicable,
+			CallsCount:    item.CallsCount,
+		}
+	}
+	return resp
+}
+
+func weakCriteriaToAPI(items []models.AnalyticsWeakCriterion) []dto.AnalyticsWeakCriterion {
+	resp := make([]dto.AnalyticsWeakCriterion, len(items))
+	for i, item := range items {
+		resp[i] = dto.AnalyticsWeakCriterion{
+			Code:              item.Code,
+			Title:             item.Title,
+			AverageScore:      item.AverageScore,
+			MissedCount:       item.MissedCount,
+			PartiallyMetCount: item.PartiallyMetCount,
+		}
+	}
+	return resp
+}
+
+func codeCountsToAPI(items []models.AnalyticsCodeCount) []dto.AnalyticsCodeCount {
+	resp := make([]dto.AnalyticsCodeCount, len(items))
+	for i, item := range items {
+		resp[i] = dto.AnalyticsCodeCount{Code: item.Code, Count: item.Count}
+	}
+	return resp
+}
+
+func statusCountsToAPI(items []models.AnalyticsStatusCount) []dto.AnalyticsStatusCount {
+	resp := make([]dto.AnalyticsStatusCount, len(items))
+	for i, item := range items {
+		resp[i] = dto.AnalyticsStatusCount{Status: item.Status, Count: item.Count}
+	}
+	return resp
 }
 
 func countPointsToAPI(points []models.AnalyticsCountPoint) []dto.AnalyticsCountPoint {
@@ -122,6 +191,14 @@ func qualityPointsToAPI(points []models.AnalyticsQualityPoint) []dto.AnalyticsQu
 	resp := make([]dto.AnalyticsQualityPoint, len(points))
 	for i, point := range points {
 		resp[i] = dto.AnalyticsQualityPoint{Date: point.Date, AverageQualityScore: point.AverageQualityScore}
+	}
+	return resp
+}
+
+func scorePointsToAPI(points []models.AnalyticsScorePoint) []dto.AnalyticsScorePoint {
+	resp := make([]dto.AnalyticsScorePoint, len(points))
+	for i, point := range points {
+		resp[i] = dto.AnalyticsScorePoint{Date: point.Date, AverageScore: point.AverageScore}
 	}
 	return resp
 }

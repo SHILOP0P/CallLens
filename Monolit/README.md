@@ -563,7 +563,7 @@ Notifications:
 | `company_uuid` | UUID компании |
 | `department_uuid` | UUID отдела |
 
-Все analytics-фильтры применяются только поверх звонков, которые видны текущему пользователю по общей модели видимости. Backend считает `calls_total`, breakdown по статусам и `average_duration_seconds` SQL-агрегацией, а quality/topics/risks/recommendations агрегирует из подтвержденных полей `call_analyses.result_json`.
+Все analytics-фильтры применяются только поверх звонков, которые видны текущему пользователю по общей модели видимости. Backend считает `calls_total`, breakdown по статусам и `average_duration_seconds` SQL-агрегацией, а quality/topics/risks/recommendations и free analytics v2 агрегирует из сохраненных `call_analyses.result_json`. Endpoint не вызывает AI и не запускает новый анализ.
 
 Ответ:
 
@@ -576,8 +576,52 @@ Notifications:
   "calls_analyzed": 20,
   "calls_failed": 0,
   "average_duration_seconds": 438,
-  "average_quality_score": null,
+  "average_quality_score": 4.3,
   "quality_score_scale": 5,
+  "average_score": 86.4,
+  "score_scale": 100,
+  "score_distribution": {
+    "critical": 1,
+    "weak": 3,
+    "normal": 8,
+    "good": 10,
+    "excellent": 4
+  },
+  "criteria_summary": [
+    {
+      "code": "needs_discovery",
+      "title": "Выявление потребности",
+      "average_score": 62.5,
+      "met": 3,
+      "partially_met": 4,
+      "missed": 2,
+      "unclear": 1,
+      "not_applicable": 0,
+      "calls_count": 10
+    }
+  ],
+  "top_weak_criteria": [
+    {
+      "code": "needs_discovery",
+      "title": "Выявление потребности",
+      "average_score": 62.5,
+      "missed_count": 2,
+      "partially_met_count": 4
+    }
+  ],
+  "top_issue_codes": [
+    { "code": "weak_next_step", "count": 7 }
+  ],
+  "business_outcomes": [
+    { "status": "follow_up_needed", "count": 8 }
+  ],
+  "next_step_summary": {
+    "with_next_step": 12,
+    "specific": 9,
+    "with_deadline": 4,
+    "with_responsible_person": 7,
+    "missing": 5
+  },
   "top_topics": [],
   "risks_count": null,
   "recommendations_count": null,
@@ -591,6 +635,9 @@ Notifications:
     "quality_by_day": [
       { "date": "2026-07-01", "average_quality_score": 4.5 }
     ],
+    "score_by_day": [
+      { "date": "2026-07-01", "average_score": 90.0 }
+    ],
     "duration_by_day": [
       { "date": "2026-07-01", "average_duration_seconds": 420 }
     ],
@@ -601,7 +648,11 @@ Notifications:
 }
 ```
 
-`average_quality_score` читает первое подтвержденное поле из `quality_score`, `score`, `overall_score`, `manager_score` и приводит значение к шкале 1..5. `risks_count` использует `risks`, `customer_objections`, `manager_quality.issues`. `recommendations_count` использует `manager_quality.recommendations`, `next_steps`, `recommendations`. `top_topics` использует `topics` и `top_topics`. CRM-сущности, сделки, воронка продаж и клиентская база в analytics не добавляются.
+`average_score` всегда возвращается в шкале 0..100, `score_scale` всегда равен `100`. Для совместимости `average_quality_score` и `quality_by_day` остаются в шкале 1..5 и считаются как `average_score / 20` с округлением до 1 знака. Score извлекается сначала из v2-пары `score` + `score_scale`, затем из legacy-полей `quality_score`, `overall_score`, `manager_score`, `score`.
+
+`score_distribution` считает только analyzed calls с валидным `result_json`: `critical` = 0..49, `weak` = 50..64, `normal` = 65..79, `good` = 80..89, `excellent` = 90..100. `criteria_summary` и `top_weak_criteria` строятся из `criteria_results`; `not_applicable` учитывается в счетчике, но исключается из среднего score критерия. `top_issue_codes` строится из `issue_codes` с игнорированием пустых строк. `business_outcomes` использует `business_outcome.status`, неизвестные статусы попадают в `unclear`. `next_step_summary` использует `next_step_quality`, а если его нет, fallback смотрит `next_step` и `next_steps`.
+
+`risks_count` использует `risks`, `customer_objections`, `manager_quality.issues`. `recommendations_count` использует `manager_quality.recommendations`, `next_steps`, `recommendations`. `top_topics` использует `topics` и `top_topics`. CRM-сущности, сделки, воронка продаж и клиентская база в analytics не добавляются.
 
 `GET /api/v1/monitoring/processing` принимает query-параметры:
 

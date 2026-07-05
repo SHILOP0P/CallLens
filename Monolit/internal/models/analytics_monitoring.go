@@ -30,16 +30,71 @@ type AnalyticsOverview struct {
 	AverageDurationSeconds *int
 	AverageQualityScore    *float64
 	QualityScoreScale      int
+	AverageScore           *float64
+	ScoreScale             int
+	ScoreDistribution      AnalyticsScoreDistribution
+	CriteriaSummary        []AnalyticsCriterionSummary
+	TopWeakCriteria        []AnalyticsWeakCriterion
+	TopIssueCodes          []AnalyticsCodeCount
+	BusinessOutcomes       []AnalyticsStatusCount
+	NextStepSummary        AnalyticsNextStepSummary
 	TopTopics              []AnalyticsTopicCount
 	RisksCount             *int
 	RecommendationsCount   *int
 	Charts                 AnalyticsCharts
 }
 
+type AnalyticsScoreDistribution struct {
+	Critical  int
+	Weak      int
+	Normal    int
+	Good      int
+	Excellent int
+}
+
+type AnalyticsCriterionSummary struct {
+	Code          string
+	Title         string
+	AverageScore  *float64
+	Met           int
+	PartiallyMet  int
+	Missed        int
+	Unclear       int
+	NotApplicable int
+	CallsCount    int
+}
+
+type AnalyticsWeakCriterion struct {
+	Code              string
+	Title             string
+	AverageScore      *float64
+	MissedCount       int
+	PartiallyMetCount int
+}
+
+type AnalyticsCodeCount struct {
+	Code  string
+	Count int
+}
+
+type AnalyticsStatusCount struct {
+	Status string
+	Count  int
+}
+
+type AnalyticsNextStepSummary struct {
+	WithNextStep          int
+	Specific              int
+	WithDeadline          int
+	WithResponsiblePerson int
+	Missing               int
+}
+
 type AnalyticsCharts struct {
 	CallsByDay    []AnalyticsCountPoint
 	AnalyzedByDay []AnalyticsCountPoint
 	QualityByDay  []AnalyticsQualityPoint
+	ScoreByDay    []AnalyticsScorePoint
 	DurationByDay []AnalyticsDurationPoint
 	RisksByDay    []AnalyticsCountPoint
 }
@@ -52,6 +107,11 @@ type AnalyticsCountPoint struct {
 type AnalyticsQualityPoint struct {
 	Date                string
 	AverageQualityScore float64
+}
+
+type AnalyticsScorePoint struct {
+	Date         string
+	AverageScore float64
 }
 
 type AnalyticsDurationPoint struct {
