@@ -26,6 +26,8 @@ func (r *Repository) UpdateCompanyMemberStatus(ctx context.Context, companyID uu
 	SET status = $3
 	WHERE company_uuid = $1
 	  AND user_uuid = $2
+	  AND role <> 'company_manager'
+	  AND status = 'active'
 	RETURNING company_uuid,
 	          user_uuid,
 	          role,
