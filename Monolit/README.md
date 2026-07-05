@@ -518,6 +518,10 @@ Reports:
 
 `POST /api/v1/calls/{uuid}/reports` и `POST /api/v1/reports` с `scope=call` используют один и тот же генератор отчета по звонку. Поддерживаемые форматы: `pdf`, `docx`, `md`, `xlsx`. Для `scope=company`, `department`, `manager`, `period` API возвращает `501 not_implemented`, пока в backend нет реального агрегированного генератора.
 
+Deep-analysis reports:
+
+`POST /api/v1/analytics/deep-analyses/{uuid}/reports` создает отдельный экспорт по готовому `aggregate_analyses`/deep analysis и не использует call-specific таблицу `call_report_exports`. Поддерживаемые форматы: `pdf`, `docx`, `md`, `xlsx`. Исходный deep analysis должен быть видим текущему пользователю и иметь `status=done`; иначе API возвращает `404 aggregate_report_not_found` или `409 invalid_aggregate_analysis_status`. Готовый файл скачивается через `/api/v1/analytics/deep-analysis-reports/{report_uuid}/download`; `pending` возвращает `409 report_not_ready`, истекший или отсутствующий файл возвращает `410 aggregate_report_file_not_found`. Subscription/model-tier логика для этих routes не добавлялась.
+
 Analytics and monitoring:
 
 | Method | Path | Auth | Описание |
@@ -526,6 +530,10 @@ Analytics and monitoring:
 | POST | `/api/v1/analytics/deep-analyses` | Да | Создать или переиспользовать глубокий AI-анализ периода |
 | GET | `/api/v1/analytics/deep-analyses` | Да | Получить список видимых deep analyses |
 | GET | `/api/v1/analytics/deep-analyses/{uuid}` | Да | Получить один видимый deep analysis |
+| POST | `/api/v1/analytics/deep-analyses/{uuid}/reports` | Да | Создать экспорт отчета по готовому deep analysis |
+| GET | `/api/v1/analytics/deep-analyses/{uuid}/reports` | Да | Получить экспорты одного видимого deep analysis |
+| GET | `/api/v1/analytics/deep-analysis-reports/{report_uuid}/download` | Да | Скачать готовый deep-analysis report |
+| DELETE | `/api/v1/analytics/deep-analysis-reports/{report_uuid}` | Да | Удалить deep-analysis report |
 | GET | `/api/v1/monitoring/processing` | Да | Summary очереди обработки для `admin`/`superadmin` или `company_manager` своей компании |
 
 Search:

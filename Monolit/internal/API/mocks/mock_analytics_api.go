@@ -26,6 +26,22 @@ func (_m *AnalyticsAPI) CreateDeepAnalysis(w http.ResponseWriter, r *http.Reques
 	_m.Called(w, r)
 }
 
+func (_m *AnalyticsAPI) CreateAggregateReport(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+func (_m *AnalyticsAPI) ListAggregateReports(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+func (_m *AnalyticsAPI) DownloadAggregateReport(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+func (_m *AnalyticsAPI) DeleteAggregateReport(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
 // AnalyticsAPI_CreateDeepAnalysis_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateDeepAnalysis'
 type AnalyticsAPI_CreateDeepAnalysis_Call struct {
 	*mock.Call

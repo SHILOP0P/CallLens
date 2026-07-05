@@ -101,6 +101,9 @@ var ErrReportFileNotFound = errors.New("report file not found")
 var ErrInvalidReportPath = errors.New("invalid report path")
 var ErrReportNotReady = errors.New("report not ready")
 var ErrReportExpired = errors.New("report expired")
+var ErrAggregateReportNotFound = errors.New("aggregate report not found")
+var ErrInvalidAggregateReportInput = errors.New("invalid aggregate report input")
+var ErrAggregateReportFileNotFound = errors.New("aggregate report file not found")
 
 // INVITATION
 var ErrInvitationNotFound = errors.New("invitation not found")

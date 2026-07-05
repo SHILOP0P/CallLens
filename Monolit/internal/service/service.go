@@ -32,6 +32,10 @@ type AnalyticsService interface {
 	CreateDeepAnalysis(ctx context.Context, input models.CreateDeepAnalysisInput) (models.AggregateAnalysis, error)
 	ListDeepAnalyses(ctx context.Context, input models.ListDeepAnalysesInput) (models.ListAggregateAnalysesResult, error)
 	GetDeepAnalysis(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.AggregateAnalysis, error)
+	CreateAggregateReport(ctx context.Context, input models.CreateAggregateReportInput) (models.AggregateReportExport, error)
+	ListAggregateReports(ctx context.Context, analysisID uuid.UUID, userID uuid.UUID) ([]models.AggregateReportExport, error)
+	GetAggregateReportFile(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) (models.AggregateReportFile, error)
+	DeleteAggregateReport(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) error
 }
 
 type CallFolderService interface {

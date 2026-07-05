@@ -244,6 +244,8 @@ func main() {
 	analyticsSvc.SetCompanyRepository(companyRepository)
 	analyticsSvc.SetDepartmentRepository(departmentRepository)
 	analyticsSvc.SetAnalyzer(analyzerProvider)
+	analyticsSvc.SetReportRepository(reportRepository)
+	analyticsSvc.SetReportStorage(reportsStorage)
 	callFolderSvc := callFolderService.NewService(callFolderRepository, callRepository, companyRepository, departmentRepository)
 	monitoringSvc := monitoringService.NewService(processingJobRepository, companyRepository)
 	searchSvc := searchService.NewService(searchRepository)

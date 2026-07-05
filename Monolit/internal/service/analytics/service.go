@@ -1,13 +1,16 @@
 package analytics
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"calllens/monolit/internal/analyzer"
 	"calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository"
+	"calllens/monolit/internal/storage"
 
 	"github.com/google/uuid"
 )
@@ -17,12 +20,15 @@ type Service struct {
 	callFolderRepository repository.CallFolderRepository
 	companyRepository    repository.CompanyRepository
 	departmentRepository repository.DepartmentRepository
+	reportRepository     repository.AggregateReportRepository
+	reportStorage        storage.ReportStorage
 	analyzer             analyzer.Analyzer
 	now                  func() time.Time
+	retention            time.Duration
 }
 
 func NewService(analyticsRepository repository.AnalyticsRepository) *Service {
-	return &Service{analyticsRepository: analyticsRepository, now: func() time.Time { return time.Now().UTC() }}
+	return &Service{analyticsRepository: analyticsRepository, now: func() time.Time { return time.Now().UTC() }, retention: 7 * 24 * time.Hour}
 }
 
 func (s *Service) SetCallFolderRepository(repository repository.CallFolderRepository) {
@@ -39,6 +45,14 @@ func (s *Service) SetDepartmentRepository(repository repository.DepartmentReposi
 
 func (s *Service) SetAnalyzer(analyzer analyzer.Analyzer) {
 	s.analyzer = analyzer
+}
+
+func (s *Service) SetReportRepository(repository repository.AggregateReportRepository) {
+	s.reportRepository = repository
+}
+
+func (s *Service) SetReportStorage(storage storage.ReportStorage) {
+	s.reportStorage = storage
 }
 
 func (s *Service) GetOverview(ctx context.Context, input models.AnalyticsOverviewInput) (models.AnalyticsOverview, error) {
@@ -152,6 +166,116 @@ func (s *Service) GetDeepAnalysis(ctx context.Context, id uuid.UUID, userID uuid
 		return models.AggregateAnalysis{}, models.ErrAggregateAnalysisNotFound
 	}
 	return analysis, nil
+}
+
+func (s *Service) CreateAggregateReport(ctx context.Context, input models.CreateAggregateReportInput) (models.AggregateReportExport, error) {
+	if input.AggregateAnalysisUUID == uuid.Nil || input.UserUUID == uuid.Nil || s.reportRepository == nil || s.reportStorage == nil {
+		return models.AggregateReportExport{}, models.ErrInvalidAggregateReportInput
+	}
+	format, err := normalizeReportFormat(input.Format)
+	if err != nil {
+		return models.AggregateReportExport{}, err
+	}
+	analysis, err := s.GetDeepAnalysis(ctx, input.AggregateAnalysisUUID, input.UserUUID)
+	if err != nil {
+		return models.AggregateReportExport{}, err
+	}
+	if analysis.Status != models.AggregateAnalysisStatusDone {
+		return models.AggregateReportExport{}, models.ErrInvalidAnalysisStatus
+	}
+	now := s.now()
+	reportID := uuid.New()
+	fileName := aggregateReportFileName(analysis, reportID, format)
+	report := models.AggregateReportExport{
+		ID: reportID, AggregateAnalysisUUID: analysis.ID, RequestedByUserUUID: input.UserUUID,
+		Format: format, Status: models.ReportStatusPending, FileName: fileName, ContentType: reportContentType(format),
+		CreatedAt: now, UpdatedAt: now, ExpiresAt: now.Add(s.retention),
+	}
+	report, err = s.reportRepository.CreateAggregate(ctx, report)
+	if err != nil {
+		return models.AggregateReportExport{}, err
+	}
+	content, err := generateAggregateReport(format, AggregateReportData{Analysis: analysis, GeneratedAt: now})
+	if err != nil {
+		return s.markAggregateReportFailed(ctx, report.ID, err)
+	}
+	saved, err := s.reportStorage.Save(ctx, models.SaveReportInput{
+		ReportUUID: report.ID, AggregateAnalysisUUID: analysis.ID, Format: format,
+		FileName: fileName, MimeType: reportContentType(format), Content: bytes.NewReader(content),
+	})
+	if err != nil {
+		return s.markAggregateReportFailed(ctx, report.ID, err)
+	}
+	return s.reportRepository.MarkAggregateReady(ctx, models.MarkAggregateReportReadyInput{
+		ID: report.ID, StoragePath: saved.Path, FileName: fileName, ContentType: saved.MimeType, SizeBytes: saved.SizeBytes,
+	})
+}
+
+func (s *Service) ListAggregateReports(ctx context.Context, analysisID uuid.UUID, userID uuid.UUID) ([]models.AggregateReportExport, error) {
+	if analysisID == uuid.Nil || userID == uuid.Nil || s.reportRepository == nil {
+		return nil, models.ErrInvalidAggregateReportInput
+	}
+	if _, err := s.GetDeepAnalysis(ctx, analysisID, userID); err != nil {
+		return nil, err
+	}
+	return s.reportRepository.ListAggregateByAnalysisUUID(ctx, analysisID, s.now())
+}
+
+func (s *Service) GetAggregateReportFile(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) (models.AggregateReportFile, error) {
+	if reportID == uuid.Nil || userID == uuid.Nil || s.reportRepository == nil || s.reportStorage == nil {
+		return models.AggregateReportFile{}, models.ErrInvalidAggregateReportInput
+	}
+	report, err := s.reportRepository.GetAggregateByUUID(ctx, reportID)
+	if err != nil {
+		return models.AggregateReportFile{}, err
+	}
+	if _, err := s.GetDeepAnalysis(ctx, report.AggregateAnalysisUUID, userID); err != nil {
+		return models.AggregateReportFile{}, models.ErrAggregateReportNotFound
+	}
+	if !s.now().Before(report.ExpiresAt) {
+		return models.AggregateReportFile{}, models.ErrReportExpired
+	}
+	if report.Status != models.ReportStatusReady {
+		return models.AggregateReportFile{}, models.ErrReportNotReady
+	}
+	if report.StoragePath == nil {
+		return models.AggregateReportFile{}, models.ErrAggregateReportFileNotFound
+	}
+	content, err := s.reportStorage.Open(ctx, *report.StoragePath)
+	if err != nil {
+		if errors.Is(err, models.ErrReportFileNotFound) {
+			return models.AggregateReportFile{}, models.ErrAggregateReportFileNotFound
+		}
+		return models.AggregateReportFile{}, err
+	}
+	return models.AggregateReportFile{Report: report, Content: content}, nil
+}
+
+func (s *Service) DeleteAggregateReport(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) error {
+	if reportID == uuid.Nil || userID == uuid.Nil || s.reportRepository == nil || s.reportStorage == nil {
+		return models.ErrInvalidAggregateReportInput
+	}
+	report, err := s.reportRepository.GetAggregateByUUID(ctx, reportID)
+	if err != nil {
+		return err
+	}
+	if _, err := s.GetDeepAnalysis(ctx, report.AggregateAnalysisUUID, userID); err != nil {
+		return models.ErrAggregateReportNotFound
+	}
+	if report.StoragePath != nil {
+		if err := s.reportStorage.Delete(ctx, *report.StoragePath); err != nil && !errors.Is(err, models.ErrReportFileNotFound) {
+			return err
+		}
+	}
+	return s.reportRepository.DeleteAggregate(ctx, reportID)
+}
+
+func (s *Service) markAggregateReportFailed(ctx context.Context, reportID uuid.UUID, cause error) (models.AggregateReportExport, error) {
+	report, err := s.reportRepository.MarkAggregateFailed(ctx, models.MarkAggregateReportFailedInput{ID: reportID, ErrorMessage: cause.Error()})
+	if err != nil {
+		return models.AggregateReportExport{}, fmt.Errorf("mark aggregate report failed after %w: %w", cause, err)
+	}
+	return report, cause
 }
 
 func (s *Service) normalizeCreateInput(ctx context.Context, input *models.CreateDeepAnalysisInput) error {

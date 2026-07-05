@@ -51,6 +51,22 @@ func (s fakeAnalyticsService) GetDeepAnalysis(context.Context, uuid.UUID, uuid.U
 	panic("not implemented")
 }
 
+func (s fakeAnalyticsService) CreateAggregateReport(context.Context, models.CreateAggregateReportInput) (models.AggregateReportExport, error) {
+	panic("not implemented")
+}
+
+func (s fakeAnalyticsService) ListAggregateReports(context.Context, uuid.UUID, uuid.UUID) ([]models.AggregateReportExport, error) {
+	panic("not implemented")
+}
+
+func (s fakeAnalyticsService) GetAggregateReportFile(context.Context, uuid.UUID, uuid.UUID) (models.AggregateReportFile, error) {
+	panic("not implemented")
+}
+
+func (s fakeAnalyticsService) DeleteAggregateReport(context.Context, uuid.UUID, uuid.UUID) error {
+	panic("not implemented")
+}
+
 func TestGetOverviewParsesFiltersAndReturnsNoUnsupportedMetrics(t *testing.T) {
 	userID := uuid.New()
 	companyID := uuid.New()

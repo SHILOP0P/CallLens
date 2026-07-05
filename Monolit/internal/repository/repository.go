@@ -148,6 +148,15 @@ type ReportRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
+type AggregateReportRepository interface {
+	CreateAggregate(ctx context.Context, report models.AggregateReportExport) (models.AggregateReportExport, error)
+	MarkAggregateReady(ctx context.Context, input models.MarkAggregateReportReadyInput) (models.AggregateReportExport, error)
+	MarkAggregateFailed(ctx context.Context, input models.MarkAggregateReportFailedInput) (models.AggregateReportExport, error)
+	GetAggregateByUUID(ctx context.Context, id uuid.UUID) (models.AggregateReportExport, error)
+	ListAggregateByAnalysisUUID(ctx context.Context, analysisID uuid.UUID, now time.Time) ([]models.AggregateReportExport, error)
+	DeleteAggregate(ctx context.Context, id uuid.UUID) error
+}
+
 type ProcessingJobRepository interface {
 	Create(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error)
 	Enqueue(ctx context.Context, job models.ProcessingJob) (models.ProcessingJob, error)
