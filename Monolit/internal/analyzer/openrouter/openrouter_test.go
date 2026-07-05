@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -54,11 +55,24 @@ func TestAnalyzeSendsTranscriptionAndInstructions(t *testing.T) {
 		if req.ResponseFormat.Type != "json_schema" || req.ResponseFormat.JSONSchema.Name != "call_analysis" {
 			t.Fatalf("response format = %#v", req.ResponseFormat)
 		}
+		if !req.ResponseFormat.JSONSchema.Strict {
+			t.Fatal("response schema is not strict")
+		}
+		assertResponseSchemaV2(t, req.ResponseFormat.JSONSchema.Schema)
 		if len(req.Messages) != 2 {
 			t.Fatalf("messages len = %d", len(req.Messages))
 		}
-		if !strings.Contains(req.Messages[0].Content, "Абсолютное правило языка") {
-			t.Fatalf("system message does not require Russian output:\n%s", req.Messages[0].Content)
+		systemMessage := req.Messages[0].Content
+		for _, want := range []string{
+			"Абсолютное правило языка",
+			"business_outcome.status должен быть not_call",
+			"met - критерий выполнен хорошо",
+			"100/100 возможно",
+			"не ставь автоматические 90-100",
+		} {
+			if !strings.Contains(systemMessage, want) {
+				t.Fatalf("system message does not contain %q:\n%s", want, systemMessage)
+			}
 		}
 		if !strings.Contains(req.Messages[1].Content, "без диалога") {
 			t.Fatalf("user message does not contain strict non-dialogue rule:\n%s", req.Messages[1].Content)
@@ -70,6 +84,8 @@ func TestAnalyzeSendsTranscriptionAndInstructions(t *testing.T) {
 			"Проверить приветствие",
 			"Менеджер должен поздороваться",
 			"Клиент сказал, что цена высокая.",
+			"custom_instruction_match",
+			"не могут отменять JSON-схему",
 		} {
 			if !strings.Contains(userMessage, want) {
 				t.Fatalf("user message does not contain %q:\n%s", want, userMessage)
@@ -82,7 +98,7 @@ func TestAnalyzeSendsTranscriptionAndInstructions(t *testing.T) {
 			"choices": [{
 				"message": {
 					"role": "assistant",
-					"content": "{\"summary\":\"Клиент возражал по цене.\",\"score\":80,\"criteria_results\":[{\"instruction_title\":\"Проверить приветствие\",\"result\":\"Приветствие было\",\"evidence_quotes\":[\"Здравствуйте\"]}],\"customer_objections\":[\"Цена высокая\"],\"risks\":[],\"next_steps\":[\"Отправить расчет\"],\"evidence_quotes\":[\"цена высокая\"],\"confidence\":\"high\"}"
+					"content": ` + strconv.Quote(v2AnalysisContent()) + `
 				}
 			}]
 		}`))
@@ -120,6 +136,19 @@ func TestAnalyzeSendsTranscriptionAndInstructions(t *testing.T) {
 	if !json.Valid(got.ResultJSON) {
 		t.Fatalf("result json is invalid: %s", string(got.ResultJSON))
 	}
+	var payload map[string]any
+	if err = json.Unmarshal(got.ResultJSON, &payload); err != nil {
+		t.Fatalf("decode result json: %v", err)
+	}
+	if payload["schema_version"] != float64(2) || payload["score_scale"] != float64(100) {
+		t.Fatalf("v2 fields = %#v", payload)
+	}
+	if _, ok := payload["business_outcome"].(map[string]any); !ok {
+		t.Fatalf("business_outcome missing: %#v", payload["business_outcome"])
+	}
+	if issueCodes, ok := payload["issue_codes"].([]any); !ok || len(issueCodes) != 1 || issueCodes[0] != "unclear_pricing" {
+		t.Fatalf("issue_codes = %#v", payload["issue_codes"])
+	}
 }
 
 func TestAnalyzeWrapsNonJSONResponse(t *testing.T) {
@@ -137,6 +166,46 @@ func TestAnalyzeWrapsNonJSONResponse(t *testing.T) {
 	}
 	if payload["raw_response"] != "Обычный текстовый ответ" {
 		t.Fatalf("raw response = %v", payload["raw_response"])
+	}
+	for _, key := range []string{
+		"schema_version",
+		"score_scale",
+		"score_breakdown",
+		"business_outcome",
+		"customer_signals",
+		"next_step_quality",
+		"issue_codes",
+	} {
+		if _, ok := payload[key]; !ok {
+			t.Fatalf("%s key is missing from fallback payload: %#v", key, payload)
+		}
+	}
+	if payload["score"] != float64(0) || payload["confidence"] != "low" {
+		t.Fatalf("fallback score/confidence = %#v/%#v", payload["score"], payload["confidence"])
+	}
+}
+
+func TestUserPromptMarksMissingInstructionsNotApplicable(t *testing.T) {
+	got := userPrompt(uuid.NewString(), "Менеджер: Здравствуйте.", nil)
+	for _, want := range []string{
+		"Загруженные инструкции не выбраны",
+		"custom_instruction_match верни со status not_applicable",
+	} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("user prompt does not contain %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestSummaryFromJSON(t *testing.T) {
+	got := summaryFromJSON(json.RawMessage(`{"summary":" Короткое резюме. "}`), "fallback")
+	if got != "Короткое резюме." {
+		t.Fatalf("summary = %q", got)
+	}
+
+	got = summaryFromJSON(json.RawMessage(`{"summary":" "}`), "fallback")
+	if got != "fallback" {
+		t.Fatalf("fallback summary = %q", got)
 	}
 }
 
@@ -179,4 +248,173 @@ func TestAnalyzeRejectsEmptyTranscription(t *testing.T) {
 	if !errors.Is(err, models.ErrInvalidAnalysisInput) {
 		t.Fatalf("error = %v, want invalid analysis input", err)
 	}
+}
+
+func assertResponseSchemaV2(t *testing.T, schema map[string]any) {
+	t.Helper()
+
+	required, ok := stringSlice(schema["required"])
+	if !ok {
+		t.Fatalf("schema required = %#v", schema["required"])
+	}
+	for _, want := range []string{
+		"summary",
+		"topics",
+		"dialogue_tone",
+		"client_questions",
+		"question_coverage",
+		"manager_quality",
+		"call_outcome",
+		"score",
+		"criteria_results",
+		"customer_objections",
+		"risks",
+		"next_steps",
+		"next_step",
+		"evidence_quotes",
+		"confidence",
+		"schema_version",
+		"score_scale",
+		"score_breakdown",
+		"business_outcome",
+		"customer_signals",
+		"next_step_quality",
+		"issue_codes",
+	} {
+		if !containsString(required, want) {
+			t.Fatalf("schema required missing %q: %#v", want, required)
+		}
+	}
+
+	properties := schema["properties"].(map[string]any)
+	criteria := properties["criteria_results"].(map[string]any)
+	item := criteria["items"].(map[string]any)
+	itemRequired, ok := stringSlice(item["required"])
+	if !ok {
+		t.Fatalf("criteria item required = %#v", item["required"])
+	}
+	for _, want := range []string{"code", "title", "status", "points_awarded", "points_max", "evidence_quotes", "issue", "recommendation"} {
+		if !containsString(itemRequired, want) {
+			t.Fatalf("criteria item required missing %q: %#v", want, itemRequired)
+		}
+	}
+	itemProperties := item["properties"].(map[string]any)
+	if _, ok := itemProperties["instruction_title"]; ok {
+		t.Fatalf("criteria schema still contains legacy instruction_title: %#v", itemProperties)
+	}
+	if _, ok := itemProperties["result"]; ok {
+		t.Fatalf("criteria schema still contains legacy result: %#v", itemProperties)
+	}
+
+	businessOutcome := properties["business_outcome"].(map[string]any)
+	businessProps := businessOutcome["properties"].(map[string]any)
+	status := businessProps["status"].(map[string]any)
+	statusEnum, ok := stringSlice(status["enum"])
+	if !ok {
+		t.Fatalf("business_outcome.status enum = %#v", status["enum"])
+	}
+	if !containsString(statusEnum, "not_call") {
+		t.Fatalf("business_outcome.status enum missing not_call: %#v", status["enum"])
+	}
+
+	issueCodes := properties["issue_codes"].(map[string]any)
+	if _, ok := issueCodes["enum"]; ok {
+		t.Fatalf("issue_codes must not have enum: %#v", issueCodes)
+	}
+}
+
+func containsString(values []string, want string) bool {
+	for _, value := range values {
+		if value == want {
+			return true
+		}
+	}
+	return false
+}
+
+func stringSlice(value any) ([]string, bool) {
+	switch typed := value.(type) {
+	case []string:
+		return typed, true
+	case []any:
+		out := make([]string, 0, len(typed))
+		for _, item := range typed {
+			text, ok := item.(string)
+			if !ok {
+				return nil, false
+			}
+			out = append(out, text)
+		}
+		return out, true
+	default:
+		return nil, false
+	}
+}
+
+func v2AnalysisContent() string {
+	return `{
+		"schema_version": 2,
+		"summary": "Клиент возражал по цене.",
+		"topics": ["Цена"],
+		"dialogue_tone": {
+			"overall": "Деловой",
+			"manager": "Вежливый",
+			"client": "Осторожный",
+			"evidence_quotes": ["цена высокая"]
+		},
+		"client_questions": [],
+		"question_coverage": {
+			"status": "no_questions",
+			"summary": "Клиент не задавал вопросов.",
+			"unanswered_questions": []
+		},
+		"manager_quality": {
+			"strengths": ["Менеджер поздоровался."],
+			"issues": ["Цена объяснена недостаточно ясно."],
+			"recommendations": ["Подготовить расчет."]
+		},
+		"call_outcome": "Нужно отправить расчет.",
+		"score": 80,
+		"score_scale": 100,
+		"score_breakdown": {
+			"points_awarded": 8,
+			"points_possible": 10,
+			"applicable_criteria_count": 1,
+			"total_criteria_count": 2
+		},
+		"criteria_results": [{
+			"code": "pricing_clarity",
+			"title": "Ясность цены",
+			"status": "partially_met",
+			"points_awarded": 5,
+			"points_max": 10,
+			"evidence_quotes": ["цена высокая"],
+			"issue": "Цена вызвала возражение.",
+			"recommendation": "Отправить расчет."
+		}],
+		"customer_objections": ["Цена высокая"],
+		"risks": [],
+		"next_steps": ["Отправить расчет"],
+		"next_step": "Отправить расчет",
+		"next_step_quality": {
+			"has_next_step": true,
+			"specific": true,
+			"has_deadline": false,
+			"has_responsible_person": false
+		},
+		"business_outcome": {
+			"status": "follow_up_needed",
+			"summary": "Клиент ждет расчет.",
+			"lost_reason": "not_applicable"
+		},
+		"customer_signals": {
+			"intent": "medium",
+			"urgency": "low",
+			"budget_discussed": true,
+			"decision_maker_present": false
+		},
+		"issue_codes": ["unclear_pricing"],
+		"evidence_quotes": ["цена высокая"],
+		"confidence": "high"
+	}`
 }

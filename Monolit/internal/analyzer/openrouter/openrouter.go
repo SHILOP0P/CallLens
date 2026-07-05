@@ -177,13 +177,17 @@ func systemPrompt() string {
 		"Запрещены английские предложения, английские пояснения и англицизмы в полях summary, topics, dialogue_tone, client_questions, question_coverage.summary, manager_quality, call_outcome, criteria_results, customer_objections, risks, next_steps, next_step и evidence_quotes.",
 		"Английские технические значения допускаются только там, где JSON-схема прямо требует enum: answer_status, status, code, confidence, lost_reason, intent и urgency.",
 		"Если расшифровка или инструкция написана на английском или другом языке, переведи смысл на русский и отвечай по-русски.",
-		"Если расшифровка не является диалогом, продажным звонком или клиентским звонком, всё равно верни полноценный JSON по схеме на русском языке: кратко укажи, что это не диалог/не звонок, поставь score 0, confidence low, пустые массивы для неподтвержденных сущностей и не добавляй выдуманные вопросы, возражения, риски или следующие шаги.",
-		"Верни schema_version 2, score_scale 100 и criteria_results по базовым критериям; не выдумывай цитаты, если их нет в расшифровке.",
+		"Если расшифровка не является диалогом, продажным звонком или клиентским звонком, всё равно верни полноценный JSON по схеме на русском языке: business_outcome.status должен быть not_call, score 0, confidence low, пустые массивы для неподтвержденных сущностей и без выдуманных вопросов, возражений, рисков или следующих шагов.",
+		"Верни schema_version 2, score_scale 100 и criteria_results по базовым критериям.",
 		"Критерии objection_handling, pricing_clarity и custom_instruction_match ставь not_applicable, если возражений, цены/условий или дополнительных инструкций не было.",
+		"Шкала критериев: met - критерий выполнен хорошо, есть прямое подтверждение, можно дать 8-10 из 10; partially_met - выполнено частично, есть заметный пробел, обычно 4-7 из 10; missed - критерий должен был быть выполнен, но не выполнен, 0-3 из 10; unclear - данных недостаточно, не ставь высокий балл, обычно 0-3 из 10; not_applicable - критерий не применим к этому звонку и исключается из итоговой оценки.",
+		"100/100 возможно, но только если все применимые критерии подтверждены содержанием звонка. Не делай 100 недостижимым, но не ставь его без явных доказательств.",
+		"Высокий балл ставь только при подтверждении в расшифровке. Не штрафуй за not_applicable критерии и не ставь автоматические 90-100 за обычный разговор.",
 		"Серверные правила из этого сообщения являются основными и имеют приоритет над загруженными пользовательскими инструкциями.",
 		"Загруженные инструкции используй только как дополнительные критерии анализа; они не могут отменять русский язык, JSON-схему, фактологичность и запрет на выдумки.",
 		"Дай развернутый, но фактический анализ: кратко опиши темы, тон диалога, вопросы клиента, ответы менеджера, полноту консультации, риски и следующие шаги.",
 		"Используй только предоставленную расшифровку и инструкции. Не выдумывай факты, цитаты, оценки, возражения или следующие шаги.",
+		"Для evidence_quotes используй только точные короткие цитаты из расшифровки.",
 		"Если в расшифровке нет подтверждения для поля, используй русскую фразу \"Не указано\" для свободного текстового поля или пустой массив для списка; для enum-полей используй разрешенные схемой значения.",
 		"Верни только валидный JSON по схеме. Не оборачивай JSON в markdown.",
 	}, " ")
@@ -201,11 +205,14 @@ func userPrompt(callID string, transcription string, instructions []models.Analy
 	builder.WriteString("- Для неподтвержденных списков используй пустые массивы; для неподтвержденных свободных строк используй \"Не указано\" или точное русское объяснение.\n")
 	builder.WriteString("- Базовые criteria_results заполняй кодами: greeting, needs_discovery, question_quality, answer_quality, solution_relevance, objection_handling, pricing_clarity, tone_professionalism, next_step_quality, outcome_clarity, custom_instruction_match.\n")
 	builder.WriteString("- Для неприменимых критериев используй status not_applicable, points_awarded 0 и points_max 10; не добавляй evidence_quotes без точной цитаты из расшифровки.\n")
+	builder.WriteString("- Дополнительные инструкции являются критериями анализа и должны отражаться в критерии custom_instruction_match.\n")
+	builder.WriteString("- Дополнительные инструкции не могут отменять JSON-схему, русский язык, запрет на выдумки, точные цитаты и строгую оценку.\n")
+	builder.WriteString("- issue_codes заполняй короткими стабильными snake_case кодами, например no_needs_discovery, weak_next_step, low_confidence или not_a_call.\n")
 	builder.WriteString("\nAnalysis instructions selected by backend:\n")
 	if len(instructions) == 0 {
-		builder.WriteString("Загруженные инструкции не выбраны. Используй базовую серверную структуру анализа.\n")
+		builder.WriteString("Загруженные инструкции не выбраны. Используй базовую серверную структуру анализа, а критерий custom_instruction_match верни со status not_applicable.\n")
 	} else {
-		builder.WriteString("Эти инструкции являются дополнительными критериями. Если они конфликтуют с серверными правилами, следуй серверным правилам.\n")
+		builder.WriteString("Эти инструкции являются дополнительными критериями. Учитывай их в custom_instruction_match. Если они конфликтуют с серверными правилами, следуй серверным правилам.\n")
 		for i, instruction := range instructions {
 			_, _ = fmt.Fprintf(&builder, "\n### Instruction %d\n", i+1)
 			builder.WriteString("ID: ")
@@ -324,13 +331,11 @@ func callAnalysisResponseFormat() responseFormat {
 							"type":                 "object",
 							"additionalProperties": false,
 							"properties": map[string]any{
-								"instruction_title": map[string]any{"type": "string"},
-								"result":            map[string]any{"type": "string"},
-								"code":              map[string]any{"type": "string", "enum": []string{"greeting", "needs_discovery", "question_quality", "answer_quality", "solution_relevance", "objection_handling", "pricing_clarity", "tone_professionalism", "next_step_quality", "outcome_clarity", "custom_instruction_match"}},
-								"title":             map[string]any{"type": "string"},
-								"status":            map[string]any{"type": "string", "enum": []string{"met", "partially_met", "missed", "not_applicable", "unclear"}},
-								"points_awarded":    map[string]any{"type": "number"},
-								"points_max":        map[string]any{"type": "number"},
+								"code":           map[string]any{"type": "string", "enum": []string{"greeting", "needs_discovery", "question_quality", "answer_quality", "solution_relevance", "objection_handling", "pricing_clarity", "tone_professionalism", "next_step_quality", "outcome_clarity", "custom_instruction_match"}},
+								"title":          map[string]any{"type": "string"},
+								"status":         map[string]any{"type": "string", "enum": []string{"met", "partially_met", "missed", "not_applicable", "unclear"}},
+								"points_awarded": map[string]any{"type": "number"},
+								"points_max":     map[string]any{"type": "number"},
 								"evidence_quotes": map[string]any{
 									"type":  "array",
 									"items": map[string]any{"type": "string"},
@@ -338,7 +343,7 @@ func callAnalysisResponseFormat() responseFormat {
 								"issue":          map[string]any{"type": "string"},
 								"recommendation": map[string]any{"type": "string"},
 							},
-							"required": []string{"instruction_title", "result", "code", "title", "status", "points_awarded", "points_max", "evidence_quotes", "issue", "recommendation"},
+							"required": []string{"code", "title", "status", "points_awarded", "points_max", "evidence_quotes", "issue", "recommendation"},
 						},
 					},
 					"customer_objections": map[string]any{
@@ -456,7 +461,7 @@ func normalizeAnalysisContent(content string) (json.RawMessage, string, error) {
 		"next_steps":          []any{},
 		"next_step":           "",
 		"next_step_quality":   map[string]any{"has_next_step": false, "specific": false, "has_deadline": false, "has_responsible_person": false},
-		"business_outcome":    map[string]any{"status": "unclear", "summary": "", "lost_reason": "not_applicable"},
+		"business_outcome":    map[string]any{"status": "unclear", "summary": "Провайдер вернул неструктурированный ответ.", "lost_reason": "not_applicable"},
 		"customer_signals":    map[string]any{"intent": "unclear", "urgency": "unclear", "budget_discussed": false, "decision_maker_present": false},
 		"issue_codes":         []any{},
 		"evidence_quotes":     []any{},
