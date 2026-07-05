@@ -71,6 +71,9 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 
 			//ANALYTICS
 			r.With(authGuard).Get("/analytics/overview", analyticsAPI.GetOverview)
+			r.With(authGuard).Post("/analytics/deep-analyses", analyticsAPI.CreateDeepAnalysis)
+			r.With(authGuard).Get("/analytics/deep-analyses", analyticsAPI.ListDeepAnalyses)
+			r.With(authGuard).Get("/analytics/deep-analyses/{uuid}", analyticsAPI.GetDeepAnalysis)
 			r.With(authGuard).Get("/monitoring/processing", monitoringAPI.GetProcessing)
 			r.With(authGuard).Get("/search", searchAPI.Search)
 

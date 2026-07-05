@@ -22,6 +22,9 @@ type CallAPI interface {
 
 type AnalyticsAPI interface {
 	GetOverview(w http.ResponseWriter, r *http.Request)
+	CreateDeepAnalysis(w http.ResponseWriter, r *http.Request)
+	ListDeepAnalyses(w http.ResponseWriter, r *http.Request)
+	GetDeepAnalysis(w http.ResponseWriter, r *http.Request)
 }
 
 type CallFolderAPI interface {

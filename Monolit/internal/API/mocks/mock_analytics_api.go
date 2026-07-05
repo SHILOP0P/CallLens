@@ -21,6 +21,74 @@ func (_m *AnalyticsAPI) EXPECT() *AnalyticsAPI_Expecter {
 	return &AnalyticsAPI_Expecter{mock: &_m.Mock}
 }
 
+// CreateDeepAnalysis provides a mock function with given fields: w, r
+func (_m *AnalyticsAPI) CreateDeepAnalysis(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AnalyticsAPI_CreateDeepAnalysis_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateDeepAnalysis'
+type AnalyticsAPI_CreateDeepAnalysis_Call struct {
+	*mock.Call
+}
+
+// CreateDeepAnalysis is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AnalyticsAPI_Expecter) CreateDeepAnalysis(w interface{}, r interface{}) *AnalyticsAPI_CreateDeepAnalysis_Call {
+	return &AnalyticsAPI_CreateDeepAnalysis_Call{Call: _e.mock.On("CreateDeepAnalysis", w, r)}
+}
+
+func (_c *AnalyticsAPI_CreateDeepAnalysis_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AnalyticsAPI_CreateDeepAnalysis_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AnalyticsAPI_CreateDeepAnalysis_Call) Return() *AnalyticsAPI_CreateDeepAnalysis_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AnalyticsAPI_CreateDeepAnalysis_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AnalyticsAPI_CreateDeepAnalysis_Call {
+	_c.Run(run)
+	return _c
+}
+
+// GetDeepAnalysis provides a mock function with given fields: w, r
+func (_m *AnalyticsAPI) GetDeepAnalysis(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AnalyticsAPI_GetDeepAnalysis_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetDeepAnalysis'
+type AnalyticsAPI_GetDeepAnalysis_Call struct {
+	*mock.Call
+}
+
+// GetDeepAnalysis is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AnalyticsAPI_Expecter) GetDeepAnalysis(w interface{}, r interface{}) *AnalyticsAPI_GetDeepAnalysis_Call {
+	return &AnalyticsAPI_GetDeepAnalysis_Call{Call: _e.mock.On("GetDeepAnalysis", w, r)}
+}
+
+func (_c *AnalyticsAPI_GetDeepAnalysis_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AnalyticsAPI_GetDeepAnalysis_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AnalyticsAPI_GetDeepAnalysis_Call) Return() *AnalyticsAPI_GetDeepAnalysis_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AnalyticsAPI_GetDeepAnalysis_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AnalyticsAPI_GetDeepAnalysis_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetOverview provides a mock function with given fields: w, r
 func (_m *AnalyticsAPI) GetOverview(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -51,6 +119,40 @@ func (_c *AnalyticsAPI_GetOverview_Call) Return() *AnalyticsAPI_GetOverview_Call
 }
 
 func (_c *AnalyticsAPI_GetOverview_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AnalyticsAPI_GetOverview_Call {
+	_c.Run(run)
+	return _c
+}
+
+// ListDeepAnalyses provides a mock function with given fields: w, r
+func (_m *AnalyticsAPI) ListDeepAnalyses(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AnalyticsAPI_ListDeepAnalyses_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListDeepAnalyses'
+type AnalyticsAPI_ListDeepAnalyses_Call struct {
+	*mock.Call
+}
+
+// ListDeepAnalyses is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AnalyticsAPI_Expecter) ListDeepAnalyses(w interface{}, r interface{}) *AnalyticsAPI_ListDeepAnalyses_Call {
+	return &AnalyticsAPI_ListDeepAnalyses_Call{Call: _e.mock.On("ListDeepAnalyses", w, r)}
+}
+
+func (_c *AnalyticsAPI_ListDeepAnalyses_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AnalyticsAPI_ListDeepAnalyses_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AnalyticsAPI_ListDeepAnalyses_Call) Return() *AnalyticsAPI_ListDeepAnalyses_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AnalyticsAPI_ListDeepAnalyses_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AnalyticsAPI_ListDeepAnalyses_Call {
 	_c.Run(run)
 	return _c
 }

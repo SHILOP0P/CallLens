@@ -166,6 +166,65 @@ func (a *Analyzer) Analyze(ctx context.Context, request models.AnalysisRequest) 
 	}, nil
 }
 
+func (a *Analyzer) AnalyzeAggregate(ctx context.Context, request models.AggregateAnalysisRequest) (models.AnalysisResult, error) {
+	if len(request.Sources) == 0 {
+		return models.AnalysisResult{}, models.ErrNoAnalyzedCallsForDeepAnalysis
+	}
+	sourceJSON, err := json.Marshal(request)
+	if err != nil {
+		return models.AnalysisResult{}, fmt.Errorf("marshal aggregate analysis source: %w", err)
+	}
+	temperature := 0.0
+	payload := chatRequest{
+		Model: a.model,
+		Messages: []message{
+			{Role: "system", Content: aggregateSystemPrompt()},
+			{Role: "user", Content: aggregateUserPrompt(string(sourceJSON))},
+		},
+		Temperature:    &temperature,
+		ResponseFormat: aggregateAnalysisResponseFormat(),
+		MaxTokens:      4096,
+	}
+	requestBody, err := json.Marshal(payload)
+	if err != nil {
+		return models.AnalysisResult{}, fmt.Errorf("marshal openrouter aggregate analysis request: %w", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.endpoint(), bytes.NewReader(requestBody))
+	if err != nil {
+		return models.AnalysisResult{}, fmt.Errorf("build openrouter aggregate analysis request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+a.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return models.AnalysisResult{}, fmt.Errorf("send openrouter aggregate analysis request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return models.AnalysisResult{}, decodeError(resp)
+	}
+	var result chatResponse
+	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return models.AnalysisResult{}, fmt.Errorf("decode openrouter aggregate analysis response: %w", err)
+	}
+	if len(result.Choices) == 0 {
+		return models.AnalysisResult{}, errors.New("openrouter aggregate analysis response has no choices")
+	}
+	content := strings.TrimSpace(result.Choices[0].Message.Content)
+	if content == "" {
+		return models.AnalysisResult{}, errors.New("openrouter aggregate analysis response is empty")
+	}
+	resultJSON, resultText, err := normalizeAnalysisContent(content)
+	if err != nil {
+		return models.AnalysisResult{}, err
+	}
+	model := result.Model
+	if model == "" {
+		model = a.model
+	}
+	return models.AnalysisResult{ResultJSON: resultJSON, ResultText: &resultText, Model: &model}, nil
+}
+
 func (a *Analyzer) endpoint() string {
 	return strings.TrimRight(a.baseURL, "/") + chatPath
 }
@@ -191,6 +250,27 @@ func systemPrompt() string {
 		"Если в расшифровке нет подтверждения для поля, используй русскую фразу \"Не указано\" для свободного текстового поля или пустой массив для списка; для enum-полей используй разрешенные схемой значения.",
 		"Верни только валидный JSON по схеме. Не оборачивай JSON в markdown.",
 	}, " ")
+}
+
+func aggregateSystemPrompt() string {
+	return strings.Join([]string{
+		"Ты делаешь глубокий агрегированный анализ периода для CallLens по уже сохраненным анализам звонков.",
+		"Вход содержит только компактные результаты per-call analysis, не полные транскрипции.",
+		"Используй только переданные данные. Не выдумывай факты, цитаты, причины, риски или рекомендации без опоры на вход.",
+		"Все человекочитаемые строки должны быть на русском языке.",
+		"Технические enum severity, priority и confidence должны быть только low, medium или high.",
+		"Верни только валидный JSON по схеме, без markdown.",
+	}, " ")
+}
+
+func aggregateUserPrompt(sourceJSON string) string {
+	return strings.Join([]string{
+		"Сделай глубокий анализ периода: почему качество просело, какие проблемы повторяются, где теряются клиенты, какие критерии слабые и какие действия приоритетны.",
+		"Для evidence_call_uuids используй только UUID звонков из входа.",
+		"Если данных недостаточно, прямо напиши это по-русски и поставь confidence low.",
+		"Входные данные JSON:",
+		sourceJSON,
+	}, "\n")
 }
 
 func userPrompt(callID string, transcription string, instructions []models.AnalysisInstructionContent) string {
@@ -431,6 +511,54 @@ func callAnalysisResponseFormat() responseFormat {
 					"evidence_quotes",
 					"confidence",
 				},
+			},
+		},
+	}
+}
+
+func aggregateAnalysisResponseFormat() responseFormat {
+	lowMediumHigh := []string{"low", "medium", "high"}
+	return responseFormat{
+		Type: "json_schema",
+		JSONSchema: jsonSchema{
+			Name:   "aggregate_analysis",
+			Strict: true,
+			Schema: map[string]any{
+				"type":                 "object",
+				"additionalProperties": false,
+				"properties": map[string]any{
+					"summary": map[string]any{"type": "string"},
+					"key_findings": map[string]any{"type": "array", "items": map[string]any{
+						"type": "object", "additionalProperties": false,
+						"properties": map[string]any{
+							"title": map[string]any{"type": "string"}, "description": map[string]any{"type": "string"},
+							"severity":            map[string]any{"type": "string", "enum": lowMediumHigh},
+							"evidence_call_uuids": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+						},
+						"required": []string{"title", "description", "severity", "evidence_call_uuids"},
+					}},
+					"recurring_issues": map[string]any{"type": "array", "items": map[string]any{
+						"type": "object", "additionalProperties": false,
+						"properties": map[string]any{
+							"code": map[string]any{"type": "string"}, "title": map[string]any{"type": "string"},
+							"count": map[string]any{"type": "number"}, "recommendation": map[string]any{"type": "string"},
+						},
+						"required": []string{"code", "title", "count", "recommendation"},
+					}},
+					"strengths": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+					"risks":     map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+					"priority_actions": map[string]any{"type": "array", "items": map[string]any{
+						"type": "object", "additionalProperties": false,
+						"properties": map[string]any{
+							"title": map[string]any{"type": "string"}, "priority": map[string]any{"type": "string", "enum": lowMediumHigh},
+							"expected_effect": map[string]any{"type": "string"},
+						},
+						"required": []string{"title", "priority", "expected_effect"},
+					}},
+					"manager_recommendations": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+					"confidence":              map[string]any{"type": "string", "enum": lowMediumHigh},
+				},
+				"required": []string{"summary", "key_findings", "recurring_issues", "strengths", "risks", "priority_actions", "manager_recommendations", "confidence"},
 			},
 		},
 	}

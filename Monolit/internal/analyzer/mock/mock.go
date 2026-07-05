@@ -75,6 +75,16 @@ func (a *Analyzer) Analyze(ctx context.Context, request models.AnalysisRequest) 
 	}, nil
 }
 
+func (a *Analyzer) AnalyzeAggregate(_ context.Context, request models.AggregateAnalysisRequest) (models.AnalysisResult, error) {
+	if len(request.Sources) == 0 {
+		return models.AnalysisResult{}, models.ErrNoAnalyzedCallsForDeepAnalysis
+	}
+	result := json.RawMessage(`{"summary":"Тестовый агрегированный анализ.","key_findings":[],"recurring_issues":[],"strengths":[],"risks":[],"priority_actions":[],"manager_recommendations":[],"confidence":"medium"}`)
+	text := "Тестовый агрегированный анализ."
+	model := "mock"
+	return models.AnalysisResult{ResultJSON: result, ResultText: &text, Model: &model}, nil
+}
+
 func stringPtr(value string) *string {
 	return &value
 }

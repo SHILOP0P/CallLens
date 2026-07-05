@@ -17,6 +17,10 @@ var ErrInvalidCallStatusTransition = errors.New("invalid call status transition"
 var ErrCallFolderNotFound = errors.New("call folder not found")
 var ErrInvalidCallFolderInput = errors.New("invalid call folder input")
 var ErrCallFolderScopeMismatch = errors.New("call folder scope mismatch")
+var ErrInvalidDeepAnalysisInput = errors.New("invalid deep analysis input")
+var ErrAggregateAnalysisNotFound = errors.New("aggregate analysis not found")
+var ErrNoAnalyzedCallsForDeepAnalysis = errors.New("no analyzed calls for deep analysis")
+var ErrDeepAnalysisLimitExceeded = errors.New("deep analysis limit exceeded")
 
 // AUDIO
 var ErrAudioFileNotFound = errors.New("audio file not found")

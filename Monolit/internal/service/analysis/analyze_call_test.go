@@ -363,6 +363,10 @@ func (a *recordingAnalyzer) Analyze(ctx context.Context, request models.Analysis
 	return a.result, nil
 }
 
+func (a *recordingAnalyzer) AnalyzeAggregate(context.Context, models.AggregateAnalysisRequest) (models.AnalysisResult, error) {
+	panic("not implemented")
+}
+
 type analysisProcessingJobRepository struct {
 	enqueued bool
 	job      models.ProcessingJob

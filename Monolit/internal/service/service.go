@@ -29,6 +29,9 @@ type CallService interface {
 
 type AnalyticsService interface {
 	GetOverview(ctx context.Context, input models.AnalyticsOverviewInput) (models.AnalyticsOverview, error)
+	CreateDeepAnalysis(ctx context.Context, input models.CreateDeepAnalysisInput) (models.AggregateAnalysis, error)
+	ListDeepAnalyses(ctx context.Context, input models.ListDeepAnalysesInput) (models.ListAggregateAnalysesResult, error)
+	GetDeepAnalysis(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.AggregateAnalysis, error)
 }
 
 type CallFolderService interface {

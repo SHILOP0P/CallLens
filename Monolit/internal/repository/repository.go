@@ -30,6 +30,15 @@ type CallRepository interface {
 
 type AnalyticsRepository interface {
 	GetAnalyticsOverview(ctx context.Context, input models.AnalyticsOverviewInput) (models.AnalyticsOverview, error)
+	CreateAggregateAnalysis(ctx context.Context, analysis models.AggregateAnalysis) (models.AggregateAnalysis, error)
+	GetAggregateAnalysisByUUID(ctx context.Context, id uuid.UUID) (models.AggregateAnalysis, error)
+	FindReusableAggregateAnalysis(ctx context.Context, input models.CreateDeepAnalysisInput) (models.AggregateAnalysis, error)
+	ListAggregateAnalyses(ctx context.Context, input models.ListDeepAnalysesInput) (models.ListAggregateAnalysesResult, error)
+	MarkAggregateAnalysisProcessing(ctx context.Context, id uuid.UUID) (models.AggregateAnalysis, error)
+	MarkAggregateAnalysisDone(ctx context.Context, id uuid.UUID, result models.AnalysisResult, sourceCallsCount int) (models.AggregateAnalysis, error)
+	MarkAggregateAnalysisFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.AggregateAnalysis, error)
+	ListAggregateAnalysisSourceCalls(ctx context.Context, input models.AnalyticsOverviewInput, limit int) ([]models.AggregateAnalysisSourceCall, int, error)
+	SpendDeepAnalysisUsage(ctx context.Context, subjectType models.DeepAnalysisSubjectType, subjectID uuid.UUID, periodStart time.Time, periodEnd time.Time) error
 }
 
 type CallFolderRepository interface {

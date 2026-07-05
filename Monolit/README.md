@@ -523,6 +523,9 @@ Analytics and monitoring:
 | Method | Path | Auth | Описание |
 | --- | --- | --- | --- |
 | GET | `/api/v1/analytics/overview` | Да | KPI summary по видимым текущему пользователю звонкам |
+| POST | `/api/v1/analytics/deep-analyses` | Да | Создать или переиспользовать глубокий AI-анализ периода |
+| GET | `/api/v1/analytics/deep-analyses` | Да | Получить список видимых deep analyses |
+| GET | `/api/v1/analytics/deep-analyses/{uuid}` | Да | Получить один видимый deep analysis |
 | GET | `/api/v1/monitoring/processing` | Да | Summary очереди обработки для `admin`/`superadmin` или `company_manager` своей компании |
 
 Search:
@@ -700,6 +703,52 @@ Notifications:
 `score_distribution` считает только analyzed calls с валидным `result_json`: `critical` = 0..49, `weak` = 50..64, `normal` = 65..79, `good` = 80..89, `excellent` = 90..100. `criteria_summary` и `top_weak_criteria` строятся из `criteria_results`; `not_applicable` учитывается в счетчике, но исключается из среднего score критерия. `top_issue_codes` строится из `issue_codes` с игнорированием пустых строк. `business_outcomes` использует `business_outcome.status`, неизвестные статусы попадают в `unclear`. `next_step_summary` использует `next_step_quality`, а если его нет, fallback смотрит `next_step` и `next_steps`.
 
 `risks_count` использует `risks`, `customer_objections`, `manager_quality.issues`. `recommendations_count` использует `manager_quality.recommendations`, `next_steps`, `recommendations`. `top_topics` использует `topics` и `top_topics`. CRM-сущности, сделки, воронка продаж и клиентская база в analytics не добавляются.
+
+Deep aggregate analysis:
+
+`POST /api/v1/analytics/deep-analyses` принимает JSON:
+
+```json
+{
+  "scope": "company",
+  "company_uuid": "company_uuid",
+  "department_uuid": null,
+  "folder_uuid": null,
+  "period_from": "2026-07-01",
+  "period_to": "2026-07-07",
+  "force": false
+}
+```
+
+Поддерживаемые scope: `personal`, `company`, `department`, `folder`. Для `folder` backend использует уже существующую модель call folders и проверяет права папки. Даты принимаются как `YYYY-MM-DD` или RFC3339; дата `period_to` в формате `YYYY-MM-DD` считается до конца дня UTC.
+
+Если уже есть non-failed deep analysis с тем же scope/subject/period и `force=false`, backend возвращает его и не тратит лимит. Если `force=true`, создается новый анализ и лимит тратится. Лимит: 2 новых deep analyses в UTC-неделю, где неделя начинается в понедельник 00:00 UTC. Для `personal` и personal folder лимит считается по пользователю; для `company`, `department`, company folder и department folder лимит общий по компании.
+
+Deep analysis использует сохраненные `call_analyses.result_json` по analyzed calls, а не полные транскрипции. В prompt отправляется компактный набор полей по звонку: `call_uuid`, `created_at`, `title`, `score`, `summary`, `topics`, `criteria_results`, `business_outcome`, `customer_signals`, `issue_codes`, `risks`, `customer_objections`, `next_step_quality`. Сейчас cap входа для AI: максимум 100 representative calls, упорядоченных детерминированно по `created_at DESC, call_uuid`; `source_calls_count` хранит полный count analyzed calls за период.
+
+Ответ deep analysis содержит:
+
+```json
+{
+  "id": "aggregate_analysis_uuid",
+  "scope": "company",
+  "company_uuid": "company_uuid",
+  "department_uuid": null,
+  "folder_uuid": null,
+  "period_from": "2026-07-01T00:00:00Z",
+  "period_to": "2026-07-07T23:59:59Z",
+  "status": "done",
+  "source_calls_count": 24,
+  "result_json": {},
+  "result_text": "...",
+  "error_message": null,
+  "created_by_user_uuid": "user_uuid",
+  "created_at": "...",
+  "updated_at": "..."
+}
+```
+
+Ошибки: `invalid_deep_analysis_input` -> 400, `aggregate_analysis_not_found` -> 404, `no_analyzed_calls_for_deep_analysis` -> 409, `deep_analysis_limit_exceeded` -> 429. Ошибка провайдера после сохранения failed status возвращается как 502. Subscription tiers, model tiers и analysis depth by plan в этом endpoint намеренно не реализованы.
 
 `GET /api/v1/monitoring/processing` принимает query-параметры:
 
