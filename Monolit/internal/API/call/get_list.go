@@ -1,6 +1,7 @@
 package call
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,6 +34,10 @@ func (h *CallHandler) List(w http.ResponseWriter, r *http.Request) {
 	if filtered {
 		result, err := h.service.ListFiltered(r.Context(), input)
 		if err != nil {
+			if errors.Is(err, models.ErrCallFolderNotFound) {
+				response.WriteError(w, http.StatusNotFound, response.CodeCallFolderNotFound, "call folder not found")
+				return
+			}
 			response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToListCalls, "failed to list calls")
 			return
 		}
@@ -139,6 +144,9 @@ func parseListCallsInput(r *http.Request, userID uuid.UUID) (models.ListCallsInp
 	if input.To, err = parseOptionalISOTime(query.Get("to"), true); err != nil {
 		return models.ListCallsInput{}, false, err
 	}
+	if input.FolderUUID, err = parseOptionalUUID(query.Get("folder_uuid")); err != nil {
+		return models.ListCallsInput{}, false, err
+	}
 	if input.From != nil && input.To != nil && input.From.After(*input.To) {
 		return models.ListCallsInput{}, false, models.ErrInvalidCallFilter
 	}
@@ -178,7 +186,7 @@ func parseCallFilterOptionsInput(r *http.Request, userID uuid.UUID) (models.Call
 }
 
 func hasCallsListQuery(query map[string][]string) bool {
-	for _, key := range []string{"q", "status", "scope", "company_uuid", "department_uuid", "uploaded_by_user_uuid", "from", "to", "limit", "offset"} {
+	for _, key := range []string{"q", "status", "scope", "company_uuid", "department_uuid", "uploaded_by_user_uuid", "from", "to", "folder_uuid", "limit", "offset"} {
 		if _, ok := query[key]; ok {
 			return true
 		}

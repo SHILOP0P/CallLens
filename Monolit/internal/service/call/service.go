@@ -27,6 +27,7 @@ type Service struct {
 	repository               repo.CallRepository
 	transcriptionRepository  repo.TranscriptionRepository
 	processingJobRepository  repo.ProcessingJobRepository
+	callFolderRepository     repo.CallFolderRepository
 	companyRepository        repo.CompanyRepository
 	departmentRepository     repo.DepartmentRepository
 	audioStorage             storage.AudioStorage
@@ -63,6 +64,10 @@ func (s *Service) SetTranscriptionRepository(repository repo.TranscriptionReposi
 
 func (s *Service) SetProcessingJobRepository(repository repo.ProcessingJobRepository) {
 	s.processingJobRepository = repository
+}
+
+func (s *Service) SetCallFolderRepository(repository repo.CallFolderRepository) {
+	s.callFolderRepository = repository
 }
 
 func (s *Service) SetProcessingJobMaxAttempts(maxAttempts int) {

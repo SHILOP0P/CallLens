@@ -14,6 +14,9 @@ var ErrInvalidCallPlacement = errors.New("invalid call placement")
 var ErrInvalidCallFilter = errors.New("invalid call filter")
 var ErrInvalidCallStatus = errors.New("invalid call status")
 var ErrInvalidCallStatusTransition = errors.New("invalid call status transition")
+var ErrCallFolderNotFound = errors.New("call folder not found")
+var ErrInvalidCallFolderInput = errors.New("invalid call folder input")
+var ErrCallFolderScopeMismatch = errors.New("call folder scope mismatch")
 
 // AUDIO
 var ErrAudioFileNotFound = errors.New("audio file not found")

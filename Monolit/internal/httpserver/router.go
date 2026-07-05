@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, reportAPI API.ReportAPI, billingAPI API.BillingAPI, invitationAPI API.InvitationAPI, analyticsAPI API.AnalyticsAPI, monitoringAPI API.MonitoringAPI, searchAPI API.SearchAPI, notificationAPI API.NotificationAPI, healthHandler *health.Handler, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
+func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, reportAPI API.ReportAPI, billingAPI API.BillingAPI, invitationAPI API.InvitationAPI, analyticsAPI API.AnalyticsAPI, monitoringAPI API.MonitoringAPI, searchAPI API.SearchAPI, notificationAPI API.NotificationAPI, healthHandler *health.Handler, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	authGuard := authMiddleware.Auth(jwtSecret, refreshSessionRepository)
@@ -58,6 +58,16 @@ func NewRouter(callAPI API.CallAPI, authAPI API.AuthAPI, companyAPI API.CompanyA
 			r.With(authGuard).Patch("/calls/{uuid}", callAPI.UpdateCallTitle)
 			//DELETE
 			r.With(authGuard).Delete("/calls/{uuid}", callAPI.DeleteCall)
+
+			//CALL FOLDERS
+			r.With(authGuard).Get("/call-folders", callFolderAPI.List)
+			r.With(authGuard).Post("/call-folders", callFolderAPI.Create)
+			r.With(authGuard).Get("/call-folders/{folder_uuid}", callFolderAPI.Get)
+			r.With(authGuard).Patch("/call-folders/{folder_uuid}", callFolderAPI.Update)
+			r.With(authGuard).Delete("/call-folders/{folder_uuid}", callFolderAPI.Delete)
+			r.With(authGuard).Get("/call-folders/{folder_uuid}/calls", callFolderAPI.ListCalls)
+			r.With(authGuard).Post("/call-folders/{folder_uuid}/calls", callFolderAPI.AssignCall)
+			r.With(authGuard).Delete("/call-folders/{folder_uuid}/calls/{call_uuid}", callFolderAPI.RemoveCall)
 
 			//ANALYTICS
 			r.With(authGuard).Get("/analytics/overview", analyticsAPI.GetOverview)

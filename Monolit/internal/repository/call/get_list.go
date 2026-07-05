@@ -238,6 +238,17 @@ func buildListFilters(input model.ListCallsInput) (string, []any) {
 		args = append(args, *input.To)
 		conditions = append(conditions, fmt.Sprintf("c.created_at <= $%d", len(args)))
 	}
+	if input.FolderUUID.Valid {
+		args = append(args, input.FolderUUID.UUID)
+		conditions = append(conditions, fmt.Sprintf(`EXISTS (
+			SELECT 1
+			FROM call_folder_assignments cfa
+			JOIN call_folders cf ON cf.folder_uuid = cfa.folder_uuid
+			WHERE cfa.call_uuid = c.call_uuid
+			  AND cf.folder_uuid = $%d
+			  AND cf.deleted_at IS NULL
+		)`, len(args)))
+	}
 
 	return strings.Join(conditions, " AND "), args
 }

@@ -13,6 +13,7 @@ type AnalyticsOverviewInput struct {
 	DepartmentUUID  uuid.NullUUID
 	From            *time.Time
 	To              *time.Time
+	FolderUUID      uuid.NullUUID
 }
 
 type AnalyticsTopicCount struct {

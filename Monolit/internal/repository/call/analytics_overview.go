@@ -21,6 +21,7 @@ func (r *Repository) GetAnalyticsOverview(ctx context.Context, input model.Analy
 		DepartmentUUID:  input.DepartmentUUID,
 		From:            input.From,
 		To:              input.To,
+		FolderUUID:      input.FolderUUID,
 	})
 
 	query := fmt.Sprintf(`

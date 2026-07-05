@@ -24,6 +24,17 @@ type AnalyticsAPI interface {
 	GetOverview(w http.ResponseWriter, r *http.Request)
 }
 
+type CallFolderAPI interface {
+	Create(w http.ResponseWriter, r *http.Request)
+	List(w http.ResponseWriter, r *http.Request)
+	Get(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+	ListCalls(w http.ResponseWriter, r *http.Request)
+	AssignCall(w http.ResponseWriter, r *http.Request)
+	RemoveCall(w http.ResponseWriter, r *http.Request)
+}
+
 type MonitoringAPI interface {
 	GetProcessing(w http.ResponseWriter, r *http.Request)
 }

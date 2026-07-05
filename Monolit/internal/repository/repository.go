@@ -32,6 +32,18 @@ type AnalyticsRepository interface {
 	GetAnalyticsOverview(ctx context.Context, input models.AnalyticsOverviewInput) (models.AnalyticsOverview, error)
 }
 
+type CallFolderRepository interface {
+	Create(ctx context.Context, folder models.CallFolder) (models.CallFolder, error)
+	GetByUUID(ctx context.Context, id uuid.UUID) (models.CallFolder, error)
+	GetVisibleByUUID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.CallFolder, error)
+	List(ctx context.Context, input models.ListCallFoldersInput) (models.ListCallFoldersResult, error)
+	Update(ctx context.Context, input models.UpdateCallFolderInput) (models.CallFolder, error)
+	SoftDelete(ctx context.Context, id uuid.UUID) error
+	AssignCall(ctx context.Context, input models.AssignCallToFolderInput) error
+	RemoveCall(ctx context.Context, input models.RemoveCallFromFolderInput) error
+	ListFolderCalls(ctx context.Context, input models.ListFolderCallsInput) (models.ListCallsResult, error)
+}
+
 type UserRepository interface {
 	//GET
 	GetUserByUUID(ctx context.Context, id uuid.UUID) (models.User, error)

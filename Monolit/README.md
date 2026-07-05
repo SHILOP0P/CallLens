@@ -449,6 +449,8 @@ Calls:
 
 Все фильтры применяются только поверх видимых текущему пользователю звонков.
 
+Дополнительно `GET /api/v1/calls` принимает `folder_uuid`. Фильтр возвращает только видимые текущему пользователю звонки, назначенные в активную папку. Доступ к самой папке проверяется отдельно; чужая или удаленная папка не должна раскрывать скрытые звонки.
+
 `GET /api/v1/calls/filters` принимает optional `company_uuid` и `department_uuid` и возвращает:
 
 ```json
@@ -467,6 +469,50 @@ Calls:
 ```
 
 Поле `managers` в справочнике содержит компактный список пользователей, которые загрузили видимые текущему пользователю звонки в выбранном scope компании/отдела. Название поля сохранено для frontend-контракта фильтров.
+
+Call folders:
+
+Папки звонков группируют звонки по теме или рабочей области для последующей фильтрации списка и analytics. Папка не является `analysis_instruction`: инструкция отвечает на вопрос "как анализировать", а папка отвечает на вопрос "к какой группе относится звонок".
+
+| Method | Path | Auth | Описание |
+| --- | --- | --- | --- |
+| GET | `/api/v1/call-folders` | Да | Получить видимые папки с `calls_count` |
+| POST | `/api/v1/call-folders` | Да | Создать папку |
+| GET | `/api/v1/call-folders/{folder_uuid}` | Да | Получить одну видимую папку |
+| PATCH | `/api/v1/call-folders/{folder_uuid}` | Да | Обновить `name`, `description`, `color` |
+| DELETE | `/api/v1/call-folders/{folder_uuid}` | Да | Soft-delete папки через `deleted_at` |
+| GET | `/api/v1/call-folders/{folder_uuid}/calls` | Да | Получить звонки папки в форме `{ items, total, limit, offset }` |
+| POST | `/api/v1/call-folders/{folder_uuid}/calls` | Да | Идемпотентно назначить звонок в папку |
+| DELETE | `/api/v1/call-folders/{folder_uuid}/calls/{call_uuid}` | Да | Убрать звонок из папки |
+
+`GET /api/v1/call-folders` принимает `scope=personal|company|department`, `company_uuid`, `department_uuid`, `q`, `limit`, `offset`. `limit` по умолчанию `20`, максимум `100`. Для `company` нужен `company_uuid`; для `department` нужны `company_uuid` и `department_uuid`; для `personal` `company_uuid` и `department_uuid` не передаются.
+
+Пример `CallFolderResponse`:
+
+```json
+{
+  "id": "folder_uuid",
+  "scope": "personal",
+  "user_uuid": "user_uuid",
+  "company_uuid": null,
+  "department_uuid": null,
+  "name": "Возражения по цене",
+  "description": "Звонки, где клиент сомневался из-за цены",
+  "color": "#3b82f6",
+  "calls_count": 12,
+  "created_by_user_uuid": "user_uuid",
+  "created_at": "2026-07-05T10:00:00Z",
+  "updated_at": "2026-07-05T10:00:00Z"
+}
+```
+
+Права:
+
+- `personal`: владелец создает, читает, обновляет, удаляет и назначает только свои personal-звонки.
+- `company`: управляет только активный `company_manager`; читать может активный `company_manager` или активный участник компании, который состоит хотя бы в одном видимом отделе.
+- `department`: управляет активный `company_manager` или активный `department_leader` этого отдела; читать может активный `company_manager` или активный участник этого отдела.
+
+Назначение звонка проверяет совпадение scope: personal-папка принимает только personal-звонок владельца, company-папка только звонки этой компании, department-папка только звонки этой компании и отдела. Несовпадение возвращает `400 call_folder_scope_mismatch`. Удаленная папка не возвращается в списках и не принимает новые назначения. `GET /api/v1/calls/filters` пока не возвращает список папок.
 
 Reports:
 
@@ -562,8 +608,9 @@ Notifications:
 | `scope` | `personal`, `company`, `department` |
 | `company_uuid` | UUID компании |
 | `department_uuid` | UUID отдела |
+| `folder_uuid` | UUID активной видимой папки звонков |
 
-Все analytics-фильтры применяются только поверх звонков, которые видны текущему пользователю по общей модели видимости. Backend считает `calls_total`, breakdown по статусам и `average_duration_seconds` SQL-агрегацией, а quality/topics/risks/recommendations и free analytics v2 агрегирует из сохраненных `call_analyses.result_json`. Endpoint не вызывает AI и не запускает новый анализ.
+Все analytics-фильтры применяются только поверх звонков, которые видны текущему пользователю по общей модели видимости. `folder_uuid` дополнительно ограничивает выборку звонками, назначенными в видимую активную папку, и не обходит проверку видимости самих звонков. Backend считает `calls_total`, breakdown по статусам и `average_duration_seconds` SQL-агрегацией, а quality/topics/risks/recommendations и free analytics v2 агрегирует из сохраненных `call_analyses.result_json`. Endpoint не вызывает AI и не запускает новый анализ.
 
 Ответ:
 
@@ -1025,7 +1072,7 @@ Backend всё равно нормализует результат анализ
 
 Основные поля v2: `score_breakdown`, `criteria_results`, `business_outcome`, `customer_signals`, `next_step_quality`, `issue_codes`, `evidence_quotes`. Базовые критерии включают приветствие, выявление потребности, качество вопросов и ответов, релевантность решения, работу с возражениями, ясность цены/условий, профессиональный тон, качество следующего шага, ясность итога и выполнение дополнительных инструкций. `criteria_results` и короткие snake_case `issue_codes` используются для бесплатной аналитики и как основа для будущего deep analysis.
 
-Deep analysis, subscription-tier глубина анализа, выбор разных AI-моделей по тарифу, папки звонков и экспорт агрегированных отчетов этим контрактом не реализуются.
+Deep analysis, subscription-tier глубина анализа, выбор разных AI-моделей по тарифу и экспорт агрегированных отчетов этим контрактом не реализуются. Папки звонков реализованы как ручная группировка и фильтр, а не как deep AI analysis.
 
 ## Формат ошибок API
 

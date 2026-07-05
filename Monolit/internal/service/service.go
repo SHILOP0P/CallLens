@@ -31,6 +31,17 @@ type AnalyticsService interface {
 	GetOverview(ctx context.Context, input models.AnalyticsOverviewInput) (models.AnalyticsOverview, error)
 }
 
+type CallFolderService interface {
+	Create(ctx context.Context, input models.CreateCallFolderInput) (models.CallFolder, error)
+	Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.CallFolder, error)
+	List(ctx context.Context, input models.ListCallFoldersInput) (models.ListCallFoldersResult, error)
+	Update(ctx context.Context, input models.UpdateCallFolderInput) (models.CallFolder, error)
+	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
+	AssignCall(ctx context.Context, input models.AssignCallToFolderInput) error
+	RemoveCall(ctx context.Context, input models.RemoveCallFromFolderInput) error
+	ListFolderCalls(ctx context.Context, input models.ListFolderCallsInput) (models.ListCallsResult, error)
+}
+
 type MonitoringService interface {
 	GetProcessing(ctx context.Context, input models.ProcessingMonitoringInput) (models.ProcessingMonitoring, error)
 }

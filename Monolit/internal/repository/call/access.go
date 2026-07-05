@@ -30,3 +30,7 @@ func visibleToUserCondition(callAlias string, userParam string) string {
 	    )
 	)`, callAlias, userParam, callAlias, callAlias, userParam, callAlias, callAlias, userParam)
 }
+
+func VisibleToUserConditionForFolders(callAlias string, userParam string) string {
+	return visibleToUserCondition(callAlias, userParam)
+}

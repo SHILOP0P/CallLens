@@ -1,6 +1,7 @@
 package analytics
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -36,6 +37,10 @@ func (h *Handler) GetOverview(w http.ResponseWriter, r *http.Request) {
 
 	overview, err := h.service.GetOverview(r.Context(), input)
 	if err != nil {
+		if errors.Is(err, models.ErrCallFolderNotFound) {
+			response.WriteError(w, http.StatusNotFound, response.CodeCallFolderNotFound, "call folder not found")
+			return
+		}
 		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToGetAnalyticsOverview, "failed to get analytics overview")
 		return
 	}
@@ -68,6 +73,9 @@ func parseOverviewInput(r *http.Request, userID uuid.UUID) (models.AnalyticsOver
 		return models.AnalyticsOverviewInput{}, err
 	}
 	if input.To, err = parseOptionalISOTime(query.Get("to"), true); err != nil {
+		return models.AnalyticsOverviewInput{}, err
+	}
+	if input.FolderUUID, err = parseOptionalUUID(query.Get("folder_uuid")); err != nil {
 		return models.AnalyticsOverviewInput{}, err
 	}
 	if input.From != nil && input.To != nil && input.From.After(*input.To) {

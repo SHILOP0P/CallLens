@@ -69,6 +69,7 @@ type ListCallsInput struct {
 	UploadedByUserUUID uuid.NullUUID
 	From               *time.Time
 	To                 *time.Time
+	FolderUUID         uuid.NullUUID
 	Limit              int
 	Offset             int
 }

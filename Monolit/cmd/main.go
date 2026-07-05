@@ -15,6 +15,7 @@ import (
 	authAPI "calllens/monolit/internal/API/auth"
 	billingAPI "calllens/monolit/internal/API/billing"
 	"calllens/monolit/internal/API/call"
+	callFolderAPI "calllens/monolit/internal/API/call_folder"
 	companyAPI "calllens/monolit/internal/API/company"
 	departmentAPI "calllens/monolit/internal/API/department"
 	healthAPI "calllens/monolit/internal/API/health"
@@ -32,6 +33,7 @@ import (
 	analysisInstructionRepo "calllens/monolit/internal/repository/analysis_instruction"
 	billingRepo "calllens/monolit/internal/repository/billing"
 	callRepo "calllens/monolit/internal/repository/call"
+	callFolderRepo "calllens/monolit/internal/repository/call_folder"
 	companyRepo "calllens/monolit/internal/repository/company"
 	departmentRepo "calllens/monolit/internal/repository/department"
 	invitationRepo "calllens/monolit/internal/repository/invitation"
@@ -49,6 +51,7 @@ import (
 	authService "calllens/monolit/internal/service/auth"
 	billingService "calllens/monolit/internal/service/billing"
 	callService "calllens/monolit/internal/service/call"
+	callFolderService "calllens/monolit/internal/service/call_folder"
 	companyService "calllens/monolit/internal/service/company"
 	departmentService "calllens/monolit/internal/service/department"
 	invitationService "calllens/monolit/internal/service/invitation"
@@ -158,6 +161,7 @@ func main() {
 	analysisInstructionRepository := analysisInstructionRepo.NewRepository(sqlDB)
 	analysisRepository := analysisRepo.NewRepository(sqlDB)
 	callRepository := callRepo.NewRepository(sqlDB)
+	callFolderRepository := callFolderRepo.NewRepository(sqlDB)
 	userRepository := userRepo.NewUserRepository(sqlDB)
 	userPreferencesRepository := userPreferencesRepo.NewRepository(sqlDB)
 	refreshRepository := refreshSessionRepo.NewRepository(sqlDB)
@@ -210,6 +214,7 @@ func main() {
 	}
 
 	callSvc := callService.NewService(callRepository, companyRepository, departmentRepository, audioStorage, appLogger)
+	callSvc.SetCallFolderRepository(callFolderRepository)
 	callSvc.SetTranscriptionRepository(transcriptionRepository)
 	callSvc.SetProcessingJobRepository(processingJobRepository)
 	callSvc.SetProcessingJobMaxAttempts(config.AppConfig().Worker.MaxAttempts())
@@ -235,6 +240,8 @@ func main() {
 	billingSvc := billingService.NewService(billingRepository)
 	reportSvc := reportService.NewService(callRepository, analysisRepository, transcriptionRepository, reportRepository, reportsStorage)
 	analyticsSvc := analyticsService.NewService(callRepository)
+	analyticsSvc.SetCallFolderRepository(callFolderRepository)
+	callFolderSvc := callFolderService.NewService(callFolderRepository, callRepository, companyRepository, departmentRepository)
 	monitoringSvc := monitoringService.NewService(processingJobRepository, companyRepository)
 	searchSvc := searchService.NewService(searchRepository)
 	notificationSvc := notificationService.NewService(notificationRepository)
@@ -248,6 +255,7 @@ func main() {
 	invitationSvc.SetNotificationService(notificationSvc)
 
 	callHandler := call.NewCallHandler(callSvc)
+	callFolderHandler := callFolderAPI.NewHandler(callFolderSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc, config.AppConfig().Auth.AccessTokenTTL(), config.AppConfig().Auth.RefreshTokenTTL())
 	companyHandler := companyAPI.NewCompanyHandler(companySvc)
 	departmentHandler := departmentAPI.NewDepartmentHandler(departmentSvc)
@@ -261,7 +269,7 @@ func main() {
 	searchHandler := searchAPI.NewHandler(searchSvc)
 	notificationHandler := notificationAPI.NewHandler(notificationSvc)
 
-	r := httpserver.NewRouter(callHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, analyticsHandler, monitoringHandler, searchHandler, notificationHandler, healthHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, callFolderHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, analyticsHandler, monitoringHandler, searchHandler, notificationHandler, healthHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),
