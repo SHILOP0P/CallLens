@@ -28,19 +28,20 @@ func CreateAPIToModel(callUUID uuid.UUID, title string, status models.CallStatus
 
 func CallModelToAPI(call models.Call) (dto.CallResponse, error) {
 	return dto.CallResponse{
-		ID:                 call.ID.String(),
-		Title:              call.Title,
-		Status:             string(call.Status),
-		OriginalFilename:   call.OriginalFilename,
-		MimeType:           call.MimeType,
-		SizeBytes:          call.SizeBytes,
-		DurationSeconds:    call.DurationSeconds,
-		AudioURL:           "/api/v1/calls/" + call.ID.String() + "/audio",
-		UploadedByUserUUID: nullUUIDToStringPtr(call.UploadedByUserUUID),
-		CompanyUUID:        nullUUIDToStringPtr(call.CompanyUUID),
-		DepartmentUUID:     nullUUIDToStringPtr(call.DepartmentUUID),
-		VisibilityScope:    string(call.VisibilityScope),
-		CreatedAt:          call.CreatedAt.Format(time.RFC3339),
+		ID:                    call.ID.String(),
+		Title:                 call.Title,
+		Status:                string(call.Status),
+		OriginalFilename:      call.OriginalFilename,
+		MimeType:              call.MimeType,
+		SizeBytes:             call.SizeBytes,
+		DurationSeconds:       call.DurationSeconds,
+		AudioURL:              "/api/v1/calls/" + call.ID.String() + "/audio",
+		UploadedByUserUUID:    nullUUIDToStringPtr(call.UploadedByUserUUID),
+		CompanyUUID:           nullUUIDToStringPtr(call.CompanyUUID),
+		DepartmentUUID:        nullUUIDToStringPtr(call.DepartmentUUID),
+		VisibilityScope:       string(call.VisibilityScope),
+		UseCustomInstructions: !call.SkipCustomInstructions,
+		CreatedAt:             call.CreatedAt.Format(time.RFC3339),
 	}, nil
 }
 
@@ -67,9 +68,10 @@ func SavedFileToModel(savedFile models.SavedFile, callUUID uuid.UUID, input mode
 			UUID:  input.UploadedByUserUUID,
 			Valid: true,
 		},
-		CompanyUUID:     input.CompanyUUID,
-		DepartmentUUID:  input.DepartmentUUID,
-		VisibilityScope: input.VisibilityScope,
-		CreatedAt:       now,
+		CompanyUUID:            input.CompanyUUID,
+		DepartmentUUID:         input.DepartmentUUID,
+		VisibilityScope:        input.VisibilityScope,
+		SkipCustomInstructions: input.SkipCustomInstructions,
+		CreatedAt:              now,
 	}, nil
 }

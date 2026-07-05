@@ -36,6 +36,7 @@ func (r *Repository) TakeNextForProcessing(ctx context.Context) (models.Call, er
 	          company_uuid,
 	          department_uuid,
 	          visibility_scope,
+	          skip_custom_instructions,
 	          created_at
 	`
 

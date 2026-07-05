@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	analyzerMocks "calllens/monolit/internal/analyzer/mocks"
@@ -128,6 +129,50 @@ func TestNormalizationHelpers(t *testing.T) {
 	ensureStringField(object, "string")
 	ensureNumberField(object, "number")
 	ensureConfidenceField(object)
+}
+
+func TestNormalizeAnalysisResultRewritesKnownEnglishFallbacks(t *testing.T) {
+	text := "The transcription provided does not contain a sales or client call. It is a text about the history and new directions of advertising, including the use of human billboards. Therefore, no analysis of a sales or client call can be provided."
+	result, err := normalizeAnalysisResult(models.AnalysisResult{
+		ResultJSON: []byte(`{
+			"summary":"The transcription provided does not contain a sales or client call. It is a text about the history and new directions of advertising, including the use of human billboards. Therefore, no analysis of a sales or client call can be provided.",
+			"dialogue_tone":{"overall":"unclear","manager":"unclear","client":"unclear","evidence_quotes":[]},
+			"question_coverage":{"status":"unclear","summary":"No client questions were identified in the transcription.","unanswered_questions":[]},
+			"call_outcome":"unclear",
+			"next_steps":["unclear"],
+			"confidence":"low"
+		}`),
+		ResultText: &text,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(result.ResultJSON, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload["summary"] != "Расшифровка не содержит продажного или клиентского звонка. Это текст об истории и новых направлениях рекламы, включая использование людей-рекламоносителей, поэтому анализ диалога с клиентом выполнить нельзя." {
+		t.Fatalf("summary = %q", payload["summary"])
+	}
+	if result.ResultText == nil || strings.Contains(*result.ResultText, "The transcription") {
+		t.Fatalf("result text was not normalized: %v", result.ResultText)
+	}
+	dialogueTone := payload["dialogue_tone"].(map[string]any)
+	if dialogueTone["overall"] != "Неясно" {
+		t.Fatalf("dialogue tone = %#v", dialogueTone)
+	}
+	questionCoverage := payload["question_coverage"].(map[string]any)
+	if questionCoverage["status"] != "unclear" || questionCoverage["summary"] != "В расшифровке не выявлены вопросы клиента." {
+		t.Fatalf("question coverage = %#v", questionCoverage)
+	}
+	if payload["call_outcome"] != "Неясно" {
+		t.Fatalf("call outcome = %q", payload["call_outcome"])
+	}
+	nextSteps := payload["next_steps"].([]any)
+	if len(nextSteps) != 1 || nextSteps[0] != "Неясно" {
+		t.Fatalf("next steps = %#v", nextSteps)
+	}
 }
 
 func TestServiceConfigurationAndInstructionSelection(t *testing.T) {

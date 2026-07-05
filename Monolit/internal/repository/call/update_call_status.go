@@ -31,6 +31,7 @@ func (r *Repository) UpdateCallStatus(ctx context.Context, id uuid.UUID, status 
 	          company_uuid,
 	          department_uuid,
 	          visibility_scope,
+	          skip_custom_instructions,
 	          created_at
 	`
 

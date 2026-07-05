@@ -28,6 +28,7 @@ func (s *APISuite) TestCreateCallSuccess() {
 			input.VisibilityScope == models.CallVisibilityScopePersonal &&
 			!input.CompanyUUID.Valid &&
 			!input.DepartmentUUID.Valid &&
+			!input.SkipCustomInstructions &&
 			input.Content != nil
 	})).
 		Return(models.Call{
@@ -40,6 +41,71 @@ func (s *APISuite) TestCreateCallSuccess() {
 			UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true},
 			VisibilityScope:    models.CallVisibilityScopePersonal,
 			CreatedAt:          time.Now().UTC(),
+		}, nil).
+		Once()
+
+	rec, req := s.request(http.MethodPost, "/api/v1/calls", body.String(), userID, nil)
+	req.Header.Set("Content-Type", contentType)
+
+	s.api.Create(rec, req)
+
+	s.Require().Equal(http.StatusCreated, rec.Code)
+}
+
+func (s *APISuite) TestCreateCallAcceptsMP3SniffedAsOctetStream() {
+	userID := uuid.New()
+	callID := uuid.New()
+	mp3Header := []byte{0xff, 0xe3, 0x48, 0xc4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x58, 0x69, 0x6e}
+
+	body, contentType := multipartBody(s.T(), map[string]string{
+		"title": "Low bitrate mp3",
+	}, "audio", "call.mp3", mp3Header)
+
+	s.service.On("CreateCall", mock.Anything, mock.MatchedBy(func(input models.CreateCallInput) bool {
+		return input.OriginalFilename == "call.mp3" && input.MimeType == "audio/mpeg"
+	})).
+		Return(models.Call{
+			ID:                 callID,
+			Title:              "Low bitrate mp3",
+			Status:             models.CallStatusNew,
+			OriginalFilename:   "call.mp3",
+			MimeType:           "audio/mpeg",
+			SizeBytes:          int64(len(mp3Header)),
+			UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+			VisibilityScope:    models.CallVisibilityScopePersonal,
+			CreatedAt:          time.Now().UTC(),
+		}, nil).
+		Once()
+
+	rec, req := s.request(http.MethodPost, "/api/v1/calls", body.String(), userID, nil)
+	req.Header.Set("Content-Type", contentType)
+
+	s.api.Create(rec, req)
+
+	s.Require().Equal(http.StatusCreated, rec.Code)
+}
+
+func (s *APISuite) TestCreateCallCanSkipCustomInstructions() {
+	userID := uuid.New()
+	body, contentType := multipartBody(s.T(), map[string]string{
+		"title":                   "Server only",
+		"use_custom_instructions": "false",
+	}, "audio", "call.wav", []byte("RIFF----WAVEfmt "))
+
+	s.service.On("CreateCall", mock.Anything, mock.MatchedBy(func(input models.CreateCallInput) bool {
+		return input.SkipCustomInstructions
+	})).
+		Return(models.Call{
+			ID:                     uuid.New(),
+			Title:                  "Server only",
+			Status:                 models.CallStatusNew,
+			OriginalFilename:       "call.wav",
+			MimeType:               "audio/wave",
+			SizeBytes:              16,
+			UploadedByUserUUID:     uuid.NullUUID{UUID: userID, Valid: true},
+			VisibilityScope:        models.CallVisibilityScopePersonal,
+			SkipCustomInstructions: true,
+			CreatedAt:              time.Now().UTC(),
 		}, nil).
 		Once()
 

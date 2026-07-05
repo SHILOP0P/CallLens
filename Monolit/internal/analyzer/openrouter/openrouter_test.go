@@ -57,8 +57,11 @@ func TestAnalyzeSendsTranscriptionAndInstructions(t *testing.T) {
 		if len(req.Messages) != 2 {
 			t.Fatalf("messages len = %d", len(req.Messages))
 		}
-		if !strings.Contains(req.Messages[0].Content, "Всегда отвечай на русском языке") {
+		if !strings.Contains(req.Messages[0].Content, "Абсолютное правило языка") {
 			t.Fatalf("system message does not require Russian output:\n%s", req.Messages[0].Content)
+		}
+		if !strings.Contains(req.Messages[1].Content, "без диалога") {
+			t.Fatalf("user message does not contain strict non-dialogue rule:\n%s", req.Messages[1].Content)
 		}
 
 		userMessage := req.Messages[1].Content

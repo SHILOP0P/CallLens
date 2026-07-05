@@ -264,6 +264,10 @@ func (s *Service) analyzerProviderName() string {
 }
 
 func (s *Service) loadInstructions(ctx context.Context, call models.Call, userID uuid.UUID) ([]models.AnalysisInstructionContent, error) {
+	if call.SkipCustomInstructions {
+		return []models.AnalysisInstructionContent{}, nil
+	}
+
 	instructions, err := s.selectInstructions(ctx, call, userID)
 	if err != nil {
 		return nil, err
@@ -358,6 +362,7 @@ func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResul
 	if summary == "" {
 		summary = "Анализ завершен, но провайдер не вернул резюме."
 	}
+	summary = normalizeRussianAnalysisText(summary)
 	payload["summary"] = summary
 
 	ensureArrayField(payload, "topics")
@@ -390,8 +395,10 @@ func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResul
 	if stringField(payload, "next_step") == "" {
 		payload["next_step"] = firstStringFromArray(payload["next_steps"])
 	}
+	normalizePayloadRussianText(payload)
+	summary = stringField(payload, "summary")
 
-	if resultText == "" {
+	if resultText == "" || isKnownEnglishAnalysisFallback(resultText) {
 		resultText = summary
 		result.ResultText = &resultText
 	}
@@ -404,6 +411,80 @@ func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResul
 	result.ResultJSON = resultJSON
 
 	return result, nil
+}
+
+func normalizePayloadRussianText(value any) {
+	normalizePayloadRussianTextValue("", value)
+}
+
+func normalizePayloadRussianTextValue(key string, value any) {
+	switch typed := value.(type) {
+	case map[string]any:
+		for childKey, childValue := range typed {
+			switch childTyped := childValue.(type) {
+			case string:
+				if isSchemaEnumKey(childKey) {
+					continue
+				}
+				typed[childKey] = normalizeRussianAnalysisText(childTyped)
+			default:
+				normalizePayloadRussianTextValue(childKey, childValue)
+			}
+		}
+	case []any:
+		for i, item := range typed {
+			switch childTyped := item.(type) {
+			case string:
+				if isSchemaEnumKey(key) {
+					continue
+				}
+				typed[i] = normalizeRussianAnalysisText(childTyped)
+			default:
+				normalizePayloadRussianTextValue(key, item)
+			}
+		}
+	}
+}
+
+func isSchemaEnumKey(key string) bool {
+	switch key {
+	case "answer_status", "confidence", "status":
+		return true
+	default:
+		return false
+	}
+}
+
+func normalizeRussianAnalysisText(value string) string {
+	trimmed := strings.TrimSpace(value)
+	switch strings.ToLower(trimmed) {
+	case "":
+		return ""
+	case "unclear":
+		return "Неясно"
+	case "not specified", "not provided", "none", "n/a":
+		return "Не указано"
+	case "no client questions were identified in the transcription.":
+		return "В расшифровке не выявлены вопросы клиента."
+	case "the transcription provided does not contain a sales or client call. it is a text about the history and new directions of advertising, including the use of human billboards. therefore, no analysis of a sales or client call can be provided.":
+		return "Расшифровка не содержит продажного или клиентского звонка. Это текст об истории и новых направлениях рекламы, включая использование людей-рекламоносителей, поэтому анализ диалога с клиентом выполнить нельзя."
+	default:
+		return trimmed
+	}
+}
+
+func isKnownEnglishAnalysisFallback(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	switch normalized {
+	case "unclear",
+		"not specified",
+		"not provided",
+		"no client questions were identified in the transcription.",
+		"the transcription provided does not contain a sales or client call. it is a text about the history and new directions of advertising, including the use of human billboards. therefore, no analysis of a sales or client call can be provided.":
+		return true
+	default:
+		return false
+	}
 }
 
 func stringField(payload map[string]any, key string) string {

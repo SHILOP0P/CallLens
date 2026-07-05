@@ -196,6 +196,61 @@ func TestProcessAnalyzeCallPassesCompanyAndDepartmentInstructions(t *testing.T) 
 	}
 }
 
+func TestProcessAnalyzeCallSkipsCustomInstructions(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	callID := uuid.New()
+	transcriptionText := "Client asked about pricing."
+
+	callRepo := &analysisCallRepository{
+		call: models.Call{
+			ID:                     callID,
+			Status:                 models.CallStatusTranscribed,
+			UploadedByUserUUID:     uuid.NullUUID{UUID: userID, Valid: true},
+			VisibilityScope:        models.CallVisibilityScopePersonal,
+			SkipCustomInstructions: true,
+		},
+	}
+	transcriptionRepo := &analysisTranscriptionRepository{
+		transcription: models.Transcription{
+			ID:       uuid.New(),
+			CallUUID: callID,
+			Status:   models.TranscriptionStatusTranscribed,
+			Text:     &transcriptionText,
+		},
+	}
+	instructionRepo := &analysisInstructionRepository{
+		instructions: map[models.AnalysisInstructionScope][]models.AnalysisInstruction{
+			models.AnalysisInstructionScopePersonal: {{
+				ID:       uuid.New(),
+				Scope:    models.AnalysisInstructionScopePersonal,
+				UserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+				Title:    "Missing file",
+				FilePath: "missing.md",
+				IsActive: true,
+			}},
+		},
+	}
+	analysisRepo := &analysisRepository{analysisID: uuid.New(), callID: callID}
+	analyzerProvider := &recordingAnalyzer{
+		result: models.AnalysisResult{
+			ResultJSON: json.RawMessage(`{"summary":"Base analysis only."}`),
+		},
+	}
+
+	service := NewService(callRepo, transcriptionRepo, instructionRepo, analysisRepo, &analysisInstructionStorage{}, analyzerProvider, nil)
+
+	if err := service.ProcessAnalyzeCall(ctx, callID); err != nil {
+		t.Fatalf("process analyze call: %v", err)
+	}
+	if len(analyzerProvider.request.Instructions) != 0 {
+		t.Fatalf("instructions len = %d, want 0", len(analyzerProvider.request.Instructions))
+	}
+	if !callRepo.updatedStatus || callRepo.lastStatus != models.CallStatusAnalyzed {
+		t.Fatalf("call status was not marked analyzed")
+	}
+}
+
 func TestProcessAnalyzeCallKeepsAnalysisProcessingOnProviderError(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()

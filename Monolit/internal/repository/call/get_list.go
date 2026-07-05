@@ -29,6 +29,7 @@ func (r *Repository) List(ctx context.Context, userID uuid.UUID) ([]model.Call, 
 	       company_uuid,
 	       department_uuid,
 	       visibility_scope,
+	       skip_custom_instructions,
 	       created_at
 	FROM calls c
 	WHERE %s
@@ -76,6 +77,7 @@ func (r *Repository) ListFiltered(ctx context.Context, input model.ListCallsInpu
 	       c.company_uuid,
 	       c.department_uuid,
 	       c.visibility_scope,
+	       c.skip_custom_instructions,
 	       c.created_at,
 	       COUNT(*) OVER() AS total
 	FROM calls c
@@ -107,6 +109,7 @@ func (r *Repository) ListFiltered(ctx context.Context, input model.ListCallsInpu
 			&call.CompanyUUID,
 			&call.DepartmentUUID,
 			&call.VisibilityScope,
+			&call.SkipCustomInstructions,
 			&call.CreatedAt,
 			&total,
 		)

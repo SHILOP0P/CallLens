@@ -8,19 +8,20 @@ import (
 )
 
 type Call struct {
-	ID                 uuid.UUID
-	Title              string
-	Status             CallStatus
-	AudioPath          string
-	OriginalFilename   string
-	MimeType           string
-	SizeBytes          int64
-	DurationSeconds    int
-	UploadedByUserUUID uuid.NullUUID
-	CompanyUUID        uuid.NullUUID
-	DepartmentUUID     uuid.NullUUID
-	VisibilityScope    CallVisibilityScope
-	CreatedAt          time.Time
+	ID                     uuid.UUID
+	Title                  string
+	Status                 CallStatus
+	AudioPath              string
+	OriginalFilename       string
+	MimeType               string
+	SizeBytes              int64
+	DurationSeconds        int
+	UploadedByUserUUID     uuid.NullUUID
+	CompanyUUID            uuid.NullUUID
+	DepartmentUUID         uuid.NullUUID
+	VisibilityScope        CallVisibilityScope
+	SkipCustomInstructions bool
+	CreatedAt              time.Time
 }
 
 type CallStatus string
@@ -41,15 +42,16 @@ const (
 )
 
 type CreateCallInput struct {
-	Title              string
-	OriginalFilename   string
-	MimeType           string
-	SizeBytes          int64
-	Content            io.Reader
-	UploadedByUserUUID uuid.UUID
-	CompanyUUID        uuid.NullUUID
-	DepartmentUUID     uuid.NullUUID
-	VisibilityScope    CallVisibilityScope
+	Title                  string
+	OriginalFilename       string
+	MimeType               string
+	SizeBytes              int64
+	Content                io.Reader
+	UploadedByUserUUID     uuid.UUID
+	CompanyUUID            uuid.NullUUID
+	DepartmentUUID         uuid.NullUUID
+	VisibilityScope        CallVisibilityScope
+	SkipCustomInstructions bool
 }
 
 type UpdateCallStatusInput struct {

@@ -33,9 +33,10 @@ func (r *Repository) CreateCall(ctx context.Context, call model.Call) (model.Cal
 		company_uuid,
 		department_uuid,
 		visibility_scope,
+		skip_custom_instructions,
 		created_at
 	)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 	RETURNING call_uuid,
 	          title,
 	          status,
@@ -48,6 +49,7 @@ func (r *Repository) CreateCall(ctx context.Context, call model.Call) (model.Cal
 	          company_uuid,
 	          department_uuid,
 	          visibility_scope,
+	          skip_custom_instructions,
 	          created_at
 	`
 
@@ -64,6 +66,7 @@ func (r *Repository) CreateCall(ctx context.Context, call model.Call) (model.Cal
 		repoCall.CompanyUUID,
 		repoCall.DepartmentUUID,
 		repoCall.VisibilityScope,
+		repoCall.SkipCustomInstructions,
 		repoCall.CreatedAt,
 	)
 
@@ -109,9 +112,10 @@ func (r *Repository) CreateCallWithProcessingJob(ctx context.Context, call model
 		company_uuid,
 		department_uuid,
 		visibility_scope,
+		skip_custom_instructions,
 		created_at
 	)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 	RETURNING call_uuid,
 	          title,
 	          status,
@@ -124,6 +128,7 @@ func (r *Repository) CreateCallWithProcessingJob(ctx context.Context, call model
 	          company_uuid,
 	          department_uuid,
 	          visibility_scope,
+	          skip_custom_instructions,
 	          created_at
 	`
 
@@ -140,6 +145,7 @@ func (r *Repository) CreateCallWithProcessingJob(ctx context.Context, call model
 		repoCall.CompanyUUID,
 		repoCall.DepartmentUUID,
 		repoCall.VisibilityScope,
+		repoCall.SkipCustomInstructions,
 		repoCall.CreatedAt,
 	)
 

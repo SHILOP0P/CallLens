@@ -34,6 +34,7 @@ func (r *Repository) UpdateCallTitle(ctx context.Context, id uuid.UUID, userID u
 	          company_uuid,
 	          department_uuid,
 	          visibility_scope,
+	          skip_custom_instructions,
 	          created_at
 	`, visibleToUserCondition("c", "$2"))
 

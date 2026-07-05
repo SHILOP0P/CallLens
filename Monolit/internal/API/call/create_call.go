@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"calllens/monolit/internal/API/dto"
@@ -50,14 +51,15 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	detectedMimeType := http.DetectContentType(buffer[:n])
+	detectedMimeType := normalizeDetectedAudioMimeType(fileHeader.Filename, http.DetectContentType(buffer[:n]))
 	fileContent := io.MultiReader(bytes.NewReader(buffer[:n]), file)
 
 	req := dto.CreateCallRequest{
-		Title:          title,
-		Audio:          fileHeader,
-		CompanyUUID:    r.FormValue("company_uuid"),
-		DepartmentUUID: r.FormValue("department_uuid"),
+		Title:                  title,
+		Audio:                  fileHeader,
+		CompanyUUID:            r.FormValue("company_uuid"),
+		DepartmentUUID:         r.FormValue("department_uuid"),
+		SkipCustomInstructions: parseSkipCustomInstructions(r.FormValue("use_custom_instructions"), r.FormValue("skip_custom_instructions")),
 	}
 
 	companyUUID, departmentUUID, visibilityScope, err := parseCallPlacement(req.CompanyUUID, req.DepartmentUUID)
@@ -77,15 +79,16 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	sizeBytes := req.Audio.Size
 
 	input := model.CreateCallInput{
-		Title:              title,
-		OriginalFilename:   originalFilename,
-		MimeType:           detectedMimeType,
-		SizeBytes:          sizeBytes,
-		Content:            fileContent,
-		UploadedByUserUUID: userID,
-		CompanyUUID:        companyUUID,
-		DepartmentUUID:     departmentUUID,
-		VisibilityScope:    visibilityScope,
+		Title:                  title,
+		OriginalFilename:       originalFilename,
+		MimeType:               detectedMimeType,
+		SizeBytes:              sizeBytes,
+		Content:                fileContent,
+		UploadedByUserUUID:     userID,
+		CompanyUUID:            companyUUID,
+		DepartmentUUID:         departmentUUID,
+		VisibilityScope:        visibilityScope,
+		SkipCustomInstructions: req.SkipCustomInstructions,
 	}
 
 	createdCall, err := h.service.CreateCall(r.Context(), input)
@@ -135,6 +138,47 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := response.WriteJSON(w, http.StatusCreated, resp); err != nil {
 		return
 	}
+}
+
+func normalizeDetectedAudioMimeType(filename string, detected string) string {
+	detected = strings.ToLower(strings.TrimSpace(strings.Split(detected, ";")[0]))
+	ext := strings.ToLower(filepath.Ext(filename))
+	if detected != "application/octet-stream" {
+		return detected
+	}
+
+	switch ext {
+	case ".mp3":
+		return "audio/mpeg"
+	case ".wav":
+		return "audio/wav"
+	case ".m4a":
+		return "audio/mp4"
+	default:
+		return detected
+	}
+}
+
+func parseSkipCustomInstructions(useCustomInstructions string, skipCustomInstructions string) bool {
+	if value, ok := parseOptionalBool(skipCustomInstructions); ok {
+		return value
+	}
+	if value, ok := parseOptionalBool(useCustomInstructions); ok {
+		return !value
+	}
+	return false
+}
+
+func parseOptionalBool(value string) (bool, bool) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return false, false
+	}
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		return false, false
+	}
+	return parsed, true
 }
 
 func parseCallPlacement(companyUUIDValue string, departmentUUIDValue string) (uuid.NullUUID, uuid.NullUUID, model.CallVisibilityScope, error) {

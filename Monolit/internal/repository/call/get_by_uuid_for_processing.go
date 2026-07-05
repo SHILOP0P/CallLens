@@ -28,6 +28,7 @@ func (r *Repository) GetByUUIDForProcessing(ctx context.Context, callUUID uuid.U
 	       company_uuid,
 	       department_uuid,
 	       visibility_scope,
+	       skip_custom_instructions,
 	       created_at
 	FROM calls
 	WHERE call_uuid = $1

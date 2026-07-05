@@ -7,19 +7,20 @@ import (
 )
 
 type Call struct {
-	ID                 uuid.UUID
-	Title              string
-	Status             string
-	AudioPath          string
-	OriginalFilename   string
-	MimeType           string
-	SizeBytes          int64
-	DurationSeconds    int
-	UploadedByUserUUID uuid.NullUUID
-	CompanyUUID        uuid.NullUUID
-	DepartmentUUID     uuid.NullUUID
-	VisibilityScope    string
-	CreatedAt          time.Time
+	ID                     uuid.UUID
+	Title                  string
+	Status                 string
+	AudioPath              string
+	OriginalFilename       string
+	MimeType               string
+	SizeBytes              int64
+	DurationSeconds        int
+	UploadedByUserUUID     uuid.NullUUID
+	CompanyUUID            uuid.NullUUID
+	DepartmentUUID         uuid.NullUUID
+	VisibilityScope        string
+	SkipCustomInstructions bool
+	CreatedAt              time.Time
 }
 
 const (
