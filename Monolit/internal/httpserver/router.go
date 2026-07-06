@@ -33,6 +33,7 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 	r.Get("/health/startup", healthHandler.Startup)
 	r.Route("/api/v1", func(r chi.Router) {
 		r.With(authGuard).Get("/calls/{uuid}/events", callAPI.Events)
+		r.With(authGuard).Get("/analytics/deep-analyses/{uuid}/events", analyticsAPI.DeepAnalysisEvents)
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Timeout(10 * time.Second))

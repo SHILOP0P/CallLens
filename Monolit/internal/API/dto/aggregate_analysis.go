@@ -33,6 +33,13 @@ type AggregateAnalysisResponse struct {
 	UpdatedAt         string          `json:"updated_at"`
 }
 
+type AggregateAnalysisStatusEvent struct {
+	AnalysisID string `json:"analysis_id"`
+	Status     string `json:"status"`
+	Terminal   bool   `json:"terminal"`
+	Timestamp  string `json:"timestamp"`
+}
+
 type ListAggregateAnalysesResponse struct {
 	Items  []AggregateAnalysisResponse `json:"items"`
 	Total  int                         `json:"total"`

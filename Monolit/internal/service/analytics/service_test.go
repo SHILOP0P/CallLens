@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -50,12 +51,10 @@ func TestCreateDeepAnalysisForceSpendsLimitAndMarksDone(t *testing.T) {
 	if !repo.spent {
 		t.Fatal("limit was not spent")
 	}
-	if !repo.markedProcessing || !repo.markedDone {
-		t.Fatal("analysis lifecycle did not reach processing and done")
-	}
-	if got.Status != models.AggregateAnalysisStatusDone {
+	if got.Status != models.AggregateAnalysisStatusPending {
 		t.Fatalf("status = %s", got.Status)
 	}
+	waitFor(t, repo.lifecycleReached)
 }
 
 func TestCreateDeepAnalysisMapsLimitNoCallsAndProviderError(t *testing.T) {
@@ -82,13 +81,18 @@ func TestCreateDeepAnalysisMapsLimitNoCallsAndProviderError(t *testing.T) {
 	providerRepo := &analyticsRepoStub{sourceTotal: 1, sources: []models.AggregateAnalysisSourceCall{{CallUUID: uuid.New()}}}
 	providerSvc := NewService(providerRepo)
 	providerSvc.SetAnalyzer(&aggregateAnalyzerStub{err: errors.New("provider failed")})
-	_, err = providerSvc.CreateDeepAnalysis(ctx, input)
-	if err == nil || !providerRepo.markedFailed {
-		t.Fatalf("provider err = %v, markedFailed = %v", err, providerRepo.markedFailed)
+	created, err := providerSvc.CreateDeepAnalysis(ctx, input)
+	if err != nil {
+		t.Fatalf("provider create err = %v", err)
 	}
+	if created.Status != models.AggregateAnalysisStatusPending {
+		t.Fatalf("provider create status = %s", created.Status)
+	}
+	waitFor(t, providerRepo.failed)
 }
 
 type analyticsRepoStub struct {
+	mu               sync.Mutex
 	reusable         *models.AggregateAnalysis
 	sourceTotal      int
 	sources          []models.AggregateAnalysisSourceCall
@@ -105,6 +109,8 @@ func (r *analyticsRepoStub) GetAnalyticsOverview(context.Context, models.Analyti
 }
 
 func (r *analyticsRepoStub) CreateAggregateAnalysis(_ context.Context, analysis models.AggregateAnalysis) (models.AggregateAnalysis, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.created = analysis
 	return analysis, nil
 }
@@ -125,6 +131,8 @@ func (r *analyticsRepoStub) ListAggregateAnalyses(context.Context, models.ListDe
 }
 
 func (r *analyticsRepoStub) MarkAggregateAnalysisProcessing(_ context.Context, id uuid.UUID) (models.AggregateAnalysis, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.markedProcessing = true
 	r.created.ID = id
 	r.created.Status = models.AggregateAnalysisStatusProcessing
@@ -132,6 +140,8 @@ func (r *analyticsRepoStub) MarkAggregateAnalysisProcessing(_ context.Context, i
 }
 
 func (r *analyticsRepoStub) MarkAggregateAnalysisDone(_ context.Context, id uuid.UUID, result models.AnalysisResult, sourceCallsCount int) (models.AggregateAnalysis, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.markedDone = true
 	r.created.ID = id
 	r.created.Status = models.AggregateAnalysisStatusDone
@@ -141,6 +151,8 @@ func (r *analyticsRepoStub) MarkAggregateAnalysisDone(_ context.Context, id uuid
 }
 
 func (r *analyticsRepoStub) MarkAggregateAnalysisFailed(_ context.Context, id uuid.UUID, message string) (models.AggregateAnalysis, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.markedFailed = true
 	r.created.ID = id
 	r.created.Status = models.AggregateAnalysisStatusFailed
@@ -156,8 +168,22 @@ func (r *analyticsRepoStub) SpendDeepAnalysisUsage(context.Context, models.DeepA
 	if r.spendErr != nil {
 		return r.spendErr
 	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.spent = true
 	return nil
+}
+
+func (r *analyticsRepoStub) lifecycleReached() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.markedProcessing && r.markedDone
+}
+
+func (r *analyticsRepoStub) failed() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.markedFailed
 }
 
 type aggregateAnalyzerStub struct {
@@ -193,4 +219,16 @@ func day(year int, month time.Month, date int) time.Time {
 
 func dayEnd(year int, month time.Month, date int) time.Time {
 	return day(year, month, date).AddDate(0, 0, 1).Add(-time.Nanosecond)
+}
+
+func waitFor(t *testing.T, condition func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		if condition() {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("condition was not met before timeout")
 }

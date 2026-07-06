@@ -25,6 +25,7 @@ type AnalyticsAPI interface {
 	CreateDeepAnalysis(w http.ResponseWriter, r *http.Request)
 	ListDeepAnalyses(w http.ResponseWriter, r *http.Request)
 	GetDeepAnalysis(w http.ResponseWriter, r *http.Request)
+	DeepAnalysisEvents(w http.ResponseWriter, r *http.Request)
 	CreateAggregateReport(w http.ResponseWriter, r *http.Request)
 	ListAggregateReports(w http.ResponseWriter, r *http.Request)
 	DownloadAggregateReport(w http.ResponseWriter, r *http.Request)

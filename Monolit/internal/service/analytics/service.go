@@ -123,9 +123,26 @@ func (s *Service) CreateDeepAnalysis(ctx context.Context, input models.CreateDee
 	if err != nil {
 		return models.AggregateAnalysis{}, err
 	}
-	processing, err := s.analyticsRepository.MarkAggregateAnalysisProcessing(ctx, created.ID)
+
+	s.processDeepAnalysisAsync(created.ID, input, sources, total)
+	return created, nil
+}
+
+func (s *Service) processDeepAnalysisAsync(id uuid.UUID, input models.CreateDeepAnalysisInput, sources []models.AggregateAnalysisSourceCall, total int) {
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+
+		if err := s.processDeepAnalysis(ctx, id, input, sources, total); err != nil {
+			_ = err
+		}
+	}()
+}
+
+func (s *Service) processDeepAnalysis(ctx context.Context, id uuid.UUID, input models.CreateDeepAnalysisInput, sources []models.AggregateAnalysisSourceCall, total int) error {
+	processing, err := s.analyticsRepository.MarkAggregateAnalysisProcessing(ctx, id)
 	if err != nil {
-		return models.AggregateAnalysis{}, err
+		return err
 	}
 	result, err := s.analyzer.AnalyzeAggregate(ctx, models.AggregateAnalysisRequest{
 		Scope: input.Scope, PeriodFrom: input.PeriodFrom, PeriodTo: input.PeriodTo, SourceCallsCount: total,
@@ -134,11 +151,13 @@ func (s *Service) CreateDeepAnalysis(ctx context.Context, input models.CreateDee
 	if err != nil {
 		failed, markErr := s.analyticsRepository.MarkAggregateAnalysisFailed(ctx, processing.ID, err.Error())
 		if markErr != nil {
-			return models.AggregateAnalysis{}, markErr
+			return markErr
 		}
-		return failed, err
+		_ = failed
+		return err
 	}
-	return s.analyticsRepository.MarkAggregateAnalysisDone(ctx, processing.ID, result, total)
+	_, err = s.analyticsRepository.MarkAggregateAnalysisDone(ctx, processing.ID, result, total)
+	return err
 }
 
 func (s *Service) ListDeepAnalyses(ctx context.Context, input models.ListDeepAnalysesInput) (models.ListAggregateAnalysesResult, error) {
