@@ -35,18 +35,12 @@ LEFT JOIN call_folder_assignments a ON a.folder_uuid = f.folder_uuid
 
 func (r *Repository) Create(ctx context.Context, folder models.CallFolder) (models.CallFolder, error) {
 	query := `
-WITH created AS (
-    INSERT INTO call_folders (
-        folder_uuid, scope, user_uuid, company_uuid, department_uuid, name, description, color, created_by_user_uuid
-    )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    RETURNING folder_uuid
+INSERT INTO call_folders (
+    folder_uuid, scope, user_uuid, company_uuid, department_uuid, name, description, color, created_by_user_uuid
 )
-` + folderSelect + `
-JOIN created ON created.folder_uuid = f.folder_uuid
-GROUP BY f.folder_uuid`
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
 
-	row := r.db.QueryRowContext(ctx, query,
+	if _, err := r.db.ExecContext(ctx, query,
 		folder.ID,
 		string(folder.Scope),
 		nullUUID(folder.UserUUID),
@@ -56,12 +50,11 @@ GROUP BY f.folder_uuid`
 		nullString(folder.Description),
 		nullString(folder.Color),
 		folder.CreatedByUserUUID,
-	)
-	created, err := scanFolder(row)
-	if err != nil {
+	); err != nil {
 		return models.CallFolder{}, fmt.Errorf("create call folder: %w", err)
 	}
-	return created, nil
+
+	return r.GetByUUID(ctx, folder.ID)
 }
 
 func (r *Repository) GetByUUID(ctx context.Context, id uuid.UUID) (models.CallFolder, error) {
