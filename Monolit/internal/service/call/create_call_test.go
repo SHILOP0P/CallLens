@@ -152,6 +152,17 @@ func (s *ServiceSuite) TestCreateCallRejectsInvalidAudioInput() {
 	}
 }
 
+func (s *ServiceSuite) TestCreateCallAcceptsOGGAudioInput() {
+	input := validCreateCallInput(uuid.New())
+	input.OriginalFilename = "call.ogg"
+
+	input.MimeType = "audio/ogg; codecs=opus"
+	s.Require().NoError(validateAudioInput(input))
+
+	input.MimeType = "application/ogg"
+	s.Require().NoError(validateAudioInput(input))
+}
+
 func (s *ServiceSuite) TestCreateCallAllowsCompanyManagerUpload() {
 	userID := uuid.New()
 	companyID := uuid.New()

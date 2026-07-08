@@ -73,7 +73,7 @@ tasks:
     desc: Start local production-like stack in background.
     cmds:
       - echo "==> Starting backend and PostgreSQL with Docker Compose"
-      - docker compose -f deploy/docker-compose.yaml --project-directory . up --build -d
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/compose-up.ps1
 
   # Остановка локального стека без удаления persistent volumes.
   down:

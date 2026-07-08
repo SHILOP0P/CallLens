@@ -196,6 +196,83 @@ func TestProcessAnalyzeCallPassesCompanyAndDepartmentInstructions(t *testing.T) 
 	}
 }
 
+func TestProcessAnalyzeCallSkipsMissingInstructionFile(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	callID := uuid.New()
+	transcriptionText := "Client asked about pricing."
+
+	callRepo := &analysisCallRepository{
+		call: models.Call{
+			ID:                 callID,
+			Status:             models.CallStatusTranscribed,
+			UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+			VisibilityScope:    models.CallVisibilityScopePersonal,
+		},
+	}
+	transcriptionRepo := &analysisTranscriptionRepository{
+		transcription: models.Transcription{
+			ID:       uuid.New(),
+			CallUUID: callID,
+			Status:   models.TranscriptionStatusTranscribed,
+			Text:     &transcriptionText,
+		},
+	}
+	missingInstruction := models.AnalysisInstruction{
+		ID:       uuid.New(),
+		Scope:    models.AnalysisInstructionScopePersonal,
+		UserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+		Title:    "Missing criteria",
+		FilePath: "missing.md",
+		IsActive: true,
+	}
+	presentInstruction := models.AnalysisInstruction{
+		ID:       uuid.New(),
+		Scope:    models.AnalysisInstructionScopePersonal,
+		UserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+		Title:    "Present criteria",
+		FilePath: "present.md",
+		IsActive: true,
+	}
+	instructionRepo := &analysisInstructionRepository{
+		instructions: map[models.AnalysisInstructionScope][]models.AnalysisInstruction{
+			models.AnalysisInstructionScopePersonal: {missingInstruction, presentInstruction},
+		},
+	}
+	analysisRepo := &analysisRepository{
+		analysisID: uuid.New(),
+		callID:     callID,
+	}
+	instructionStorage := &analysisInstructionStorage{
+		files: map[string]string{
+			"present.md": "Ask for a concrete next step.",
+		},
+	}
+	analyzerProvider := &recordingAnalyzer{
+		result: models.AnalysisResult{
+			ResultJSON: json.RawMessage(`{"summary":"Client discussed pricing."}`),
+		},
+	}
+
+	service := NewService(callRepo, transcriptionRepo, instructionRepo, analysisRepo, instructionStorage, analyzerProvider, nil)
+
+	if err := service.ProcessAnalyzeCall(ctx, callID); err != nil {
+		t.Fatalf("process analyze call: %v", err)
+	}
+	if len(analyzerProvider.request.Instructions) != 1 {
+		t.Fatalf("instructions len = %d, want 1", len(analyzerProvider.request.Instructions))
+	}
+	if analyzerProvider.request.Instructions[0].ID != presentInstruction.ID {
+		t.Fatalf("instruction id = %s, want %s", analyzerProvider.request.Instructions[0].ID, presentInstruction.ID)
+	}
+	if !strings.Contains(analyzerProvider.request.Instructions[0].Content, "next step") {
+		t.Fatalf("instruction content was not passed: %#v", analyzerProvider.request.Instructions[0])
+	}
+	if !callRepo.updatedStatus || callRepo.lastStatus != models.CallStatusAnalyzed {
+		t.Fatalf("call status was not marked analyzed")
+	}
+}
+
 func TestProcessAnalyzeCallSkipsCustomInstructions(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()
@@ -407,7 +484,11 @@ func (s *analysisInstructionStorage) Save(ctx context.Context, input models.Save
 }
 
 func (s *analysisInstructionStorage) Open(ctx context.Context, path string) (io.ReadCloser, error) {
-	return io.NopCloser(strings.NewReader(s.files[path])), nil
+	content, ok := s.files[path]
+	if !ok {
+		return nil, models.ErrInstructionFileNotFound
+	}
+	return io.NopCloser(strings.NewReader(content)), nil
 }
 
 func (s *analysisInstructionStorage) Delete(ctx context.Context, path string) error {

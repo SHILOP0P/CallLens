@@ -278,6 +278,10 @@ func (s *Service) loadInstructions(ctx context.Context, call models.Call, userID
 	for _, instruction := range instructions {
 		content, err := s.readInstructionContent(ctx, instruction)
 		if err != nil {
+			if errors.Is(err, models.ErrInstructionFileNotFound) {
+				s.log.Warn(ctx, "analysis instruction file skipped", zap.String("instruction_id", instruction.ID.String()), zap.String("file_path", instruction.FilePath), zap.Error(err))
+				continue
+			}
 			return nil, err
 		}
 		contents = append(contents, content)
@@ -408,7 +412,6 @@ func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResul
 	})
 	normalizeBusinessOutcome(payload)
 	normalizeCustomerSignals(payload)
-	normalizeNextStepQuality(payload)
 	normalizeIssueCodes(payload)
 	ensureArrayField(payload, "evidence_quotes")
 	ensureConfidenceField(payload)
@@ -417,6 +420,7 @@ func normalizeAnalysisResult(result models.AnalysisResult) (models.AnalysisResul
 	if stringField(payload, "next_step") == "" {
 		payload["next_step"] = firstStringFromArray(payload["next_steps"])
 	}
+	normalizeNextStepQuality(payload)
 	normalizePayloadRussianText(payload)
 	summary = stringField(payload, "summary")
 
@@ -504,28 +508,42 @@ func normalizeCriterionResult(item map[string]any) map[string]any {
 	if status == "" && stringField(out, "result") != "" {
 		status = "unclear"
 	}
-	out["status"] = normalizeCriterionStatus(status)
+	status = normalizeCriterionStatus(status)
+	out["status"] = status
 
-	if _, ok := out["points_awarded"]; !ok {
-		out["points_awarded"] = float64(0)
+	pointsMax := float64(0)
+	if _, ok := out["points_max"]; ok {
+		pointsMax = math.Max(0, numberField(out, "points_max"))
 	} else {
-		out["points_awarded"] = math.Max(0, numberField(out, "points_awarded"))
-	}
-	if _, ok := out["points_max"]; !ok {
 		if legacyInstructionCriterion {
-			out["points_max"] = float64(0)
+			pointsMax = 0
 		} else if known {
-			out["points_max"] = float64(criterion.PointsMax)
+			pointsMax = float64(criterion.PointsMax)
 		} else {
-			out["points_max"] = float64(0)
+			pointsMax = 0
 		}
-	} else {
-		out["points_max"] = math.Max(0, numberField(out, "points_max"))
 	}
+	if status == "not_applicable" {
+		pointsMax = 0
+	}
+	out["points_max"] = pointsMax
+
+	pointsAwarded := float64(0)
+	if _, ok := out["points_awarded"]; ok {
+		pointsAwarded = math.Max(0, numberField(out, "points_awarded"))
+	}
+	if pointsMax > 0 && (pointsAwarded == 0 && statusImpliesPositiveScore(status)) {
+		pointsAwarded = defaultCriterionPointsAwarded(status, pointsMax)
+	}
+	if status == "not_applicable" || pointsMax <= 0 {
+		pointsAwarded = 0
+	} else if pointsAwarded > pointsMax {
+		pointsAwarded = pointsMax
+	}
+	out["points_awarded"] = pointsAwarded
 
 	ensureArrayField(out, "evidence_quotes")
-	ensureStringField(out, "issue")
-	ensureStringField(out, "recommendation")
+	normalizeCriterionExplanation(out, status)
 	return out
 }
 
@@ -535,6 +553,65 @@ func normalizeCriterionStatus(status string) string {
 		return status
 	default:
 		return "unclear"
+	}
+}
+
+func statusImpliesPositiveScore(status string) bool {
+	return status == "met" || status == "partially_met"
+}
+
+func defaultCriterionPointsAwarded(status string, pointsMax float64) float64 {
+	switch status {
+	case "met":
+		return pointsMax
+	case "partially_met":
+		return math.Round(pointsMax / 2)
+	default:
+		return 0
+	}
+}
+
+func normalizeCriterionExplanation(out map[string]any, status string) {
+	issue := normalizeCriterionText(stringField(out, "issue"))
+	recommendation := normalizeCriterionText(stringField(out, "recommendation"))
+
+	if issue == "" {
+		switch status {
+		case "met":
+			issue = "Проблема не выявлена."
+		case "partially_met":
+			issue = "Критерий выполнен частично."
+		case "missed":
+			issue = "Критерий не подтвержден в расшифровке."
+		case "not_applicable":
+			issue = "Критерий не применим к этому звонку."
+		default:
+			issue = "Данных в расшифровке недостаточно для уверенной оценки."
+		}
+	}
+	if recommendation == "" {
+		switch status {
+		case "met", "not_applicable":
+			recommendation = "Рекомендация не требуется."
+		case "partially_met":
+			recommendation = "Усилить выполнение этого критерия."
+		case "missed":
+			recommendation = "Добавить явное выполнение этого критерия в разговор."
+		default:
+			recommendation = "Проверить качество расшифровки или уточнить критерий."
+		}
+	}
+
+	out["issue"] = issue
+	out["recommendation"] = recommendation
+}
+
+func normalizeCriterionText(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "", "not_applicable", "not applicable", "not specified", "not provided", "none", "n/a":
+		return ""
+	default:
+		return normalizeRussianAnalysisText(value)
 	}
 }
 
@@ -568,11 +645,14 @@ func clampScore(score float64) float64 {
 
 func normalizeBusinessOutcome(payload map[string]any) {
 	value, _ := payload["business_outcome"].(map[string]any)
-	if !allowedString(value, "status", []string{"success", "follow_up_needed", "no_decision", "lost", "support_resolved", "not_call", "unclear"}) {
+	if !allowedString(value, "status", []string{"success", "follow_up_needed", "no_decision", "lost", "support_resolved", "unclear"}) {
 		value["status"] = "unclear"
 	}
 	if !allowedString(value, "lost_reason", []string{"price", "timing", "no_need", "competitor", "no_next_step", "unclear_value", "bad_fit", "not_applicable", "unclear"}) {
 		value["lost_reason"] = "not_applicable"
+	}
+	if stringField(value, "summary") == "" {
+		value["summary"] = "Не указано"
 	}
 }
 
@@ -592,6 +672,12 @@ func normalizeNextStepQuality(payload map[string]any) {
 	for _, key := range []string{"has_next_step", "specific", "has_deadline", "has_responsible_person"} {
 		ensureBoolField(value, key)
 	}
+	if hasMeaningfulNextStep(payload) {
+		value["has_next_step"] = true
+		if !boolValue(value["specific"]) && hasSpecificNextStep(payload) {
+			value["specific"] = true
+		}
+	}
 }
 
 func normalizeIssueCodes(payload map[string]any) {
@@ -607,11 +693,84 @@ func normalizeIssueCodes(payload map[string]any) {
 			continue
 		}
 		text = strings.TrimSpace(text)
+		switch normalizeAnalysisIssueCode(text) {
+		case "not_call", "not_a_call":
+			continue
+		}
 		if text != "" {
 			out = append(out, text)
 		}
 	}
 	payload["issue_codes"] = out
+}
+
+func normalizeAnalysisIssueCode(code string) string {
+	code = strings.ToLower(strings.TrimSpace(code))
+	code = strings.ReplaceAll(code, "-", "_")
+	code = strings.Join(strings.Fields(code), "_")
+	return code
+}
+
+func boolValue(value any) bool {
+	v, _ := value.(bool)
+	return v
+}
+
+func hasMeaningfulNextStep(payload map[string]any) bool {
+	if isMeaningfulAnalysisText(stringField(payload, "next_step")) {
+		return true
+	}
+	values, ok := payload["next_steps"].([]any)
+	if !ok {
+		return false
+	}
+	for _, value := range values {
+		text, ok := value.(string)
+		if ok && isMeaningfulAnalysisText(text) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasSpecificNextStep(payload map[string]any) bool {
+	if isSpecificAnalysisText(stringField(payload, "next_step")) {
+		return true
+	}
+	values, ok := payload["next_steps"].([]any)
+	if !ok {
+		return false
+	}
+	for _, value := range values {
+		text, ok := value.(string)
+		if ok && isSpecificAnalysisText(text) {
+			return true
+		}
+	}
+	return false
+}
+
+func isMeaningfulAnalysisText(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	switch normalized {
+	case "", "unclear", "not specified", "not provided", "none", "n/a", "не указано", "неясно":
+		return false
+	default:
+		return true
+	}
+}
+
+func isSpecificAnalysisText(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	if !isMeaningfulAnalysisText(normalized) {
+		return false
+	}
+	switch normalized {
+	case "следующий шаг не указан", "не указан", "нет", "не требуется":
+		return false
+	default:
+		return len([]rune(normalized)) >= 12
+	}
 }
 
 func normalizePayloadRussianText(value any) {
@@ -668,7 +827,7 @@ func normalizeRussianAnalysisText(value string) string {
 	case "no client questions were identified in the transcription.":
 		return "В расшифровке не выявлены вопросы клиента."
 	case "the transcription provided does not contain a sales or client call. it is a text about the history and new directions of advertising, including the use of human billboards. therefore, no analysis of a sales or client call can be provided.":
-		return "Расшифровка не содержит продажного или клиентского звонка. Это текст об истории и новых направлениях рекламы, включая использование людей-рекламоносителей, поэтому анализ диалога с клиентом выполнить нельзя."
+		return "Не удалось надежно определить итог разговора по расшифровке."
 	default:
 		return trimmed
 	}

@@ -13,16 +13,19 @@ var allowedAudioExtensions = map[string]struct{}{
 	".mp3": {},
 	".wav": {},
 	".m4a": {},
+	".ogg": {},
 }
 
 var allowedAudioMimeTypes = map[string]struct{}{
-	"audio/mpeg":     {},
-	"audio/wav":      {},
-	"audio/x-wav":    {},
-	"audio/wave":     {},
-	"audio/vnd.wave": {},
-	"audio/mp4":      {},
-	"audio/x-m4a":    {},
+	"application/ogg": {},
+	"audio/mpeg":      {},
+	"audio/ogg":       {},
+	"audio/wav":       {},
+	"audio/x-wav":     {},
+	"audio/wave":      {},
+	"audio/vnd.wave":  {},
+	"audio/mp4":       {},
+	"audio/x-m4a":     {},
 }
 
 func validateAudioInput(input models.CreateCallInput) error {
@@ -35,7 +38,8 @@ func validateAudioInput(input models.CreateCallInput) error {
 		return models.ErrUnsupportedAudioType
 	}
 
-	if _, ok := allowedAudioMimeTypes[input.MimeType]; !ok {
+	mimeType := strings.ToLower(strings.TrimSpace(strings.Split(input.MimeType, ";")[0]))
+	if _, ok := allowedAudioMimeTypes[mimeType]; !ok {
 		return models.ErrUnsupportedAudioType
 	}
 

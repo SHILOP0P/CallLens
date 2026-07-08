@@ -65,7 +65,9 @@ func TestAnalyzeSendsTranscriptionAndInstructions(t *testing.T) {
 		systemMessage := req.Messages[0].Content
 		for _, want := range []string{
 			"Абсолютное правило языка",
-			"business_outcome.status должен быть not_call",
+			"Не используй отдельный сценарий отбраковки входа",
+			"points_awarded 0 и points_max 0",
+			"Для каждого критерия заполняй issue и recommendation",
 			"met - критерий выполнен хорошо",
 			"100/100 возможно",
 			"не ставь автоматические 90-100",
@@ -74,8 +76,8 @@ func TestAnalyzeSendsTranscriptionAndInstructions(t *testing.T) {
 				t.Fatalf("system message does not contain %q:\n%s", want, systemMessage)
 			}
 		}
-		if !strings.Contains(req.Messages[1].Content, "без диалога") {
-			t.Fatalf("user message does not contain strict non-dialogue rule:\n%s", req.Messages[1].Content)
+		if !strings.Contains(req.Messages[1].Content, "отдельный сценарий отбраковки входа") {
+			t.Fatalf("user message does not contain input handling rule:\n%s", req.Messages[1].Content)
 		}
 
 		userMessage := req.Messages[1].Content
@@ -313,8 +315,8 @@ func assertResponseSchemaV2(t *testing.T, schema map[string]any) {
 	if !ok {
 		t.Fatalf("business_outcome.status enum = %#v", status["enum"])
 	}
-	if !containsString(statusEnum, "not_call") {
-		t.Fatalf("business_outcome.status enum missing not_call: %#v", status["enum"])
+	if containsString(statusEnum, "not_call") {
+		t.Fatalf("business_outcome.status enum must not contain not_call: %#v", status["enum"])
 	}
 
 	issueCodes := properties["issue_codes"].(map[string]any)

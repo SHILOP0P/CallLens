@@ -143,6 +143,9 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 func normalizeDetectedAudioMimeType(filename string, detected string) string {
 	detected = strings.ToLower(strings.TrimSpace(strings.Split(detected, ";")[0]))
 	ext := strings.ToLower(filepath.Ext(filename))
+	if ext == ".ogg" && detected == "application/ogg" {
+		return "audio/ogg"
+	}
 	if detected != "application/octet-stream" {
 		return detected
 	}
@@ -154,6 +157,8 @@ func normalizeDetectedAudioMimeType(filename string, detected string) string {
 		return "audio/wav"
 	case ".m4a":
 		return "audio/mp4"
+	case ".ogg":
+		return "audio/ogg"
 	default:
 		return detected
 	}

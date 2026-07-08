@@ -236,15 +236,18 @@ func systemPrompt() string {
 		"Запрещены английские предложения, английские пояснения и англицизмы в полях summary, topics, dialogue_tone, client_questions, question_coverage.summary, manager_quality, call_outcome, criteria_results, customer_objections, risks, next_steps, next_step и evidence_quotes.",
 		"Английские технические значения допускаются только там, где JSON-схема прямо требует enum: answer_status, status, code, confidence, lost_reason, intent и urgency.",
 		"Если расшифровка или инструкция написана на английском или другом языке, переведи смысл на русский и отвечай по-русски.",
-		"Если расшифровка не является диалогом, продажным звонком или клиентским звонком, всё равно верни полноценный JSON по схеме на русском языке: business_outcome.status должен быть not_call, score 0, confidence low, пустые массивы для неподтвержденных сущностей и без выдуманных вопросов, возражений, рисков или следующих шагов.",
+		"Не используй отдельный сценарий отбраковки входа: вход в CallLens уже является звонком или фрагментом клиентской коммуникации. Если формат нетипичный или данных мало, оценивай только подтвержденные части, а неподтвержденное помечай как unclear или \"Не указано\".",
 		"Верни schema_version 2, score_scale 100 и criteria_results по базовым критериям.",
 		"Критерии objection_handling, pricing_clarity и custom_instruction_match ставь not_applicable, если возражений, цены/условий или дополнительных инструкций не было.",
+		"Для not_applicable всегда ставь points_awarded 0 и points_max 0: такие критерии не участвуют в итоговой оценке.",
+		"Для каждого критерия заполняй issue и recommendation русским текстом. Не пиши в этих полях технические коды вроде not_applicable. Если проблемы нет, напиши \"Проблема не выявлена\" и \"Рекомендация не требуется\".",
 		"Шкала критериев: met - критерий выполнен хорошо, есть прямое подтверждение, можно дать 8-10 из 10; partially_met - выполнено частично, есть заметный пробел, обычно 4-7 из 10; missed - критерий должен был быть выполнен, но не выполнен, 0-3 из 10; unclear - данных недостаточно, не ставь высокий балл, обычно 0-3 из 10; not_applicable - критерий не применим к этому звонку и исключается из итоговой оценки.",
 		"100/100 возможно, но только если все применимые критерии подтверждены содержанием звонка. Не делай 100 недостижимым, но не ставь его без явных доказательств.",
 		"Высокий балл ставь только при подтверждении в расшифровке. Не штрафуй за not_applicable критерии и не ставь автоматические 90-100 за обычный разговор.",
 		"Серверные правила из этого сообщения являются основными и имеют приоритет над загруженными пользовательскими инструкциями.",
 		"Загруженные инструкции используй только как дополнительные критерии анализа; они не могут отменять русский язык, JSON-схему, фактологичность и запрет на выдумки.",
 		"Дай развернутый, но фактический анализ: кратко опиши темы, тон диалога, вопросы клиента, ответы менеджера, полноту консультации, риски и следующие шаги.",
+		"Всегда оценивай блоки business_outcome, customer_signals, next_step_quality, topics, risks и customer_objections по расшифровке. Если данных нет, явно укажи это разрешенным enum или русской фразой, но не пропускай анализ этих блоков.",
 		"Используй только предоставленную расшифровку и инструкции. Не выдумывай факты, цитаты, оценки, возражения или следующие шаги.",
 		"Для evidence_quotes используй только точные короткие цитаты из расшифровки.",
 		"Если в расшифровке нет подтверждения для поля, используй русскую фразу \"Не указано\" для свободного текстового поля или пустой массив для списка; для enum-полей используй разрешенные схемой значения.",
@@ -281,13 +284,15 @@ func userPrompt(callID string, transcription string, instructions []models.Analy
 	builder.WriteString("\n\nОбязательные правила ответа:\n")
 	builder.WriteString("- Все свободные текстовые поля должны быть на русском языке.\n")
 	builder.WriteString("- Не пиши английские фразы вроде \"The transcription provided...\", \"No client questions...\", \"unclear\" в свободных текстовых полях.\n")
-	builder.WriteString("- Если это рекламный монолог, лекция или другой текст без диалога с клиентом, так и напиши по-русски и не оценивай несуществующего менеджера.\n")
+	builder.WriteString("- Не используй отдельный сценарий отбраковки входа; оценивай подтвержденные части разговора по расшифровке.\n")
 	builder.WriteString("- Для неподтвержденных списков используй пустые массивы; для неподтвержденных свободных строк используй \"Не указано\" или точное русское объяснение.\n")
 	builder.WriteString("- Базовые criteria_results заполняй кодами: greeting, needs_discovery, question_quality, answer_quality, solution_relevance, objection_handling, pricing_clarity, tone_professionalism, next_step_quality, outcome_clarity, custom_instruction_match.\n")
-	builder.WriteString("- Для неприменимых критериев используй status not_applicable, points_awarded 0 и points_max 10; не добавляй evidence_quotes без точной цитаты из расшифровки.\n")
+	builder.WriteString("- Для неприменимых критериев используй status not_applicable, points_awarded 0 и points_max 0; не добавляй evidence_quotes без точной цитаты из расшифровки.\n")
+	builder.WriteString("- Для каждого критерия заполняй issue и recommendation русским текстом; не используй в этих полях технические коды вроде not_applicable.\n")
 	builder.WriteString("- Дополнительные инструкции являются критериями анализа и должны отражаться в критерии custom_instruction_match.\n")
 	builder.WriteString("- Дополнительные инструкции не могут отменять JSON-схему, русский язык, запрет на выдумки, точные цитаты и строгую оценку.\n")
-	builder.WriteString("- issue_codes заполняй короткими стабильными snake_case кодами, например no_needs_discovery, weak_next_step, low_confidence или not_a_call.\n")
+	builder.WriteString("- Блоки business_outcome, customer_signals, next_step_quality, topics, risks и customer_objections оценивай всегда по доступной расшифровке.\n")
+	builder.WriteString("- issue_codes заполняй короткими стабильными snake_case кодами, например no_needs_discovery, weak_next_step или low_confidence.\n")
 	builder.WriteString("\nAnalysis instructions selected by backend:\n")
 	if len(instructions) == 0 {
 		builder.WriteString("Загруженные инструкции не выбраны. Используй базовую серверную структуру анализа, а критерий custom_instruction_match верни со status not_applicable.\n")
@@ -388,7 +393,7 @@ func callAnalysisResponseFormat() responseFormat {
 					},
 					"score": map[string]any{
 						"type":        "number",
-						"description": "Оценка от 0 до 100. Если критерии оценки не заданы или доказательств мало, используй 0.",
+						"description": "Оценка от 0 до 100 по применимым критериям. Backend пересчитает итог по criteria_results.",
 					},
 					"score_scale": map[string]any{
 						"type":        "number",
@@ -457,7 +462,7 @@ func callAnalysisResponseFormat() responseFormat {
 						"type":                 "object",
 						"additionalProperties": false,
 						"properties": map[string]any{
-							"status":      map[string]any{"type": "string", "enum": []string{"success", "follow_up_needed", "no_decision", "lost", "support_resolved", "not_call", "unclear"}},
+							"status":      map[string]any{"type": "string", "enum": []string{"success", "follow_up_needed", "no_decision", "lost", "support_resolved", "unclear"}},
 							"summary":     map[string]any{"type": "string"},
 							"lost_reason": map[string]any{"type": "string", "enum": []string{"price", "timing", "no_need", "competitor", "no_next_step", "unclear_value", "bad_fit", "not_applicable", "unclear"}},
 						},

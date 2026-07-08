@@ -153,7 +153,7 @@ func TestNormalizeAnalysisResultRewritesKnownEnglishFallbacks(t *testing.T) {
 	if err := json.Unmarshal(result.ResultJSON, &payload); err != nil {
 		t.Fatal(err)
 	}
-	if payload["summary"] != "Расшифровка не содержит продажного или клиентского звонка. Это текст об истории и новых направлениях рекламы, включая использование людей-рекламоносителей, поэтому анализ диалога с клиентом выполнить нельзя." {
+	if payload["summary"] != "Не удалось надежно определить итог разговора по расшифровке." {
 		t.Fatalf("summary = %q", payload["summary"])
 	}
 	if result.ResultText == nil || strings.Contains(*result.ResultText, "The transcription") {
@@ -234,6 +234,12 @@ func TestNormalizeAnalysisResultCriteriaOverrideScore(t *testing.T) {
 	if len(criteria) != 4 {
 		t.Fatalf("criteria len = %d", len(criteria))
 	}
+	if criteria[0].(map[string]any)["issue"] != "Проблема не выявлена." {
+		t.Fatalf("met criterion issue was not normalized: %#v", criteria[0])
+	}
+	if criteria[2].(map[string]any)["points_max"] != float64(0) {
+		t.Fatalf("not_applicable points_max = %#v", criteria[2])
+	}
 	if criteria[3].(map[string]any)["status"] != "unclear" {
 		t.Fatalf("unknown status was not normalized: %#v", criteria[3])
 	}
@@ -244,6 +250,46 @@ func TestNormalizeAnalysisResultCriteriaOverrideScore(t *testing.T) {
 	issueCodes := payload["issue_codes"].([]any)
 	if len(issueCodes) != 1 || issueCodes[0] != "late_followup" {
 		t.Fatalf("issue_codes = %#v", issueCodes)
+	}
+}
+
+func TestNormalizeAnalysisResultRepairsCriterionScoreAndLegacyNotCall(t *testing.T) {
+	result, err := normalizeAnalysisResult(models.AnalysisResult{ResultJSON: []byte(`{
+		"summary":"ok",
+		"criteria_results":[
+			{"code":"greeting","status":"met","points_awarded":0,"points_max":10,"issue":"not_applicable","recommendation":"not_applicable","evidence_quotes":["Здравствуйте"]},
+			{"code":"next_step_quality","status":"partially_met","points_awarded":0,"points_max":10,"evidence_quotes":["Свяжутся позже"]},
+			{"code":"pricing_clarity","status":"not_applicable","points_awarded":10,"points_max":10,"evidence_quotes":[]}
+		],
+		"business_outcome":{"status":"not_call","summary":"","lost_reason":"bad"},
+		"next_steps":["Свяжутся позже"],
+		"next_step_quality":{"has_next_step":false,"specific":false}
+	}`)})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	payload := decodeAnalysisPayload(t, result)
+	if payload["score"] != float64(75) {
+		t.Fatalf("score = %v", payload["score"])
+	}
+	criteria := payload["criteria_results"].([]any)
+	if criteria[0].(map[string]any)["points_awarded"] != float64(10) {
+		t.Fatalf("met criterion points = %#v", criteria[0])
+	}
+	if criteria[1].(map[string]any)["points_awarded"] != float64(5) {
+		t.Fatalf("partial criterion points = %#v", criteria[1])
+	}
+	if criteria[2].(map[string]any)["points_max"] != float64(0) {
+		t.Fatalf("not applicable criterion = %#v", criteria[2])
+	}
+	businessOutcome := payload["business_outcome"].(map[string]any)
+	if businessOutcome["status"] != "unclear" || businessOutcome["summary"] != "Не указано" || businessOutcome["lost_reason"] != "not_applicable" {
+		t.Fatalf("business outcome = %#v", businessOutcome)
+	}
+	nextStepQuality := payload["next_step_quality"].(map[string]any)
+	if nextStepQuality["has_next_step"] != true || nextStepQuality["specific"] != true {
+		t.Fatalf("next step quality = %#v", nextStepQuality)
 	}
 }
 

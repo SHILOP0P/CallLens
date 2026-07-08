@@ -16,7 +16,7 @@ import (
 )
 
 func TestNewRequiresAPIKey(t *testing.T) {
-	_, err := New("", "qwen/qwen3-asr-flash-2026-02-10")
+	_, err := New("", "openai/whisper-large-v3-turbo")
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -46,7 +46,7 @@ func TestTranscribeSendsOpenRouterRequest(t *testing.T) {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			t.Fatalf("decode request: %v", err)
 		}
-		if req.Model != "qwen/qwen3-asr-flash-2026-02-10" {
+		if req.Model != "openai/whisper-large-v3-turbo" {
 			t.Fatalf("model = %q", req.Model)
 		}
 		if req.Language != defaultLanguage {
@@ -71,7 +71,7 @@ func TestTranscribeSendsOpenRouterRequest(t *testing.T) {
 	}))
 	defer server.Close()
 
-	transcriber, err := New("sk-or-v1-test", "qwen/qwen3-asr-flash-2026-02-10")
+	transcriber, err := New("sk-or-v1-test", "openai/whisper-large-v3-turbo")
 	if err != nil {
 		t.Fatalf("new transcriber: %v", err)
 	}
@@ -113,7 +113,7 @@ func TestTranscribeReturnsOpenRouterError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	transcriber, err := New("sk-or-v1-test", "qwen/qwen3-asr-flash-2026-02-10")
+	transcriber, err := New("sk-or-v1-test", "openai/whisper-large-v3-turbo")
 	if err != nil {
 		t.Fatalf("new transcriber: %v", err)
 	}
@@ -134,7 +134,7 @@ func TestTranscribeReturnsOpenRouterError(t *testing.T) {
 }
 
 func TestTranscribeRejectsUnsupportedFormat(t *testing.T) {
-	transcriber, err := New("sk-or-v1-test", "qwen/qwen3-asr-flash-2026-02-10")
+	transcriber, err := New("sk-or-v1-test", "openai/whisper-large-v3-turbo")
 	if err != nil {
 		t.Fatalf("new transcriber: %v", err)
 	}

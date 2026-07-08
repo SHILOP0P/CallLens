@@ -396,7 +396,7 @@ func (a *analyticsAccumulator) addBusinessOutcome(value any) {
 
 func isAllowedBusinessOutcome(status string) bool {
 	switch status {
-	case "success", "follow_up_needed", "no_decision", "lost", "support_resolved", "not_call", "unclear":
+	case "success", "follow_up_needed", "no_decision", "lost", "support_resolved", "unclear":
 		return true
 	default:
 		return false

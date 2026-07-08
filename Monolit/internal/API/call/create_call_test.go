@@ -85,6 +85,39 @@ func (s *APISuite) TestCreateCallAcceptsMP3SniffedAsOctetStream() {
 	s.Require().Equal(http.StatusCreated, rec.Code)
 }
 
+func (s *APISuite) TestCreateCallAcceptsOGGSniffedAsOctetStream() {
+	userID := uuid.New()
+	callID := uuid.New()
+	oggHeader := []byte("OggS\x00\x02test-audio")
+
+	body, contentType := multipartBody(s.T(), map[string]string{
+		"title": "OGG call",
+	}, "audio", "call.ogg", oggHeader)
+
+	s.service.On("CreateCall", mock.Anything, mock.MatchedBy(func(input models.CreateCallInput) bool {
+		return input.OriginalFilename == "call.ogg" && input.MimeType == "audio/ogg"
+	})).
+		Return(models.Call{
+			ID:                 callID,
+			Title:              "OGG call",
+			Status:             models.CallStatusNew,
+			OriginalFilename:   "call.ogg",
+			MimeType:           "audio/ogg",
+			SizeBytes:          int64(len(oggHeader)),
+			UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+			VisibilityScope:    models.CallVisibilityScopePersonal,
+			CreatedAt:          time.Now().UTC(),
+		}, nil).
+		Once()
+
+	rec, req := s.request(http.MethodPost, "/api/v1/calls", body.String(), userID, nil)
+	req.Header.Set("Content-Type", contentType)
+
+	s.api.Create(rec, req)
+
+	s.Require().Equal(http.StatusCreated, rec.Code)
+}
+
 func (s *APISuite) TestCreateCallCanSkipCustomInstructions() {
 	userID := uuid.New()
 	body, contentType := multipartBody(s.T(), map[string]string{
