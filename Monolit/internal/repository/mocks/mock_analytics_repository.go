@@ -311,9 +311,9 @@ func (_c *AnalyticsRepository_ListAggregateAnalyses_Call) RunAndReturn(run func(
 	return _c
 }
 
-// ListAggregateAnalysisSourceCalls provides a mock function with given fields: ctx, input, limit
-func (_m *AnalyticsRepository) ListAggregateAnalysisSourceCalls(ctx context.Context, input models.AnalyticsOverviewInput, limit int) ([]models.AggregateAnalysisSourceCall, int, error) {
-	ret := _m.Called(ctx, input, limit)
+// ListAggregateAnalysisSourceCalls provides a mock function with given fields: ctx, input
+func (_m *AnalyticsRepository) ListAggregateAnalysisSourceCalls(ctx context.Context, input models.AnalyticsOverviewInput) ([]models.AggregateAnalysisSourceCall, int, error) {
+	ret := _m.Called(ctx, input)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListAggregateAnalysisSourceCalls")
@@ -322,25 +322,25 @@ func (_m *AnalyticsRepository) ListAggregateAnalysisSourceCalls(ctx context.Cont
 	var r0 []models.AggregateAnalysisSourceCall
 	var r1 int
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, models.AnalyticsOverviewInput, int) ([]models.AggregateAnalysisSourceCall, int, error)); ok {
-		return rf(ctx, input, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, models.AnalyticsOverviewInput) ([]models.AggregateAnalysisSourceCall, int, error)); ok {
+		return rf(ctx, input)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, models.AnalyticsOverviewInput, int) []models.AggregateAnalysisSourceCall); ok {
-		r0 = rf(ctx, input, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, models.AnalyticsOverviewInput) []models.AggregateAnalysisSourceCall); ok {
+		r0 = rf(ctx, input)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]models.AggregateAnalysisSourceCall)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, models.AnalyticsOverviewInput, int) int); ok {
-		r1 = rf(ctx, input, limit)
+	if rf, ok := ret.Get(1).(func(context.Context, models.AnalyticsOverviewInput) int); ok {
+		r1 = rf(ctx, input)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, models.AnalyticsOverviewInput, int) error); ok {
-		r2 = rf(ctx, input, limit)
+	if rf, ok := ret.Get(2).(func(context.Context, models.AnalyticsOverviewInput) error); ok {
+		r2 = rf(ctx, input)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -356,14 +356,13 @@ type AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call struct {
 // ListAggregateAnalysisSourceCalls is a helper method to define mock.On call
 //   - ctx context.Context
 //   - input models.AnalyticsOverviewInput
-//   - limit int
-func (_e *AnalyticsRepository_Expecter) ListAggregateAnalysisSourceCalls(ctx interface{}, input interface{}, limit interface{}) *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call {
-	return &AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call{Call: _e.mock.On("ListAggregateAnalysisSourceCalls", ctx, input, limit)}
+func (_e *AnalyticsRepository_Expecter) ListAggregateAnalysisSourceCalls(ctx interface{}, input interface{}) *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call {
+	return &AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call{Call: _e.mock.On("ListAggregateAnalysisSourceCalls", ctx, input)}
 }
 
-func (_c *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call) Run(run func(ctx context.Context, input models.AnalyticsOverviewInput, limit int)) *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call {
+func (_c *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call) Run(run func(ctx context.Context, input models.AnalyticsOverviewInput)) *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(models.AnalyticsOverviewInput), args[2].(int))
+		run(args[0].(context.Context), args[1].(models.AnalyticsOverviewInput))
 	})
 	return _c
 }
@@ -373,7 +372,7 @@ func (_c *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call) Return(_a0 
 	return _c
 }
 
-func (_c *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call) RunAndReturn(run func(context.Context, models.AnalyticsOverviewInput, int) ([]models.AggregateAnalysisSourceCall, int, error)) *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call {
+func (_c *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call) RunAndReturn(run func(context.Context, models.AnalyticsOverviewInput) ([]models.AggregateAnalysisSourceCall, int, error)) *AnalyticsRepository_ListAggregateAnalysisSourceCalls_Call {
 	_c.Call.Return(run)
 	return _c
 }

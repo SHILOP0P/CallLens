@@ -114,7 +114,7 @@ func (r *Repository) MarkAggregateAnalysisFailed(ctx context.Context, id uuid.UU
 	return scanAggregateAnalysis(row, "mark aggregate analysis failed")
 }
 
-func (r *Repository) ListAggregateAnalysisSourceCalls(ctx context.Context, input models.AnalyticsOverviewInput, limit int) ([]models.AggregateAnalysisSourceCall, int, error) {
+func (r *Repository) ListAggregateAnalysisSourceCalls(ctx context.Context, input models.AnalyticsOverviewInput) ([]models.AggregateAnalysisSourceCall, int, error) {
 	where, args := buildListFilters(models.ListCallsInput{
 		UserID: input.UserID, VisibilityScope: input.VisibilityScope, CompanyUUID: input.CompanyUUID,
 		DepartmentUUID: input.DepartmentUUID, From: input.From, To: input.To, FolderUUID: input.FolderUUID,
@@ -124,8 +124,8 @@ func (r *Repository) ListAggregateAnalysisSourceCalls(ctx context.Context, input
 	if err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count aggregate source calls: %w", err)
 	}
-	query := fmt.Sprintf(`SELECT c.call_uuid, c.created_at, c.title, ca.result_json FROM calls c JOIN call_analyses ca ON ca.call_uuid = c.call_uuid AND ca.status = 'done' WHERE %s ORDER BY c.created_at DESC, c.call_uuid LIMIT $%d`, where, len(args)+1)
-	rows, err := r.db.QueryContext(ctx, query, append(args, limit)...)
+	query := fmt.Sprintf(`SELECT c.call_uuid, c.created_at, c.title, ca.result_json FROM calls c JOIN call_analyses ca ON ca.call_uuid = c.call_uuid AND ca.status = 'done' WHERE %s ORDER BY c.created_at DESC, c.call_uuid`, where)
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list aggregate source calls: %w", err)
 	}

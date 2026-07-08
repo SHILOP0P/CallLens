@@ -66,7 +66,7 @@ func (r *Repository) ListAggregateByAnalysisUUID(ctx context.Context, analysisID
 	if err != nil {
 		return nil, fmt.Errorf("list aggregate reports: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	reports := []models.AggregateReportExport{}
 	for rows.Next() {

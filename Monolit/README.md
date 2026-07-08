@@ -732,7 +732,9 @@ Deep aggregate analysis:
 
 Если уже есть non-failed deep analysis с тем же scope/subject/period и `force=false`, backend возвращает его и не тратит лимит. Если `force=true`, создается новый анализ и лимит тратится. Лимит: 2 новых deep analyses в UTC-неделю, где неделя начинается в понедельник 00:00 UTC. Для `personal` и personal folder лимит считается по пользователю; для `company`, `department`, company folder и department folder лимит общий по компании.
 
-Deep analysis использует сохраненные `call_analyses.result_json` по analyzed calls, а не полные транскрипции. В prompt отправляется компактный набор полей по звонку: `call_uuid`, `created_at`, `title`, `score`, `summary`, `topics`, `criteria_results`, `business_outcome`, `customer_signals`, `issue_codes`, `risks`, `customer_objections`, `next_step_quality`. Сейчас cap входа для AI: максимум 100 representative calls, упорядоченных детерминированно по `created_at DESC, call_uuid`; `source_calls_count` хранит полный count analyzed calls за период.
+Deep analysis использует сохраненные `call_analyses.result_json` по analyzed calls, а не полные транскрипции. Backend загружает все видимые готовые per-call analyses за выбранный scope/period и строит детерминированный агрегированный dataset по всему набору: `source_summary`, `score_summary`, `issue_coverage`, `weak_criteria`, `business_outcomes`, `lost_reasons`, `customer_objections`, `risks`, `topics`, `next_step_summary`, `attention_calls`, `strong_calls`. В AI prompt отправляется полный dataset и ограниченный набор `representative_calls` только как доказательные примеры; representative calls не являются полной базой анализа. `source_calls_count` хранит полный count analyzed calls за период. Для контроля состава dataset содержит `source_set_hash`.
+
+Правила результата deep analysis отличаются от анализа одного звонка: `recurring_issues` должен описывать только паттерны, подтвержденные минимум двумя звонками; единичные, но важные сигналы помещаются в `single_call_observations`. Backend дополнительно обогащает `result_json` проверяемыми блоками `source_summary`, `aggregate_statistics` и `coverage_note`, поэтому frontend может показывать доли и counts из backend-расчетов, а не из свободного текста модели.
 
 Ответ deep analysis содержит:
 
@@ -747,7 +749,38 @@ Deep analysis использует сохраненные `call_analyses.result_
   "period_to": "2026-07-07T23:59:59Z",
   "status": "done",
   "source_calls_count": 24,
-  "result_json": {},
+  "result_json": {
+    "summary": "...",
+    "executive_summary": "...",
+    "overall_assessment": "...",
+    "source_summary": {
+      "analyzed_calls": 24,
+      "included_in_statistics": 24,
+      "representative_calls": 24,
+      "all_analyzed_calls_used": true,
+      "source_set_hash": "..."
+    },
+    "aggregate_statistics": {
+      "issue_coverage": [
+        {
+          "code": "unclear_pricing",
+          "title": "Неясное объяснение цены",
+          "count": 8,
+          "share": 0.3333,
+          "sample_call_uuids": ["..."]
+        }
+      ],
+      "weak_criteria": [],
+      "next_step_summary": {}
+    },
+    "recurring_issues": [],
+    "single_call_observations": [],
+    "systemic_issues": [],
+    "weak_criteria": [],
+    "client_objections": [],
+    "loss_and_risk_patterns": [],
+    "detailed_report": {}
+  },
   "result_text": "...",
   "error_message": null,
   "created_by_user_uuid": "user_uuid",

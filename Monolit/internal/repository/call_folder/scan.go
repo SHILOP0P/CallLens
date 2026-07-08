@@ -2,7 +2,6 @@ package call_folder
 
 import (
 	"database/sql"
-	"time"
 
 	"calllens/monolit/internal/models"
 
@@ -62,13 +61,6 @@ func nullUUID(id uuid.NullUUID) any {
 }
 
 func nullString(value *string) any {
-	if value == nil {
-		return nil
-	}
-	return *value
-}
-
-func nullTime(value *time.Time) any {
 	if value == nil {
 		return nil
 	}

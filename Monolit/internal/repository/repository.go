@@ -37,7 +37,7 @@ type AnalyticsRepository interface {
 	MarkAggregateAnalysisProcessing(ctx context.Context, id uuid.UUID) (models.AggregateAnalysis, error)
 	MarkAggregateAnalysisDone(ctx context.Context, id uuid.UUID, result models.AnalysisResult, sourceCallsCount int) (models.AggregateAnalysis, error)
 	MarkAggregateAnalysisFailed(ctx context.Context, id uuid.UUID, errorMessage string) (models.AggregateAnalysis, error)
-	ListAggregateAnalysisSourceCalls(ctx context.Context, input models.AnalyticsOverviewInput, limit int) ([]models.AggregateAnalysisSourceCall, int, error)
+	ListAggregateAnalysisSourceCalls(ctx context.Context, input models.AnalyticsOverviewInput) ([]models.AggregateAnalysisSourceCall, int, error)
 	SpendDeepAnalysisUsage(ctx context.Context, subjectType models.DeepAnalysisSubjectType, subjectID uuid.UUID, periodStart time.Time, periodEnd time.Time) error
 }
 

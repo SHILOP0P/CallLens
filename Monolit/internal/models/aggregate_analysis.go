@@ -87,17 +87,93 @@ type ListAggregateAnalysesResult struct {
 }
 
 type AggregateAnalysisRequest struct {
-	Scope            AggregateAnalysisScope
-	PeriodFrom       time.Time
-	PeriodTo         time.Time
-	SourceCallsCount int
-	Sources          []AggregateAnalysisSourceCall
-	Metrics          AggregateAnalysisSourceMetrics
+	Scope            AggregateAnalysisScope         `json:"scope"`
+	PeriodFrom       time.Time                      `json:"period_from"`
+	PeriodTo         time.Time                      `json:"period_to"`
+	SourceCallsCount int                            `json:"source_calls_count"`
+	Sources          []AggregateAnalysisSourceCall  `json:"representative_calls"`
+	Metrics          AggregateAnalysisSourceMetrics `json:"metrics"`
+	Dataset          AggregateAnalysisSourceDataset `json:"dataset"`
 }
 
 type AggregateAnalysisSourceMetrics struct {
-	IncludedCalls int `json:"included_calls"`
-	TotalCalls    int `json:"total_calls"`
+	IncludedCalls       int    `json:"included_calls"`
+	TotalCalls          int    `json:"total_calls"`
+	AggregatedCalls     int    `json:"aggregated_calls"`
+	RepresentativeCalls int    `json:"representative_calls"`
+	SourceSetHash       string `json:"source_set_hash"`
+}
+
+type AggregateAnalysisSourceDataset struct {
+	SourceSummary      AggregateAnalysisSourceSummary     `json:"source_summary"`
+	ScoreSummary       AggregateAnalysisScoreSummary      `json:"score_summary"`
+	IssueCoverage      []AggregateAnalysisFrequency       `json:"issue_coverage"`
+	WeakCriteria       []AggregateAnalysisCriterionMetric `json:"weak_criteria"`
+	BusinessOutcomes   []AggregateAnalysisFrequency       `json:"business_outcomes"`
+	LostReasons        []AggregateAnalysisFrequency       `json:"lost_reasons"`
+	CustomerObjections []AggregateAnalysisFrequency       `json:"customer_objections"`
+	Risks              []AggregateAnalysisFrequency       `json:"risks"`
+	Topics             []AggregateAnalysisFrequency       `json:"topics"`
+	NextStepSummary    AggregateAnalysisNextStepSummary   `json:"next_step_summary"`
+	AttentionCalls     []AggregateAnalysisCallEvidence    `json:"attention_calls"`
+	StrongCalls        []AggregateAnalysisCallEvidence    `json:"strong_calls"`
+}
+
+type AggregateAnalysisSourceSummary struct {
+	AnalyzedCalls        int    `json:"analyzed_calls"`
+	IncludedInStatistics int    `json:"included_in_statistics"`
+	RepresentativeCalls  int    `json:"representative_calls"`
+	AllAnalyzedCallsUsed bool   `json:"all_analyzed_calls_used"`
+	SourceSetHash        string `json:"source_set_hash"`
+}
+
+type AggregateAnalysisScoreSummary struct {
+	CallsWithScore int      `json:"calls_with_score"`
+	Average        *float64 `json:"average,omitempty"`
+	Min            *float64 `json:"min,omitempty"`
+	Max            *float64 `json:"max,omitempty"`
+	LowCount       int      `json:"low_count"`
+	MediumCount    int      `json:"medium_count"`
+	HighCount      int      `json:"high_count"`
+}
+
+type AggregateAnalysisFrequency struct {
+	Code            string   `json:"code"`
+	Title           string   `json:"title"`
+	Count           int      `json:"count"`
+	Share           float64  `json:"share"`
+	SampleCallUUIDs []string `json:"sample_call_uuids"`
+}
+
+type AggregateAnalysisCriterionMetric struct {
+	Code               string   `json:"code"`
+	Title              string   `json:"title"`
+	ApplicableCalls    int      `json:"applicable_calls"`
+	WeakCalls          int      `json:"weak_calls"`
+	WeakShare          float64  `json:"weak_share"`
+	AveragePointsShare *float64 `json:"average_points_share,omitempty"`
+	MissedCalls        int      `json:"missed_calls"`
+	PartiallyMetCalls  int      `json:"partially_met_calls"`
+	UnclearCalls       int      `json:"unclear_calls"`
+	SampleCallUUIDs    []string `json:"sample_call_uuids"`
+}
+
+type AggregateAnalysisNextStepSummary struct {
+	CallsWithNextStep         int     `json:"calls_with_next_step"`
+	CallsWithSpecificNextStep int     `json:"calls_with_specific_next_step"`
+	CallsMissingNextStep      int     `json:"calls_missing_next_step"`
+	CallsMissingSpecificStep  int     `json:"calls_missing_specific_step"`
+	MissingNextStepShare      float64 `json:"missing_next_step_share"`
+	MissingSpecificStepShare  float64 `json:"missing_specific_step_share"`
+}
+
+type AggregateAnalysisCallEvidence struct {
+	CallUUID   uuid.UUID `json:"call_uuid"`
+	CreatedAt  time.Time `json:"created_at"`
+	Title      string    `json:"title"`
+	Score      *float64  `json:"score,omitempty"`
+	Summary    string    `json:"summary,omitempty"`
+	IssueCodes []string  `json:"issue_codes,omitempty"`
 }
 
 type AggregateAnalysisSourceCall struct {

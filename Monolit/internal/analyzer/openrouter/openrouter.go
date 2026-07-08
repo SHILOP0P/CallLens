@@ -183,7 +183,7 @@ func (a *Analyzer) AnalyzeAggregate(ctx context.Context, request models.Aggregat
 		},
 		Temperature:    &temperature,
 		ResponseFormat: aggregateAnalysisResponseFormat(),
-		MaxTokens:      4096,
+		MaxTokens:      8192,
 	}
 	requestBody, err := json.Marshal(payload)
 	if err != nil {
@@ -258,8 +258,12 @@ func systemPrompt() string {
 func aggregateSystemPrompt() string {
 	return strings.Join([]string{
 		"Ты делаешь глубокий агрегированный анализ периода для CallLens по уже сохраненным анализам звонков.",
-		"Вход содержит только компактные результаты per-call analysis, не полные транскрипции.",
+		"Вход содержит backend dataset, рассчитанный по всем доступным готовым per-call analysis за период, и ограниченный набор representative_calls только как примеры.",
+		"Representative_calls не являются полной базой анализа; полная база отражена в dataset, metrics и source_summary.",
 		"Используй только переданные данные. Не выдумывай факты, цитаты, причины, риски или рекомендации без опоры на вход.",
+		"Числа, доли, affected_calls_count и count бери из backend dataset; не пересчитывай их по representative_calls.",
+		"Не называй проблему повторяющейся, если она подтверждена менее чем в двух звонках.",
+		"Ответ должен быть глубоким: дай развернутую картину периода, системные проблемы, единичные важные случаи, слабые критерии, клиентские возражения, риски потери клиентов, сильные практики и план действий.",
 		"Все человекочитаемые строки должны быть на русском языке.",
 		"Технические enum severity, priority и confidence должны быть только low, medium или high.",
 		"Верни только валидный JSON по схеме, без markdown.",
@@ -269,7 +273,10 @@ func aggregateSystemPrompt() string {
 func aggregateUserPrompt(sourceJSON string) string {
 	return strings.Join([]string{
 		"Сделай глубокий анализ периода: почему качество просело, какие проблемы повторяются, где теряются клиенты, какие критерии слабые и какие действия приоритетны.",
-		"Для evidence_call_uuids используй только UUID звонков из входа.",
+		"Оцени весь dataset, а не только representative_calls.",
+		"Для recurring_issues используй только паттерны с count >= 2. Паттерны с count = 1 помещай в single_call_observations.",
+		"Для evidence_call_uuids используй только UUID звонков из dataset sample_call_uuids или representative_calls.",
+		"В detailed_report напиши связный глубокий отчет, а не короткое резюме.",
 		"Если данных недостаточно, прямо напиши это по-русски и поставь confidence low.",
 		"Входные данные JSON:",
 		sourceJSON,
@@ -523,6 +530,27 @@ func callAnalysisResponseFormat() responseFormat {
 
 func aggregateAnalysisResponseFormat() responseFormat {
 	lowMediumHigh := []string{"low", "medium", "high"}
+	issueObject := map[string]any{
+		"type": "object", "additionalProperties": false,
+		"properties": map[string]any{
+			"code": map[string]any{"type": "string"}, "title": map[string]any{"type": "string"},
+			"description": map[string]any{"type": "string"}, "affected_calls_count": map[string]any{"type": "number"},
+			"affected_share": map[string]any{"type": "number"}, "severity": map[string]any{"type": "string", "enum": lowMediumHigh},
+			"evidence_call_uuids": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+			"recommendation":      map[string]any{"type": "string"}, "business_impact": map[string]any{"type": "string"},
+		},
+		"required": []string{"code", "title", "description", "affected_calls_count", "affected_share", "severity", "evidence_call_uuids", "recommendation", "business_impact"},
+	}
+	metricObject := map[string]any{
+		"type": "object", "additionalProperties": false,
+		"properties": map[string]any{
+			"code": map[string]any{"type": "string"}, "title": map[string]any{"type": "string"},
+			"affected_calls_count": map[string]any{"type": "number"}, "affected_share": map[string]any{"type": "number"},
+			"explanation": map[string]any{"type": "string"}, "recommendation": map[string]any{"type": "string"},
+			"evidence_call_uuids": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+		},
+		"required": []string{"code", "title", "affected_calls_count", "affected_share", "explanation", "recommendation", "evidence_call_uuids"},
+	}
 	return responseFormat{
 		Type: "json_schema",
 		JSONSchema: jsonSchema{
@@ -532,26 +560,37 @@ func aggregateAnalysisResponseFormat() responseFormat {
 				"type":                 "object",
 				"additionalProperties": false,
 				"properties": map[string]any{
-					"summary": map[string]any{"type": "string"},
+					"summary":            map[string]any{"type": "string"},
+					"executive_summary":  map[string]any{"type": "string"},
+					"overall_assessment": map[string]any{"type": "string"},
 					"key_findings": map[string]any{"type": "array", "items": map[string]any{
 						"type": "object", "additionalProperties": false,
 						"properties": map[string]any{
 							"title": map[string]any{"type": "string"}, "description": map[string]any{"type": "string"},
-							"severity":            map[string]any{"type": "string", "enum": lowMediumHigh},
-							"evidence_call_uuids": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+							"severity":             map[string]any{"type": "string", "enum": lowMediumHigh},
+							"evidence_call_uuids":  map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+							"affected_calls_count": map[string]any{"type": "number"},
+							"affected_share":       map[string]any{"type": "number"},
 						},
-						"required": []string{"title", "description", "severity", "evidence_call_uuids"},
+						"required": []string{"title", "description", "severity", "evidence_call_uuids", "affected_calls_count", "affected_share"},
 					}},
 					"recurring_issues": map[string]any{"type": "array", "items": map[string]any{
 						"type": "object", "additionalProperties": false,
 						"properties": map[string]any{
 							"code": map[string]any{"type": "string"}, "title": map[string]any{"type": "string"},
 							"count": map[string]any{"type": "number"}, "recommendation": map[string]any{"type": "string"},
+							"affected_share":    map[string]any{"type": "number"},
+							"sample_call_uuids": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
 						},
-						"required": []string{"code", "title", "count", "recommendation"},
+						"required": []string{"code", "title", "count", "recommendation", "affected_share", "sample_call_uuids"},
 					}},
-					"strengths": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
-					"risks":     map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+					"systemic_issues":          map[string]any{"type": "array", "items": issueObject},
+					"single_call_observations": map[string]any{"type": "array", "items": issueObject},
+					"weak_criteria":            map[string]any{"type": "array", "items": metricObject},
+					"client_objections":        map[string]any{"type": "array", "items": metricObject},
+					"loss_and_risk_patterns":   map[string]any{"type": "array", "items": issueObject},
+					"strengths":                map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
+					"risks":                    map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
 					"priority_actions": map[string]any{"type": "array", "items": map[string]any{
 						"type": "object", "additionalProperties": false,
 						"properties": map[string]any{
@@ -562,8 +601,20 @@ func aggregateAnalysisResponseFormat() responseFormat {
 					}},
 					"manager_recommendations": map[string]any{"type": "array", "items": map[string]any{"type": "string"}},
 					"confidence":              map[string]any{"type": "string", "enum": lowMediumHigh},
+					"detailed_report": map[string]any{
+						"type": "object", "additionalProperties": false,
+						"properties": map[string]any{
+							"methodology":            map[string]any{"type": "string"},
+							"quality_overview":       map[string]any{"type": "string"},
+							"issue_analysis":         map[string]any{"type": "string"},
+							"customer_loss_analysis": map[string]any{"type": "string"},
+							"training_plan":          map[string]any{"type": "string"},
+							"data_limitations":       map[string]any{"type": "string"},
+						},
+						"required": []string{"methodology", "quality_overview", "issue_analysis", "customer_loss_analysis", "training_plan", "data_limitations"},
+					},
 				},
-				"required": []string{"summary", "key_findings", "recurring_issues", "strengths", "risks", "priority_actions", "manager_recommendations", "confidence"},
+				"required": []string{"summary", "executive_summary", "overall_assessment", "key_findings", "recurring_issues", "systemic_issues", "single_call_observations", "weak_criteria", "client_objections", "loss_and_risk_patterns", "strengths", "risks", "priority_actions", "manager_recommendations", "confidence", "detailed_report"},
 			},
 		},
 	}
