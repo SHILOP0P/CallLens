@@ -84,6 +84,7 @@ func (s *Service) Refresh(ctx context.Context, input model.RefreshTokenInput) (m
 		string(user.Role),
 		s.jwtSecret,
 		s.accessTokenTTL,
+		rotatedSession.AccessVersion,
 	)
 	if err != nil {
 		s.log.Error(ctx, "failed to generate refreshed access token", zap.String("user_id", user.ID.String()), zap.String("session_id", rotatedSession.ID.String()), zap.Error(err))

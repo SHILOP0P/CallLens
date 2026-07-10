@@ -21,6 +21,7 @@ func (r *Repository) CreateRefreshSession(ctx context.Context, session model.Ref
 	    session_uuid,
 	    user_uuid,
 	    refresh_token_hash,
+	    access_version,
 	    user_agent,
 	    ip_address,
 	    created_at,
@@ -29,10 +30,11 @@ func (r *Repository) CreateRefreshSession(ctx context.Context, session model.Ref
 	    revoked_at,
 	    revoked_reason
 	)
-	VALUES ($1, $2, $3, $4, $5::INET, $6, $7, $8, $9, $10)
+	VALUES ($1, $2, $3, $4, $5, $6::INET, $7, $8, $9, $10, $11)
 	RETURNING session_uuid,
 	          user_uuid,
 	          refresh_token_hash,
+	          access_version,
 	          user_agent,
 	          ip_address::TEXT,
 	          created_at,
@@ -48,6 +50,7 @@ func (r *Repository) CreateRefreshSession(ctx context.Context, session model.Ref
 		repoSession.ID,
 		repoSession.UserID,
 		repoSession.RefreshTokenHash,
+		repoSession.AccessVersion,
 		repoSession.UserAgent,
 		repoSession.IPAddress,
 		repoSession.CreatedAt,

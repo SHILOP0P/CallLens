@@ -19,6 +19,7 @@ func Auth(secret string, refreshSessionRepository repository.RefreshSessionRepos
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			rawTokens, sawMalformedAuthorization := accessTokensFromRequest(r)
+			sawStaleToken := false
 			if len(rawTokens) == 0 {
 				response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidAuthorizationHeader, "invalid authorization header")
 				return
@@ -42,6 +43,10 @@ func Auth(secret string, refreshSessionRepository repository.RefreshSessionRepos
 				if session.UserID != claims.UserID || session.RevokedAt != nil || !session.ExpiresAt.After(time.Now().UTC()) {
 					continue
 				}
+				if claims.AccessVersion != session.AccessVersion {
+					sawStaleToken = true
+					continue
+				}
 
 				ctx := ContextWithUserID(r.Context(), claims.UserID)
 				ctx = ContextWithSessionID(ctx, claims.SessionID)
@@ -49,6 +54,11 @@ func Auth(secret string, refreshSessionRepository repository.RefreshSessionRepos
 				ctx = logger.ContextWithUserID(ctx, claims.UserID.String())
 
 				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			if sawStaleToken {
+				response.WriteError(w, http.StatusUnauthorized, response.CodeAccessTokenStale, "access token must be refreshed")
 				return
 			}
 

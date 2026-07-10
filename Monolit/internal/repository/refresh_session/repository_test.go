@@ -37,6 +37,7 @@ func testRefreshSession(userID uuid.UUID) models.RefreshSession {
 		ID:               uuid.New(),
 		UserID:           userID,
 		RefreshTokenHash: uuid.NewString(),
+		AccessVersion:    1,
 		UserAgent:        &userAgent,
 		IPAddress:        &ipAddress,
 		CreatedAt:        now,
@@ -53,6 +54,7 @@ func (s *RepositorySuite) TestCreateRefreshSessionAndGetters() {
 	s.Require().Equal(session.ID, created.ID)
 	s.Require().Equal(session.UserID, created.UserID)
 	s.Require().Equal(session.RefreshTokenHash, created.RefreshTokenHash)
+	s.Require().Equal(session.AccessVersion, created.AccessVersion)
 	s.Require().NotNil(created.UserAgent)
 	s.Require().Equal(*session.UserAgent, *created.UserAgent)
 	s.Require().NotNil(created.IPAddress)
@@ -169,4 +171,33 @@ func (s *RepositorySuite) TestRevokeAllUserRefreshSessions() {
 	s.Require().NotNil(secondRevoked.RevokedAt)
 	s.Require().NotNil(secondRevoked.RevokedReason)
 	s.Require().Equal("logout_all", *secondRevoked.RevokedReason)
+}
+
+func (s *RepositorySuite) TestInvalidateAccessVersions() {
+	user := s.createUser()
+	first := testRefreshSession(user.ID)
+	second := testRefreshSession(user.ID)
+	second.ID = uuid.New()
+	second.RefreshTokenHash = uuid.NewString()
+
+	_, err := s.repository.CreateRefreshSession(s.ctx, first)
+	s.Require().NoError(err)
+	_, err = s.repository.CreateRefreshSession(s.ctx, second)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.repository.InvalidateSessionAccess(s.ctx, first.ID))
+	updatedFirst, err := s.repository.GetRefreshSessionByUUID(s.ctx, first.ID)
+	s.Require().NoError(err)
+	s.Require().Equal(int64(2), updatedFirst.AccessVersion)
+	unchangedSecond, err := s.repository.GetRefreshSessionByUUID(s.ctx, second.ID)
+	s.Require().NoError(err)
+	s.Require().Equal(int64(1), unchangedSecond.AccessVersion)
+
+	s.Require().NoError(s.repository.InvalidateAllUserAccess(s.ctx, user.ID))
+	updatedFirst, err = s.repository.GetRefreshSessionByUUID(s.ctx, first.ID)
+	s.Require().NoError(err)
+	updatedSecond, err := s.repository.GetRefreshSessionByUUID(s.ctx, second.ID)
+	s.Require().NoError(err)
+	s.Require().Equal(int64(3), updatedFirst.AccessVersion)
+	s.Require().Equal(int64(2), updatedSecond.AccessVersion)
 }

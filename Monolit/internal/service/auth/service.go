@@ -27,6 +27,8 @@ type Service struct {
 	accessTokenTTL     time.Duration
 	refreshTokenSecret string
 	refreshTokenTTL    time.Duration
+	sessionTrustAge    time.Duration
+	now                func() time.Time
 	log                logger.Logger
 }
 
@@ -68,6 +70,14 @@ func NewService(
 		accessTokenTTL:           accessTokenTTL,
 		refreshTokenSecret:       refreshTokenSecret,
 		refreshTokenTTL:          refreshTokenTTL,
+		sessionTrustAge:          24 * time.Hour,
+		now:                      func() time.Time { return time.Now().UTC() },
 		log:                      log,
+	}
+}
+
+func (s *Service) SetSessionTrustAge(age time.Duration) {
+	if age >= 0 {
+		s.sessionTrustAge = age
 	}
 }

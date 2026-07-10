@@ -86,7 +86,7 @@ func TestAuthRejectsInvalidRequests(t *testing.T) {
 	userID := uuid.New()
 	sessionID := uuid.New()
 	secret := "secret"
-	validToken, _ := token.GenerateAccessTokenWithSession(userID, sessionID, "user", secret, time.Minute)
+	validToken, _ := token.GenerateAccessTokenWithSession(userID, sessionID, "user", secret, time.Minute, 1)
 
 	tests := []struct {
 		name  string

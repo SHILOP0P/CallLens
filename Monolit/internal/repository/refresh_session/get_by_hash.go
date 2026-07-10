@@ -16,6 +16,7 @@ func (r *Repository) GetRefreshSessionByHash(ctx context.Context, refreshTokenHa
 	SELECT session_uuid,
 	       user_uuid,
 	       refresh_token_hash,
+	       access_version,
 	       user_agent,
 	       ip_address::TEXT,
 	       created_at,

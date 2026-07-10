@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"calllens/monolit/internal/auth/password"
+	"calllens/monolit/internal/auth/token"
 	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
@@ -29,6 +30,7 @@ func (s *ServiceSuite) TestLoginSuccess() {
 		Once()
 	s.refreshSessionRepository.On("CreateRefreshSession", s.ctx, mock.MatchedBy(func(session models.RefreshSession) bool {
 		return session.UserID == userID &&
+			session.AccessVersion == 1 &&
 			session.RefreshTokenHash != "" &&
 			session.ExpiresAt.After(time.Now().UTC())
 	})).
@@ -47,6 +49,9 @@ func (s *ServiceSuite) TestLoginSuccess() {
 	s.Require().Equal(userID, gotUser.ID)
 	s.Require().NotEmpty(accessToken)
 	s.Require().NotEmpty(refreshToken)
+	claims, err := token.ParseAccessToken(accessToken, "jwt-secret")
+	s.Require().NoError(err)
+	s.Require().Equal(int64(1), claims.AccessVersion)
 }
 
 func (s *ServiceSuite) TestLoginRejectsEmptyCredentials() {

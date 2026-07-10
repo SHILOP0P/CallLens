@@ -16,6 +16,7 @@ func (r *Repository) ListActiveUserRefreshSessions(ctx context.Context, userID u
 	SELECT session_uuid,
 	       user_uuid,
 	       refresh_token_hash,
+	       access_version,
 	       user_agent,
 	       ip_address::TEXT,
 	       created_at,

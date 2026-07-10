@@ -8,37 +8,38 @@ import (
 
 func TestConfigsFromEnvironment(t *testing.T) {
 	values := map[string]string{
-		"ANALYZER_PROVIDER":    "openrouter",
-		"ANALYZER_API_KEY":     "analyzer-key",
-		"ANALYZER_MODEL":       "analyzer-model",
-		"UPLOAD_PATH":          "uploads",
-		"FFPROBE_PATH":         "custom-ffprobe",
-		"PASSWORD_PEPPER":      "pepper",
-		"JWT_SECRET":           "jwt-secret",
-		"JWT_ACCESS_TOKEN_TTL": "15m",
-		"REFRESH_TOKEN_SECRET": "refresh-secret",
-		"REFRESH_TOKEN_TTL":    "24h",
-		"HTTP_HOST":            "127.0.0.1",
-		"HTTP_PORT":            "8080",
-		"HTTP_READ_TIMEOUT":    "5s",
-		"LOG_LEVEL":            "debug",
-		"LOG_AS_JSON":          "true",
-		"POSTGRES_HOST":        "localhost",
-		"POSTGRES_PORT":        "5432",
-		"POSTGRES_DB":          "calllens",
-		"POSTGRES_USER":        "postgres",
-		"POSTGRES_PASSWORD":    "password",
-		"POSTGRES_SSL_MODE":    "disable",
-		"MIGRATION_DIRECTORY":  "migrations",
-		"TRANSCRIBER_PROVIDER": "mock",
-		"TRANSCRIBER_API_KEY":  "transcriber-key",
-		"TRANSCRIBER_MODEL":    "transcriber-model",
-		"WORKER_ENABLED":       "false",
-		"WORKER_POLL_INTERVAL": "3s",
-		"WORKER_LIMIT":         "7",
-		"WORKER_RETRY_DELAY":   "2m",
-		"WORKER_STALE_AFTER":   "20m",
-		"WORKER_MAX_ATTEMPTS":  "5",
+		"ANALYZER_PROVIDER":      "openrouter",
+		"ANALYZER_API_KEY":       "analyzer-key",
+		"ANALYZER_MODEL":         "analyzer-model",
+		"UPLOAD_PATH":            "uploads",
+		"FFPROBE_PATH":           "custom-ffprobe",
+		"PASSWORD_PEPPER":        "pepper",
+		"JWT_SECRET":             "jwt-secret",
+		"JWT_ACCESS_TOKEN_TTL":   "15m",
+		"REFRESH_TOKEN_SECRET":   "refresh-secret",
+		"REFRESH_TOKEN_TTL":      "24h",
+		"AUTH_SESSION_TRUST_AGE": "12h",
+		"HTTP_HOST":              "127.0.0.1",
+		"HTTP_PORT":              "8080",
+		"HTTP_READ_TIMEOUT":      "5s",
+		"LOG_LEVEL":              "debug",
+		"LOG_AS_JSON":            "true",
+		"POSTGRES_HOST":          "localhost",
+		"POSTGRES_PORT":          "5432",
+		"POSTGRES_DB":            "calllens",
+		"POSTGRES_USER":          "postgres",
+		"POSTGRES_PASSWORD":      "password",
+		"POSTGRES_SSL_MODE":      "disable",
+		"MIGRATION_DIRECTORY":    "migrations",
+		"TRANSCRIBER_PROVIDER":   "mock",
+		"TRANSCRIBER_API_KEY":    "transcriber-key",
+		"TRANSCRIBER_MODEL":      "transcriber-model",
+		"WORKER_ENABLED":         "false",
+		"WORKER_POLL_INTERVAL":   "3s",
+		"WORKER_LIMIT":           "7",
+		"WORKER_RETRY_DELAY":     "2m",
+		"WORKER_STALE_AFTER":     "20m",
+		"WORKER_MAX_ATTEMPTS":    "5",
 	}
 	for key, value := range values {
 		t.Setenv(key, value)
@@ -54,7 +55,7 @@ func TestConfigsFromEnvironment(t *testing.T) {
 	}
 	auth, err := NewAuthConfig()
 	if err != nil || auth.PasswordPepper() != "pepper" || auth.JWTSecret() != "jwt-secret" ||
-		auth.AccessTokenTTL() != 15*time.Minute || auth.RefreshTokenSecret() != "refresh-secret" || auth.RefreshTokenTTL() != 24*time.Hour {
+		auth.AccessTokenTTL() != 15*time.Minute || auth.RefreshTokenSecret() != "refresh-secret" || auth.RefreshTokenTTL() != 24*time.Hour || auth.SessionTrustAge() != 12*time.Hour {
 		t.Fatalf("auth config: %+v err=%v", auth, err)
 	}
 	httpCfg, err := NewHTTPConfig()

@@ -11,6 +11,7 @@ type RefreshSession struct {
 	ID               uuid.UUID
 	UserID           uuid.UUID
 	RefreshTokenHash string
+	AccessVersion    int64
 	UserAgent        sql.NullString
 	IPAddress        sql.NullString
 	CreatedAt        time.Time

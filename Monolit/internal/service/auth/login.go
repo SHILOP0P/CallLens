@@ -56,6 +56,7 @@ func (s *Service) Login(ctx context.Context, input model.LoginInput) (model.User
 		ID:               sessionID,
 		UserID:           user.ID,
 		RefreshTokenHash: refreshTokenHash,
+		AccessVersion:    1,
 		UserAgent:        input.UserAgent,
 		IPAddress:        input.IPAddress,
 		CreatedAt:        now,
@@ -74,6 +75,7 @@ func (s *Service) Login(ctx context.Context, input model.LoginInput) (model.User
 		string(user.Role),
 		s.jwtSecret,
 		s.accessTokenTTL,
+		createdSession.AccessVersion,
 	)
 	if err != nil {
 		s.log.Error(ctx, "failed to generate access token", zap.String("user_id", user.ID.String()), zap.String("session_id", createdSession.ID.String()), zap.Error(err))

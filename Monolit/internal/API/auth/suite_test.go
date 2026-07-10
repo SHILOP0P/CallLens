@@ -52,6 +52,12 @@ func (s *APISuite) requestWithSession(method string, path string, body string, s
 	return rec, req
 }
 
+func (s *APISuite) requestWithUserAndSession(method string, path string, body string, userID uuid.UUID, sessionID uuid.UUID) (*httptest.ResponseRecorder, *http.Request) {
+	rec, req := s.requestWithUser(method, path, body, userID)
+	req = req.WithContext(middleware.ContextWithSessionID(req.Context(), sessionID))
+	return rec, req
+}
+
 func (s *APISuite) requireErrorCode(rec *httptest.ResponseRecorder, expectedCode string) {
 	var resp response.ErrorResponse
 	s.Require().NoError(json.Unmarshal(rec.Body.Bytes(), &resp))

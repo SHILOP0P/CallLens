@@ -29,6 +29,7 @@ type AuthConfig interface {
 	AccessTokenTTL() time.Duration
 	RefreshTokenSecret() string
 	RefreshTokenTTL() time.Duration
+	SessionTrustAge() time.Duration
 }
 
 type WorkerConfig interface {

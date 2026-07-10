@@ -11,23 +11,25 @@ import (
 var ErrInvalidToken = errors.New("invalid token")
 
 type Claims struct {
-	UserID    uuid.UUID `json:"user_id"`
-	SessionID uuid.UUID `json:"session_uuid"`
-	Role      string    `json:"role"`
+	UserID        uuid.UUID `json:"user_id"`
+	SessionID     uuid.UUID `json:"session_uuid"`
+	Role          string    `json:"role"`
+	AccessVersion int64     `json:"access_version"`
 	jwt.RegisteredClaims
 }
 
 func GenerateAccessToken(userID uuid.UUID, role string, secret string, ttl time.Duration) (string, error) {
-	return GenerateAccessTokenWithSession(userID, uuid.Nil, role, secret, ttl)
+	return GenerateAccessTokenWithSession(userID, uuid.Nil, role, secret, ttl, 1)
 }
 
-func GenerateAccessTokenWithSession(userID uuid.UUID, sessionID uuid.UUID, role string, secret string, ttl time.Duration) (string, error) {
+func GenerateAccessTokenWithSession(userID uuid.UUID, sessionID uuid.UUID, role string, secret string, ttl time.Duration, accessVersion int64) (string, error) {
 	now := time.Now().UTC()
 
 	claims := Claims{
-		UserID:    userID,
-		SessionID: sessionID,
-		Role:      role,
+		UserID:        userID,
+		SessionID:     sessionID,
+		Role:          role,
+		AccessVersion: accessVersion,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID.String(),
 			IssuedAt:  jwt.NewNumericDate(now),

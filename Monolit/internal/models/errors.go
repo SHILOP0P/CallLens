@@ -49,6 +49,7 @@ var ErrForbidden = errors.New("forbidden")
 // REFRESH SESSION
 var ErrRefreshSessionNotFound = errors.New("refresh session not found")
 var ErrInvalidRefreshToken = errors.New("invalid refresh token")
+var ErrSessionNotTrusted = errors.New("session is not trusted yet")
 
 // TRANSCRIPT
 var ErrTranscriptionNotFound = errors.New("transcription not found")

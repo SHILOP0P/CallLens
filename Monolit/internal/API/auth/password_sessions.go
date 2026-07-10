@@ -3,7 +3,9 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 
 	"calllens/monolit/internal/API/dto"
@@ -106,7 +108,7 @@ func (h *AuthHandler) DeleteSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.RevokeSession(r.Context(), userID, sessionID); err != nil {
+	if err := h.service.RevokeSession(r.Context(), userID, currentSessionID, sessionID); err != nil {
 		writePasswordSessionError(w, err, response.CodeFailedToLogout, "failed to delete session")
 		return
 	}
@@ -132,6 +134,16 @@ func writePasswordSessionError(w http.ResponseWriter, err error, fallbackCode st
 	}
 	if errors.Is(err, models.ErrRefreshSessionNotFound) {
 		response.WriteError(w, http.StatusNotFound, response.CodeRefreshSessionNotFound, "session not found")
+		return
+	}
+	var trustErr models.SessionTrustError
+	if errors.As(err, &trustErr) {
+		retryAfter := max(0, int(math.Ceil(time.Until(trustErr.AvailableAt).Seconds())))
+		w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+		response.WriteErrorWithDetails(w, http.StatusForbidden, response.CodeSessionTrustAgeRequired, "management of other sessions is not available yet", map[string]any{
+			"available_at":        trustErr.AvailableAt.Format(time.RFC3339),
+			"retry_after_seconds": retryAfter,
+		})
 		return
 	}
 	response.WriteError(w, http.StatusInternalServerError, fallbackCode, fallbackMessage)

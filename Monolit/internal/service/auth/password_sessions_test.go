@@ -135,7 +135,47 @@ func TestRevokeSessionUsesOwnerScopedRepositoryMethod(t *testing.T) {
 		Return(models.ErrRefreshSessionNotFound).
 		Once()
 
-	err := s.service.RevokeSession(s.ctx, userID, sessionID)
+	err := s.service.RevokeSession(s.ctx, userID, sessionID, sessionID)
 
 	require.ErrorIs(t, err, models.ErrRefreshSessionNotFound)
+}
+
+func TestRevokeOtherSessionRequiresTrustedCurrentSession(t *testing.T) {
+	s := new(ServiceSuite)
+	s.SetT(t)
+	s.SetupTest()
+
+	userID := uuid.New()
+	currentSessionID := uuid.New()
+	targetSessionID := uuid.New()
+	now := time.Now().UTC()
+	s.service.now = func() time.Time { return now }
+	s.refreshSessionRepository.On("GetRefreshSessionByUUID", s.ctx, currentSessionID).
+		Return(models.RefreshSession{
+			ID:        currentSessionID,
+			UserID:    userID,
+			CreatedAt: now.Add(-time.Hour),
+			ExpiresAt: now.Add(time.Hour),
+		}, nil).
+		Once()
+
+	err := s.service.RevokeSession(s.ctx, userID, currentSessionID, targetSessionID)
+
+	require.ErrorIs(t, err, models.ErrSessionNotTrusted)
+}
+
+func TestRevokeCurrentSessionDoesNotRequireTrustAge(t *testing.T) {
+	s := new(ServiceSuite)
+	s.SetT(t)
+	s.SetupTest()
+
+	userID := uuid.New()
+	sessionID := uuid.New()
+	s.refreshSessionRepository.On("RevokeUserRefreshSession", s.ctx, userID, sessionID, logoutReason).
+		Return(nil).
+		Once()
+
+	err := s.service.RevokeSession(s.ctx, userID, sessionID, sessionID)
+
+	require.NoError(t, err)
 }

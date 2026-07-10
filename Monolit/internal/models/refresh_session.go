@@ -10,6 +10,7 @@ type RefreshSession struct {
 	ID               uuid.UUID
 	UserID           uuid.UUID
 	RefreshTokenHash string
+	AccessVersion    int64
 	UserAgent        *string
 	IPAddress        *string
 	CreatedAt        time.Time
@@ -26,4 +27,16 @@ type UserSession struct {
 	IPAddress  *string
 	CreatedAt  time.Time
 	LastSeenAt *time.Time
+}
+
+type SessionTrustError struct {
+	AvailableAt time.Time
+}
+
+func (e SessionTrustError) Error() string {
+	return ErrSessionNotTrusted.Error()
+}
+
+func (e SessionTrustError) Unwrap() error {
+	return ErrSessionNotTrusted
 }

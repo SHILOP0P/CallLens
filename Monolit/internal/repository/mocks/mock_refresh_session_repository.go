@@ -197,6 +197,100 @@ func (_c *RefreshSessionRepository_GetRefreshSessionByUUID_Call) RunAndReturn(ru
 	return _c
 }
 
+// InvalidateAllUserAccess provides a mock function with given fields: ctx, userID
+func (_m *RefreshSessionRepository) InvalidateAllUserAccess(ctx context.Context, userID uuid.UUID) error {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for InvalidateAllUserAccess")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RefreshSessionRepository_InvalidateAllUserAccess_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'InvalidateAllUserAccess'
+type RefreshSessionRepository_InvalidateAllUserAccess_Call struct {
+	*mock.Call
+}
+
+// InvalidateAllUserAccess is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *RefreshSessionRepository_Expecter) InvalidateAllUserAccess(ctx interface{}, userID interface{}) *RefreshSessionRepository_InvalidateAllUserAccess_Call {
+	return &RefreshSessionRepository_InvalidateAllUserAccess_Call{Call: _e.mock.On("InvalidateAllUserAccess", ctx, userID)}
+}
+
+func (_c *RefreshSessionRepository_InvalidateAllUserAccess_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *RefreshSessionRepository_InvalidateAllUserAccess_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *RefreshSessionRepository_InvalidateAllUserAccess_Call) Return(_a0 error) *RefreshSessionRepository_InvalidateAllUserAccess_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *RefreshSessionRepository_InvalidateAllUserAccess_Call) RunAndReturn(run func(context.Context, uuid.UUID) error) *RefreshSessionRepository_InvalidateAllUserAccess_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// InvalidateSessionAccess provides a mock function with given fields: ctx, sessionID
+func (_m *RefreshSessionRepository) InvalidateSessionAccess(ctx context.Context, sessionID uuid.UUID) error {
+	ret := _m.Called(ctx, sessionID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for InvalidateSessionAccess")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
+		r0 = rf(ctx, sessionID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RefreshSessionRepository_InvalidateSessionAccess_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'InvalidateSessionAccess'
+type RefreshSessionRepository_InvalidateSessionAccess_Call struct {
+	*mock.Call
+}
+
+// InvalidateSessionAccess is a helper method to define mock.On call
+//   - ctx context.Context
+//   - sessionID uuid.UUID
+func (_e *RefreshSessionRepository_Expecter) InvalidateSessionAccess(ctx interface{}, sessionID interface{}) *RefreshSessionRepository_InvalidateSessionAccess_Call {
+	return &RefreshSessionRepository_InvalidateSessionAccess_Call{Call: _e.mock.On("InvalidateSessionAccess", ctx, sessionID)}
+}
+
+func (_c *RefreshSessionRepository_InvalidateSessionAccess_Call) Run(run func(ctx context.Context, sessionID uuid.UUID)) *RefreshSessionRepository_InvalidateSessionAccess_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *RefreshSessionRepository_InvalidateSessionAccess_Call) Return(_a0 error) *RefreshSessionRepository_InvalidateSessionAccess_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *RefreshSessionRepository_InvalidateSessionAccess_Call) RunAndReturn(run func(context.Context, uuid.UUID) error) *RefreshSessionRepository_InvalidateSessionAccess_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListActiveUserRefreshSessions provides a mock function with given fields: ctx, userID
 func (_m *RefreshSessionRepository) ListActiveUserRefreshSessions(ctx context.Context, userID uuid.UUID) ([]models.RefreshSession, error) {
 	ret := _m.Called(ctx, userID)

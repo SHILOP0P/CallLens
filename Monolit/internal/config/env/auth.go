@@ -12,6 +12,7 @@ type authEnvConfig struct {
 	AccessTokenTTL     time.Duration `env:"JWT_ACCESS_TOKEN_TTL,required"`
 	RefreshTokenSecret string        `env:"REFRESH_TOKEN_SECRET,required"`
 	RefreshTokenTTL    time.Duration `env:"REFRESH_TOKEN_TTL,required"`
+	SessionTrustAge    time.Duration `env:"AUTH_SESSION_TRUST_AGE" envDefault:"24h"`
 }
 
 type authConfig struct {
@@ -44,4 +45,8 @@ func (cfg *authConfig) RefreshTokenSecret() string {
 
 func (cfg *authConfig) RefreshTokenTTL() time.Duration {
 	return cfg.raw.RefreshTokenTTL
+}
+
+func (cfg *authConfig) SessionTrustAge() time.Duration {
+	return cfg.raw.SessionTrustAge
 }

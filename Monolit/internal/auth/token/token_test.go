@@ -12,7 +12,7 @@ import (
 func TestGenerateAndParseAccessToken(t *testing.T) {
 	userID := uuid.New()
 	sessionID := uuid.New()
-	raw, err := GenerateAccessTokenWithSession(userID, sessionID, "user", "secret", time.Minute)
+	raw, err := GenerateAccessTokenWithSession(userID, sessionID, "user", "secret", time.Minute, 7)
 	if err != nil {
 		t.Fatalf("GenerateAccessTokenWithSession: %v", err)
 	}
@@ -20,7 +20,7 @@ func TestGenerateAndParseAccessToken(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ParseAccessToken: %v", err)
 	}
-	if claims.UserID != userID || claims.SessionID != sessionID || claims.Role != "user" {
+	if claims.UserID != userID || claims.SessionID != sessionID || claims.Role != "user" || claims.AccessVersion != 7 {
 		t.Fatalf("unexpected claims: %+v", claims)
 	}
 }
@@ -42,19 +42,19 @@ func TestParseAccessTokenRejectsInvalidTokens(t *testing.T) {
 	}{
 		{name: "malformed", raw: func() string { return "not-a-token" }},
 		{name: "wrong secret", raw: func() string {
-			raw, _ := GenerateAccessTokenWithSession(uuid.New(), uuid.New(), "user", "one", time.Minute)
+			raw, _ := GenerateAccessTokenWithSession(uuid.New(), uuid.New(), "user", "one", time.Minute, 1)
 			return raw
 		}},
 		{name: "expired", raw: func() string {
-			raw, _ := GenerateAccessTokenWithSession(uuid.New(), uuid.New(), "user", "secret", -time.Minute)
+			raw, _ := GenerateAccessTokenWithSession(uuid.New(), uuid.New(), "user", "secret", -time.Minute, 1)
 			return raw
 		}},
 		{name: "empty user", raw: func() string {
-			raw, _ := GenerateAccessTokenWithSession(uuid.Nil, uuid.New(), "user", "secret", time.Minute)
+			raw, _ := GenerateAccessTokenWithSession(uuid.Nil, uuid.New(), "user", "secret", time.Minute, 1)
 			return raw
 		}},
 		{name: "empty role", raw: func() string {
-			raw, _ := GenerateAccessTokenWithSession(uuid.New(), uuid.New(), "", "secret", time.Minute)
+			raw, _ := GenerateAccessTokenWithSession(uuid.New(), uuid.New(), "", "secret", time.Minute, 1)
 			return raw
 		}},
 		{name: "wrong algorithm", raw: func() string {

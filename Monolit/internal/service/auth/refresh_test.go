@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"calllens/monolit/internal/auth/refresh"
+	"calllens/monolit/internal/auth/token"
 	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
@@ -22,6 +23,7 @@ func (s *ServiceSuite) TestRefreshSuccess() {
 		ID:               sessionID,
 		UserID:           userID,
 		RefreshTokenHash: oldHash,
+		AccessVersion:    4,
 		ExpiresAt:        time.Now().UTC().Add(time.Hour),
 	}
 
@@ -51,6 +53,10 @@ func (s *ServiceSuite) TestRefreshSuccess() {
 	s.Require().NotEmpty(accessToken)
 	s.Require().NotEmpty(newRefreshToken)
 	s.Require().NotEqual(rawRefreshToken, newRefreshToken)
+	claims, err := token.ParseAccessToken(accessToken, "jwt-secret")
+	s.Require().NoError(err)
+	s.Require().Equal(int64(4), claims.AccessVersion)
+	s.Require().Equal(string(models.UserRoleUser), claims.Role)
 }
 
 func (s *ServiceSuite) TestRefreshRejectsEmptyToken() {

@@ -9,6 +9,7 @@ func ScanRefreshSession(row rowScanner) (repoModel.RefreshSession, error) {
 		&session.ID,
 		&session.UserID,
 		&session.RefreshTokenHash,
+		&session.AccessVersion,
 		&session.UserAgent,
 		&session.IPAddress,
 		&session.CreatedAt,

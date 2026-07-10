@@ -373,17 +373,17 @@ func (_c *AuthService_Logout_Call) RunAndReturn(run func(context.Context, uuid.U
 	return _c
 }
 
-// LogoutAll provides a mock function with given fields: ctx, userID
-func (_m *AuthService) LogoutAll(ctx context.Context, userID uuid.UUID) error {
-	ret := _m.Called(ctx, userID)
+// LogoutAll provides a mock function with given fields: ctx, userID, currentSessionID
+func (_m *AuthService) LogoutAll(ctx context.Context, userID uuid.UUID, currentSessionID uuid.UUID) error {
+	ret := _m.Called(ctx, userID, currentSessionID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for LogoutAll")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) error); ok {
-		r0 = rf(ctx, userID)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r0 = rf(ctx, userID, currentSessionID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -399,13 +399,14 @@ type AuthService_LogoutAll_Call struct {
 // LogoutAll is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID uuid.UUID
-func (_e *AuthService_Expecter) LogoutAll(ctx interface{}, userID interface{}) *AuthService_LogoutAll_Call {
-	return &AuthService_LogoutAll_Call{Call: _e.mock.On("LogoutAll", ctx, userID)}
+//   - currentSessionID uuid.UUID
+func (_e *AuthService_Expecter) LogoutAll(ctx interface{}, userID interface{}, currentSessionID interface{}) *AuthService_LogoutAll_Call {
+	return &AuthService_LogoutAll_Call{Call: _e.mock.On("LogoutAll", ctx, userID, currentSessionID)}
 }
 
-func (_c *AuthService_LogoutAll_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *AuthService_LogoutAll_Call {
+func (_c *AuthService_LogoutAll_Call) Run(run func(ctx context.Context, userID uuid.UUID, currentSessionID uuid.UUID)) *AuthService_LogoutAll_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
 	})
 	return _c
 }
@@ -415,7 +416,7 @@ func (_c *AuthService_LogoutAll_Call) Return(_a0 error) *AuthService_LogoutAll_C
 	return _c
 }
 
-func (_c *AuthService_LogoutAll_Call) RunAndReturn(run func(context.Context, uuid.UUID) error) *AuthService_LogoutAll_Call {
+func (_c *AuthService_LogoutAll_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) error) *AuthService_LogoutAll_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -605,17 +606,17 @@ func (_c *AuthService_Register_Call) RunAndReturn(run func(context.Context, mode
 	return _c
 }
 
-// RevokeSession provides a mock function with given fields: ctx, userID, sessionID
-func (_m *AuthService) RevokeSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID) error {
-	ret := _m.Called(ctx, userID, sessionID)
+// RevokeSession provides a mock function with given fields: ctx, userID, currentSessionID, sessionID
+func (_m *AuthService) RevokeSession(ctx context.Context, userID uuid.UUID, currentSessionID uuid.UUID, sessionID uuid.UUID) error {
+	ret := _m.Called(ctx, userID, currentSessionID, sessionID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for RevokeSession")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
-		r0 = rf(ctx, userID, sessionID)
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) error); ok {
+		r0 = rf(ctx, userID, currentSessionID, sessionID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -631,14 +632,15 @@ type AuthService_RevokeSession_Call struct {
 // RevokeSession is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID uuid.UUID
+//   - currentSessionID uuid.UUID
 //   - sessionID uuid.UUID
-func (_e *AuthService_Expecter) RevokeSession(ctx interface{}, userID interface{}, sessionID interface{}) *AuthService_RevokeSession_Call {
-	return &AuthService_RevokeSession_Call{Call: _e.mock.On("RevokeSession", ctx, userID, sessionID)}
+func (_e *AuthService_Expecter) RevokeSession(ctx interface{}, userID interface{}, currentSessionID interface{}, sessionID interface{}) *AuthService_RevokeSession_Call {
+	return &AuthService_RevokeSession_Call{Call: _e.mock.On("RevokeSession", ctx, userID, currentSessionID, sessionID)}
 }
 
-func (_c *AuthService_RevokeSession_Call) Run(run func(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID)) *AuthService_RevokeSession_Call {
+func (_c *AuthService_RevokeSession_Call) Run(run func(ctx context.Context, userID uuid.UUID, currentSessionID uuid.UUID, sessionID uuid.UUID)) *AuthService_RevokeSession_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID), args[3].(uuid.UUID))
 	})
 	return _c
 }
@@ -648,7 +650,7 @@ func (_c *AuthService_RevokeSession_Call) Return(_a0 error) *AuthService_RevokeS
 	return _c
 }
 
-func (_c *AuthService_RevokeSession_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) error) *AuthService_RevokeSession_Call {
+func (_c *AuthService_RevokeSession_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) error) *AuthService_RevokeSession_Call {
 	_c.Call.Return(run)
 	return _c
 }

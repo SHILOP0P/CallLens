@@ -104,7 +104,7 @@ func (s *APISuite) TestDeleteSessionMapsForeignSessionToNotFound() {
 	currentSessionID := uuid.New()
 	sessionID := uuid.New()
 
-	s.service.On("RevokeSession", mock.Anything, userID, sessionID).
+	s.service.On("RevokeSession", mock.Anything, userID, currentSessionID, sessionID).
 		Return(models.ErrRefreshSessionNotFound).
 		Once()
 
@@ -124,7 +124,7 @@ func (s *APISuite) TestDeleteCurrentSessionClearsCookies() {
 	userID := uuid.New()
 	sessionID := uuid.New()
 
-	s.service.On("RevokeSession", mock.Anything, userID, sessionID).
+	s.service.On("RevokeSession", mock.Anything, userID, sessionID, sessionID).
 		Return(nil).
 		Once()
 
@@ -138,4 +138,28 @@ func (s *APISuite) TestDeleteCurrentSessionClearsCookies() {
 
 	s.Require().Equal(http.StatusNoContent, rec.Code)
 	s.requireClearedAuthCookies(rec)
+}
+
+func (s *APISuite) TestDeleteOtherSessionMapsTrustCooldown() {
+	userID := uuid.New()
+	currentSessionID := uuid.New()
+	targetSessionID := uuid.New()
+	availableAt := time.Now().UTC().Add(time.Hour)
+
+	s.service.On("RevokeSession", mock.Anything, userID, currentSessionID, targetSessionID).
+		Return(models.SessionTrustError{AvailableAt: availableAt}).
+		Once()
+
+	rec, req := s.requestWithUser(http.MethodDelete, "/api/v1/auth/me/sessions/"+targetSessionID.String(), "", userID)
+	req = req.WithContext(middleware.ContextWithSessionID(req.Context(), currentSessionID))
+	routeCtx := chi.NewRouteContext()
+	routeCtx.URLParams.Add("session_uuid", targetSessionID.String())
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, routeCtx))
+
+	s.api.DeleteSession(rec, req)
+
+	s.Require().Equal(http.StatusForbidden, rec.Code)
+	s.requireErrorCode(rec, response.CodeSessionTrustAgeRequired)
+	s.Require().NotEmpty(rec.Header().Get("Retry-After"))
+	s.Require().Empty(rec.Header().Values("Set-Cookie"))
 }

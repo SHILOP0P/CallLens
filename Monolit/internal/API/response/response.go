@@ -13,6 +13,17 @@ type ErrorResponse struct {
 type ErrorBody struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	Details any    `json:"details,omitempty"`
+}
+
+func WriteErrorWithDetails(w http.ResponseWriter, status int, code string, message string, details any) {
+	_ = WriteJSON(w, status, ErrorResponse{
+		Error: ErrorBody{
+			Code:    code,
+			Message: message,
+			Details: details,
+		},
+	})
 }
 
 func WriteJSON(w http.ResponseWriter, status int, payload any) error {

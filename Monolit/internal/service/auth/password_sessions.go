@@ -78,9 +78,24 @@ func (s *Service) ListSessions(ctx context.Context, userID uuid.UUID, currentSes
 	return sessions, nil
 }
 
-func (s *Service) RevokeSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID) error {
-	if userID == uuid.Nil || sessionID == uuid.Nil {
+func (s *Service) RevokeSession(ctx context.Context, userID uuid.UUID, currentSessionID uuid.UUID, sessionID uuid.UUID) error {
+	if userID == uuid.Nil || currentSessionID == uuid.Nil || sessionID == uuid.Nil {
 		return models.ErrInvalidUserInput
+	}
+
+	if sessionID != currentSessionID {
+		currentSession, err := s.refreshSessionRepository.GetRefreshSessionByUUID(ctx, currentSessionID)
+		if err != nil {
+			return err
+		}
+		if currentSession.UserID != userID || currentSession.RevokedAt != nil || !currentSession.ExpiresAt.After(s.now()) {
+			return models.ErrRefreshSessionNotFound
+		}
+
+		availableAt := currentSession.CreatedAt.Add(s.sessionTrustAge)
+		if s.now().Before(availableAt) {
+			return models.SessionTrustError{AvailableAt: availableAt}
+		}
 	}
 
 	return s.refreshSessionRepository.RevokeUserRefreshSession(ctx, userID, sessionID, logoutReason)

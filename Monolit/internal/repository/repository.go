@@ -116,6 +116,8 @@ type RefreshSessionRepository interface {
 	GetRefreshSessionByUUID(ctx context.Context, sessionID uuid.UUID) (models.RefreshSession, error)
 	ListActiveUserRefreshSessions(ctx context.Context, userID uuid.UUID) ([]models.RefreshSession, error)
 	RotateRefreshSession(ctx context.Context, oldRefreshTokenHash string, newRefreshTokenHash string, expiresAt time.Time) (models.RefreshSession, error)
+	InvalidateSessionAccess(ctx context.Context, sessionID uuid.UUID) error
+	InvalidateAllUserAccess(ctx context.Context, userID uuid.UUID) error
 	RevokeRefreshSession(ctx context.Context, sessionID uuid.UUID, reason string) error
 	RevokeUserRefreshSession(ctx context.Context, userID uuid.UUID, sessionID uuid.UUID, reason string) error
 	RevokeAllUserRefreshSessions(ctx context.Context, userID uuid.UUID, reason string) error

@@ -230,6 +230,7 @@ func main() {
 		appLogger,
 	)
 	authSvc.SetBillingRepository(billingRepository)
+	authSvc.SetSessionTrustAge(config.AppConfig().Auth.SessionTrustAge())
 	authSvc.SetCompanyRepository(companyRepository)
 	authSvc.SetPreferencesRepository(userPreferencesRepository)
 	authSvc.SetAvatarStorage(avatarsStorage)
