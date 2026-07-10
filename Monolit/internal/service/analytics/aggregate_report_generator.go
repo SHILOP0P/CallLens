@@ -23,14 +23,35 @@ type AggregateReportData struct {
 }
 
 type aggregateResult struct {
-	Summary                string   `json:"summary"`
-	KeyFindings            []string `json:"key_findings"`
-	RecurringIssues        []string `json:"recurring_issues"`
-	Strengths              []string `json:"strengths"`
-	Risks                  []string `json:"risks"`
-	PriorityActions        []string `json:"priority_actions"`
-	ManagerRecommendations []string `json:"manager_recommendations"`
-	Confidence             any      `json:"confidence"`
+	Summary                string                                `json:"summary"`
+	KeyFindings            []string                              `json:"key_findings"`
+	RecurringIssues        []string                              `json:"recurring_issues"`
+	Strengths              []string                              `json:"strengths"`
+	Risks                  []string                              `json:"risks"`
+	PriorityActions        []string                              `json:"priority_actions"`
+	ManagerRecommendations []string                              `json:"manager_recommendations"`
+	Confidence             any                                   `json:"confidence"`
+	SourceSummary          models.AggregateAnalysisSourceSummary `json:"source_summary"`
+	AggregateStatistics    aggregateReportStatistics             `json:"aggregate_statistics"`
+	CoverageNote           string                                `json:"coverage_note"`
+}
+
+// aggregateReportStatistics mirrors the deterministic dataset saved with a deep
+// analysis. Keeping it in the export means that every report format exposes
+// statistics calculated from the complete source set, not only the AI's
+// representative-call narrative.
+type aggregateReportStatistics struct {
+	ScoreSummary       models.AggregateAnalysisScoreSummary      `json:"score_summary"`
+	IssueCoverage      []models.AggregateAnalysisFrequency       `json:"issue_coverage"`
+	WeakCriteria       []models.AggregateAnalysisCriterionMetric `json:"weak_criteria"`
+	BusinessOutcomes   []models.AggregateAnalysisFrequency       `json:"business_outcomes"`
+	LostReasons        []models.AggregateAnalysisFrequency       `json:"lost_reasons"`
+	CustomerObjections []models.AggregateAnalysisFrequency       `json:"customer_objections"`
+	Risks              []models.AggregateAnalysisFrequency       `json:"risks"`
+	Topics             []models.AggregateAnalysisFrequency       `json:"topics"`
+	NextStepSummary    models.AggregateAnalysisNextStepSummary   `json:"next_step_summary"`
+	AttentionCalls     []models.AggregateAnalysisCallEvidence    `json:"attention_calls"`
+	StrongCalls        []models.AggregateAnalysisCallEvidence    `json:"strong_calls"`
 }
 
 func generateAggregateReport(format models.ReportFormat, data AggregateReportData) ([]byte, error) {
@@ -75,6 +96,18 @@ func writeAggregateMarkdown(b *bytes.Buffer, data AggregateReportData, result ag
 	writeMarkdownSection(b, "Risks", result.Risks)
 	writeMarkdownSection(b, "Priority actions", result.PriorityActions)
 	writeMarkdownSection(b, "Manager recommendations", result.ManagerRecommendations)
+	writeMarkdownSection(b, "Data coverage", aggregateCoverageLines(a, result))
+	writeMarkdownSection(b, "Score summary", aggregateScoreLines(result.AggregateStatistics.ScoreSummary))
+	writeMarkdownSection(b, "Issue coverage", aggregateFrequencyLines(result.AggregateStatistics.IssueCoverage))
+	writeMarkdownSection(b, "Weak criteria", aggregateWeakCriteriaLines(result.AggregateStatistics.WeakCriteria))
+	writeMarkdownSection(b, "Business outcomes", aggregateFrequencyLines(result.AggregateStatistics.BusinessOutcomes))
+	writeMarkdownSection(b, "Lost reasons", aggregateFrequencyLines(result.AggregateStatistics.LostReasons))
+	writeMarkdownSection(b, "Customer objections", aggregateFrequencyLines(result.AggregateStatistics.CustomerObjections))
+	writeMarkdownSection(b, "Risk metrics", aggregateFrequencyLines(result.AggregateStatistics.Risks))
+	writeMarkdownSection(b, "Topics", aggregateFrequencyLines(result.AggregateStatistics.Topics))
+	writeMarkdownSection(b, "Next-step quality", aggregateNextStepLines(result.AggregateStatistics.NextStepSummary))
+	writeMarkdownSection(b, "Attention calls", aggregateCallEvidenceLines(result.AggregateStatistics.AttentionCalls))
+	writeMarkdownSection(b, "Strong calls", aggregateCallEvidenceLines(result.AggregateStatistics.StrongCalls))
 	if result.Confidence != nil {
 		writeMarkdownSection(b, "Confidence", []string{fmt.Sprint(result.Confidence)})
 	}
@@ -118,6 +151,19 @@ func generateAggregateXLSXReport(data AggregateReportData) ([]byte, error) {
 		{"Generated at", data.GeneratedAt.Format(timeLayout)},
 		{"Summary", fallback(result.Summary, resultText(data.Analysis))},
 		{"Confidence", fmt.Sprint(result.Confidence)},
+		{"Coverage note", result.CoverageNote},
+		{"Analyzed calls", result.SourceSummary.AnalyzedCalls},
+		{"Included in statistics", result.SourceSummary.IncludedInStatistics},
+		{"All analyzed calls used", result.SourceSummary.AllAnalyzedCallsUsed},
+		{"Representative calls", result.SourceSummary.RepresentativeCalls},
+		{"Source set hash", result.SourceSummary.SourceSetHash},
+		{"Calls with score", result.AggregateStatistics.ScoreSummary.CallsWithScore},
+		{"Average score", formatOptionalFloat(result.AggregateStatistics.ScoreSummary.Average)},
+		{"Minimum score", formatOptionalFloat(result.AggregateStatistics.ScoreSummary.Min)},
+		{"Maximum score", formatOptionalFloat(result.AggregateStatistics.ScoreSummary.Max)},
+		{"Low-score calls", result.AggregateStatistics.ScoreSummary.LowCount},
+		{"Medium-score calls", result.AggregateStatistics.ScoreSummary.MediumCount},
+		{"High-score calls", result.AggregateStatistics.ScoreSummary.HighCount},
 	})
 	for _, sheet := range []struct {
 		name  string
@@ -137,6 +183,25 @@ func generateAggregateXLSXReport(data AggregateReportData) ([]byte, error) {
 			rows = append(rows, []any{item})
 		}
 		setSheetRows(file, sheet.name, rows)
+	}
+	for _, sheet := range []struct {
+		name string
+		rows [][]any
+	}{
+		{"Issue coverage", aggregateFrequencyRows(result.AggregateStatistics.IssueCoverage)},
+		{"Weak criteria", aggregateWeakCriteriaRows(result.AggregateStatistics.WeakCriteria)},
+		{"Business outcomes", aggregateFrequencyRows(result.AggregateStatistics.BusinessOutcomes)},
+		{"Lost reasons", aggregateFrequencyRows(result.AggregateStatistics.LostReasons)},
+		{"Objections", aggregateFrequencyRows(result.AggregateStatistics.CustomerObjections)},
+		{"Risk metrics", aggregateFrequencyRows(result.AggregateStatistics.Risks)},
+		{"Topics", aggregateFrequencyRows(result.AggregateStatistics.Topics)},
+		{"Next steps", aggregateNextStepRows(result.AggregateStatistics.NextStepSummary)},
+		{"Attention calls", aggregateCallEvidenceRows(result.AggregateStatistics.AttentionCalls)},
+		{"Strong calls", aggregateCallEvidenceRows(result.AggregateStatistics.StrongCalls)},
+	} {
+		if err := addAggregateSheet(file, sheet.name, sheet.rows); err != nil {
+			return nil, err
+		}
 	}
 	var buffer bytes.Buffer
 	if err := file.Write(&buffer); err != nil {
@@ -208,6 +273,149 @@ func fallback(value string, fallbackValue string) string {
 		return fallbackValue
 	}
 	return value
+}
+
+func aggregateCoverageLines(analysis models.AggregateAnalysis, result aggregateResult) []string {
+	summary := result.SourceSummary
+	if summary.AnalyzedCalls == 0 && summary.IncludedInStatistics == 0 && summary.SourceSetHash == "" && result.CoverageNote == "" && analysis.SourceCallsCount == 0 {
+		return nil
+	}
+	analyzedCalls := summary.AnalyzedCalls
+	if analyzedCalls == 0 {
+		analyzedCalls = analysis.SourceCallsCount
+	}
+	lines := []string{
+		fmt.Sprintf("Analyzed calls: %d", analyzedCalls),
+		fmt.Sprintf("Included in statistics: %d", summary.IncludedInStatistics),
+		fmt.Sprintf("All analyzed calls used: %t", summary.AllAnalyzedCallsUsed),
+		fmt.Sprintf("Representative calls used by AI: %d", summary.RepresentativeCalls),
+	}
+	if summary.SourceSetHash != "" {
+		lines = append(lines, "Source set hash: "+summary.SourceSetHash)
+	}
+	if result.CoverageNote != "" {
+		lines = append(lines, result.CoverageNote)
+	}
+	return lines
+}
+
+func aggregateScoreLines(summary models.AggregateAnalysisScoreSummary) []string {
+	if summary.CallsWithScore == 0 {
+		return nil
+	}
+	return []string{
+		fmt.Sprintf("Calls with score: %d", summary.CallsWithScore),
+		"Average: " + formatOptionalFloat(summary.Average),
+		"Minimum: " + formatOptionalFloat(summary.Min),
+		"Maximum: " + formatOptionalFloat(summary.Max),
+		fmt.Sprintf("Score distribution — low: %d, medium: %d, high: %d", summary.LowCount, summary.MediumCount, summary.HighCount),
+	}
+}
+
+func aggregateFrequencyLines(items []models.AggregateAnalysisFrequency) []string {
+	lines := make([]string, 0, len(items))
+	for _, item := range items {
+		line := fmt.Sprintf("%s — %d calls (%.1f%%)", fallback(item.Title, item.Code), item.Count, item.Share*100)
+		if len(item.SampleCallUUIDs) > 0 {
+			line += "; sample calls: " + strings.Join(item.SampleCallUUIDs, ", ")
+		}
+		lines = append(lines, line)
+	}
+	return lines
+}
+
+func aggregateWeakCriteriaLines(items []models.AggregateAnalysisCriterionMetric) []string {
+	lines := make([]string, 0, len(items))
+	for _, item := range items {
+		line := fmt.Sprintf("%s — weak in %d of %d applicable calls (%.1f%%); missed: %d, partial: %d, unclear: %d", fallback(item.Title, item.Code), item.WeakCalls, item.ApplicableCalls, item.WeakShare*100, item.MissedCalls, item.PartiallyMetCalls, item.UnclearCalls)
+		if item.AveragePointsShare != nil {
+			line += fmt.Sprintf("; average points: %.1f%%", *item.AveragePointsShare*100)
+		}
+		if len(item.SampleCallUUIDs) > 0 {
+			line += "; sample calls: " + strings.Join(item.SampleCallUUIDs, ", ")
+		}
+		lines = append(lines, line)
+	}
+	return lines
+}
+
+func aggregateNextStepLines(summary models.AggregateAnalysisNextStepSummary) []string {
+	if summary.CallsWithNextStep == 0 && summary.CallsMissingNextStep == 0 && summary.CallsWithSpecificNextStep == 0 && summary.CallsMissingSpecificStep == 0 {
+		return nil
+	}
+	return []string{
+		fmt.Sprintf("Calls with next step: %d; missing next step: %d (%.1f%%)", summary.CallsWithNextStep, summary.CallsMissingNextStep, summary.MissingNextStepShare*100),
+		fmt.Sprintf("Calls with specific next step: %d; missing specific step: %d (%.1f%%)", summary.CallsWithSpecificNextStep, summary.CallsMissingSpecificStep, summary.MissingSpecificStepShare*100),
+	}
+}
+
+func aggregateCallEvidenceLines(items []models.AggregateAnalysisCallEvidence) []string {
+	lines := make([]string, 0, len(items))
+	for _, item := range items {
+		line := fmt.Sprintf("%s (%s)", fallback(item.Title, item.CallUUID.String()), item.CallUUID)
+		if item.Score != nil {
+			line += fmt.Sprintf(" — score %.2f", *item.Score)
+		}
+		if item.Summary != "" {
+			line += "; " + item.Summary
+		}
+		if len(item.IssueCodes) > 0 {
+			line += "; issues: " + strings.Join(item.IssueCodes, ", ")
+		}
+		lines = append(lines, line)
+	}
+	return lines
+}
+
+func formatOptionalFloat(value *float64) string {
+	if value == nil {
+		return "No data"
+	}
+	return fmt.Sprintf("%.2f", *value)
+}
+
+func aggregateFrequencyRows(items []models.AggregateAnalysisFrequency) [][]any {
+	rows := [][]any{{"Code", "Title", "Calls", "Share", "Sample call UUIDs"}}
+	for _, item := range items {
+		rows = append(rows, []any{item.Code, item.Title, item.Count, item.Share, strings.Join(item.SampleCallUUIDs, ", ")})
+	}
+	return rows
+}
+
+func aggregateWeakCriteriaRows(items []models.AggregateAnalysisCriterionMetric) [][]any {
+	rows := [][]any{{"Code", "Title", "Applicable", "Weak", "Weak share", "Avg. points share", "Missed", "Partial", "Unclear", "Sample call UUIDs"}}
+	for _, item := range items {
+		rows = append(rows, []any{item.Code, item.Title, item.ApplicableCalls, item.WeakCalls, item.WeakShare, formatOptionalFloat(item.AveragePointsShare), item.MissedCalls, item.PartiallyMetCalls, item.UnclearCalls, strings.Join(item.SampleCallUUIDs, ", ")})
+	}
+	return rows
+}
+
+func aggregateNextStepRows(summary models.AggregateAnalysisNextStepSummary) [][]any {
+	return [][]any{
+		{"Metric", "Value"},
+		{"Calls with next step", summary.CallsWithNextStep},
+		{"Calls with specific next step", summary.CallsWithSpecificNextStep},
+		{"Calls missing next step", summary.CallsMissingNextStep},
+		{"Calls missing specific step", summary.CallsMissingSpecificStep},
+		{"Missing next step share", summary.MissingNextStepShare},
+		{"Missing specific step share", summary.MissingSpecificStepShare},
+	}
+}
+
+func aggregateCallEvidenceRows(items []models.AggregateAnalysisCallEvidence) [][]any {
+	rows := [][]any{{"Call UUID", "Created at", "Title", "Score", "Summary", "Issue codes"}}
+	for _, item := range items {
+		rows = append(rows, []any{item.CallUUID.String(), item.CreatedAt.Format(timeLayout), item.Title, formatOptionalFloat(item.Score), item.Summary, strings.Join(item.IssueCodes, ", ")})
+	}
+	return rows
+}
+
+func addAggregateSheet(file *excelize.File, name string, rows [][]any) error {
+	if _, err := file.NewSheet(name); err != nil {
+		return err
+	}
+	setSheetRows(file, name, rows)
+	return file.SetColWidth(name, "C", "J", 18)
 }
 
 func setSheetRows(file *excelize.File, sheet string, rows [][]any) {

@@ -1,6 +1,7 @@
 package analytics
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"io"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"github.com/xuri/excelize/v2"
 )
 
 func TestAggregateReportGeneratorMarkdownAndXLSX(t *testing.T) {
@@ -32,6 +34,81 @@ func TestAggregateReportGeneratorMarkdownAndXLSX(t *testing.T) {
 	xlsx, err := generateAggregateReport(models.ReportFormatXLSX, AggregateReportData{Analysis: analysis, GeneratedAt: analysis.PeriodTo})
 	require.NoError(t, err)
 	require.NotEmpty(t, xlsx)
+}
+
+func TestAggregateReportExportsFullSourceDatasetInEveryFormat(t *testing.T) {
+	analysis := models.AggregateAnalysis{
+		ID: uuid.New(), Scope: models.AggregateAnalysisScopeCompany,
+		PeriodFrom: time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC),
+		PeriodTo:   time.Date(2026, 7, 7, 23, 59, 59, 0, time.UTC),
+		Status:     models.AggregateAnalysisStatusDone, SourceCallsCount: 120,
+		ResultJSON: []byte(`{
+			"summary":"summary from representative evidence",
+			"source_summary":{"analyzed_calls":120,"included_in_statistics":120,"representative_calls":40,"all_analyzed_calls_used":true,"source_set_hash":"full-source-set"},
+			"coverage_note":"Statistics are based on all 120 analyzed calls.",
+			"aggregate_statistics":{
+				"score_summary":{"calls_with_score":120,"average":76.5,"min":20,"max":98,"low_count":12,"medium_count":63,"high_count":45},
+				"issue_coverage":[{"code":"no_next_step","title":"No next step","count":42,"share":0.35,"sample_call_uuids":["11111111-1111-1111-1111-111111111111"]}],
+				"weak_criteria":[{"code":"needs_discovery","title":"Needs discovery","applicable_calls":120,"weak_calls":30,"weak_share":0.25,"average_points_share":0.5,"missed_calls":10,"partially_met_calls":20,"unclear_calls":0,"sample_call_uuids":["22222222-2222-2222-2222-222222222222"]}],
+				"business_outcomes":[{"code":"lost","title":"Lost","count":18,"share":0.15}],
+				"lost_reasons":[{"code":"price","title":"Price","count":10,"share":0.0833}],
+				"customer_objections":[{"code":"budget","title":"Budget","count":21,"share":0.175}],
+				"risks":[{"code":"churn","title":"Churn","count":8,"share":0.0667}],
+				"topics":[{"code":"onboarding","title":"Onboarding","count":70,"share":0.5833}],
+				"next_step_summary":{"calls_with_next_step":80,"calls_with_specific_next_step":60,"calls_missing_next_step":40,"calls_missing_specific_step":60,"missing_next_step_share":0.3333,"missing_specific_step_share":0.5},
+				"attention_calls":[{"call_uuid":"33333333-3333-3333-3333-333333333333","created_at":"2026-07-02T10:00:00Z","title":"At-risk call","score":20,"summary":"Customer may leave","issue_codes":["no_next_step"]}],
+				"strong_calls":[{"call_uuid":"44444444-4444-4444-4444-444444444444","created_at":"2026-07-03T10:00:00Z","title":"Successful call","score":98}]
+			}
+		}`),
+	}
+	data := AggregateReportData{Analysis: analysis, GeneratedAt: analysis.PeriodTo}
+
+	markdown, err := generateAggregateReport(models.ReportFormatMD, data)
+	require.NoError(t, err)
+	require.Contains(t, string(markdown), "Statistics are based on all 120 analyzed calls.")
+	require.Contains(t, string(markdown), "Issue coverage")
+	require.Contains(t, string(markdown), "Needs discovery")
+	require.Contains(t, string(markdown), "At-risk call")
+
+	docx, err := generateAggregateReport(models.ReportFormatDOCX, data)
+	require.NoError(t, err)
+	require.Contains(t, docxDocument(t, docx), "All analyzed calls used: true")
+	require.Contains(t, docxDocument(t, docx), "Needs discovery")
+
+	xlsx, err := generateAggregateReport(models.ReportFormatXLSX, data)
+	require.NoError(t, err)
+	workbook, err := excelize.OpenReader(bytes.NewReader(xlsx))
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, workbook.Close()) })
+	require.Contains(t, workbook.GetSheetList(), "Issue coverage")
+	require.Contains(t, workbook.GetSheetList(), "Weak criteria")
+	require.Contains(t, workbook.GetSheetList(), "Attention calls")
+	issue, err := workbook.GetCellValue("Issue coverage", "B2")
+	require.NoError(t, err)
+	require.Equal(t, "No next step", issue)
+
+	pdf, err := generateAggregateReport(models.ReportFormatPDF, data)
+	require.NoError(t, err)
+	require.True(t, bytes.HasPrefix(pdf, []byte("%PDF")))
+}
+
+func docxDocument(t *testing.T, content []byte) string {
+	t.Helper()
+	reader, err := zip.NewReader(bytes.NewReader(content), int64(len(content)))
+	require.NoError(t, err)
+	for _, file := range reader.File {
+		if file.Name != "word/document.xml" {
+			continue
+		}
+		body, err := file.Open()
+		require.NoError(t, err)
+		t.Cleanup(func() { require.NoError(t, body.Close()) })
+		document, err := io.ReadAll(body)
+		require.NoError(t, err)
+		return string(document)
+	}
+	t.Fatal("word/document.xml is missing")
+	return ""
 }
 
 func TestAggregateReportGeneratorFallsBackOnMalformedJSON(t *testing.T) {
