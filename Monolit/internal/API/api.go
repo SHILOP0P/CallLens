@@ -84,6 +84,14 @@ type AdminAPI interface {
 	ListUserSessions(w http.ResponseWriter, r *http.Request)
 	RevokeUserSession(w http.ResponseWriter, r *http.Request)
 	RevokeAllUserSessions(w http.ResponseWriter, r *http.Request)
+	ListCompanies(w http.ResponseWriter, r *http.Request)
+	GetCompany(w http.ResponseWriter, r *http.Request)
+	GetPersonalSubscription(w http.ResponseWriter, r *http.Request)
+	GetCompanySubscription(w http.ResponseWriter, r *http.Request)
+	GrantPersonalSubscription(w http.ResponseWriter, r *http.Request)
+	GrantCompanySubscription(w http.ResponseWriter, r *http.Request)
+	CancelPersonalSubscription(w http.ResponseWriter, r *http.Request)
+	CancelCompanySubscription(w http.ResponseWriter, r *http.Request)
 }
 
 type CompanyAPI interface {

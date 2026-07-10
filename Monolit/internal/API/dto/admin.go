@@ -43,3 +43,33 @@ type AdminSessionsResponse struct {
 type AdminReasonRequest struct {
 	Reason string `json:"reason"`
 }
+type AdminCompanyResponse struct {
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	ManagerUserUUID string `json:"manager_user_uuid"`
+	CreatedAt       string `json:"created_at"`
+}
+type AdminCompaniesResponse struct {
+	Items  []AdminCompanyResponse `json:"items"`
+	Total  int                    `json:"total"`
+	Limit  int                    `json:"limit"`
+	Offset int                    `json:"offset"`
+}
+type AdminSubscriptionResponse struct {
+	ID          string  `json:"id"`
+	PlanCode    string  `json:"plan_code"`
+	Type        string  `json:"type"`
+	Status      string  `json:"status"`
+	UserUUID    *string `json:"user_uuid"`
+	CompanyUUID *string `json:"company_uuid"`
+	StartsAt    string  `json:"starts_at"`
+	EndsAt      *string `json:"ends_at"`
+	CreatedAt   string  `json:"created_at"`
+	UpdatedAt   string  `json:"updated_at"`
+}
+type GrantAdminSubscriptionRequest struct {
+	PlanCode string  `json:"plan_code"`
+	StartsAt *string `json:"starts_at,omitempty"`
+	EndsAt   string  `json:"ends_at"`
+	Reason   string  `json:"reason"`
+}

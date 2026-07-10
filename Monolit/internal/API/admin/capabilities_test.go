@@ -110,6 +110,24 @@ func (s *adminServiceStub) RevokeUserSession(context.Context, models.AdminSessio
 func (s *adminServiceStub) RevokeAllUserSessions(context.Context, models.AdminSessionMutationInput) error {
 	return s.err
 }
+func (s *adminServiceStub) ListCompanies(context.Context, models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error) {
+	return models.ListAdminCompaniesResult{}, s.err
+}
+func (s *adminServiceStub) GetCompany(context.Context, uuid.UUID) (models.AdminCompany, error) {
+	return models.AdminCompany{}, s.err
+}
+func (s *adminServiceStub) GetPersonalSubscription(context.Context, uuid.UUID) (models.AdminSubscription, error) {
+	return models.AdminSubscription{}, s.err
+}
+func (s *adminServiceStub) GetCompanySubscription(context.Context, uuid.UUID) (models.AdminSubscription, error) {
+	return models.AdminSubscription{}, s.err
+}
+func (s *adminServiceStub) GrantSubscription(context.Context, models.GrantAdminSubscriptionInput) (models.AdminSubscription, error) {
+	return models.AdminSubscription{}, s.err
+}
+func (s *adminServiceStub) CancelSubscription(context.Context, models.CancelAdminSubscriptionInput) (models.AdminSubscription, error) {
+	return models.AdminSubscription{}, s.err
+}
 
 func requireErrorCode(t *testing.T, rec *httptest.ResponseRecorder, code string) {
 	t.Helper()

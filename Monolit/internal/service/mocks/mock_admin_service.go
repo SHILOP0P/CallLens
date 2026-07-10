@@ -24,6 +24,63 @@ func (_m *AdminService) EXPECT() *AdminService_Expecter {
 	return &AdminService_Expecter{mock: &_m.Mock}
 }
 
+// CancelSubscription provides a mock function with given fields: ctx, input
+func (_m *AdminService) CancelSubscription(ctx context.Context, input models.CancelAdminSubscriptionInput) (models.AdminSubscription, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CancelSubscription")
+	}
+
+	var r0 models.AdminSubscription
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.CancelAdminSubscriptionInput) models.AdminSubscription); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.AdminSubscription)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.CancelAdminSubscriptionInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminService_CancelSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelSubscription'
+type AdminService_CancelSubscription_Call struct {
+	*mock.Call
+}
+
+// CancelSubscription is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.CancelAdminSubscriptionInput
+func (_e *AdminService_Expecter) CancelSubscription(ctx interface{}, input interface{}) *AdminService_CancelSubscription_Call {
+	return &AdminService_CancelSubscription_Call{Call: _e.mock.On("CancelSubscription", ctx, input)}
+}
+
+func (_c *AdminService_CancelSubscription_Call) Run(run func(ctx context.Context, input models.CancelAdminSubscriptionInput)) *AdminService_CancelSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.CancelAdminSubscriptionInput))
+	})
+	return _c
+}
+
+func (_c *AdminService_CancelSubscription_Call) Return(_a0 models.AdminSubscription, _a1 error) *AdminService_CancelSubscription_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminService_CancelSubscription_Call) RunAndReturn(run func(context.Context, models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)) *AdminService_CancelSubscription_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ChangeUserRole provides a mock function with given fields: ctx, input
 func (_m *AdminService) ChangeUserRole(ctx context.Context, input models.ChangeAdminUserRoleInput) (models.AdminUser, error) {
 	ret := _m.Called(ctx, input)
@@ -138,6 +195,177 @@ func (_c *AdminService_GetCapabilities_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
+// GetCompany provides a mock function with given fields: ctx, companyID
+func (_m *AdminService) GetCompany(ctx context.Context, companyID uuid.UUID) (models.AdminCompany, error) {
+	ret := _m.Called(ctx, companyID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCompany")
+	}
+
+	var r0 models.AdminCompany
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.AdminCompany, error)); ok {
+		return rf(ctx, companyID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.AdminCompany); ok {
+		r0 = rf(ctx, companyID)
+	} else {
+		r0 = ret.Get(0).(models.AdminCompany)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, companyID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminService_GetCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCompany'
+type AdminService_GetCompany_Call struct {
+	*mock.Call
+}
+
+// GetCompany is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+func (_e *AdminService_Expecter) GetCompany(ctx interface{}, companyID interface{}) *AdminService_GetCompany_Call {
+	return &AdminService_GetCompany_Call{Call: _e.mock.On("GetCompany", ctx, companyID)}
+}
+
+func (_c *AdminService_GetCompany_Call) Run(run func(ctx context.Context, companyID uuid.UUID)) *AdminService_GetCompany_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AdminService_GetCompany_Call) Return(_a0 models.AdminCompany, _a1 error) *AdminService_GetCompany_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminService_GetCompany_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AdminCompany, error)) *AdminService_GetCompany_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetCompanySubscription provides a mock function with given fields: ctx, companyID
+func (_m *AdminService) GetCompanySubscription(ctx context.Context, companyID uuid.UUID) (models.AdminSubscription, error) {
+	ret := _m.Called(ctx, companyID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCompanySubscription")
+	}
+
+	var r0 models.AdminSubscription
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.AdminSubscription, error)); ok {
+		return rf(ctx, companyID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.AdminSubscription); ok {
+		r0 = rf(ctx, companyID)
+	} else {
+		r0 = ret.Get(0).(models.AdminSubscription)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, companyID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminService_GetCompanySubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCompanySubscription'
+type AdminService_GetCompanySubscription_Call struct {
+	*mock.Call
+}
+
+// GetCompanySubscription is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+func (_e *AdminService_Expecter) GetCompanySubscription(ctx interface{}, companyID interface{}) *AdminService_GetCompanySubscription_Call {
+	return &AdminService_GetCompanySubscription_Call{Call: _e.mock.On("GetCompanySubscription", ctx, companyID)}
+}
+
+func (_c *AdminService_GetCompanySubscription_Call) Run(run func(ctx context.Context, companyID uuid.UUID)) *AdminService_GetCompanySubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AdminService_GetCompanySubscription_Call) Return(_a0 models.AdminSubscription, _a1 error) *AdminService_GetCompanySubscription_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminService_GetCompanySubscription_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AdminSubscription, error)) *AdminService_GetCompanySubscription_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetPersonalSubscription provides a mock function with given fields: ctx, userID
+func (_m *AdminService) GetPersonalSubscription(ctx context.Context, userID uuid.UUID) (models.AdminSubscription, error) {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPersonalSubscription")
+	}
+
+	var r0 models.AdminSubscription
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.AdminSubscription, error)); ok {
+		return rf(ctx, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.AdminSubscription); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Get(0).(models.AdminSubscription)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminService_GetPersonalSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPersonalSubscription'
+type AdminService_GetPersonalSubscription_Call struct {
+	*mock.Call
+}
+
+// GetPersonalSubscription is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *AdminService_Expecter) GetPersonalSubscription(ctx interface{}, userID interface{}) *AdminService_GetPersonalSubscription_Call {
+	return &AdminService_GetPersonalSubscription_Call{Call: _e.mock.On("GetPersonalSubscription", ctx, userID)}
+}
+
+func (_c *AdminService_GetPersonalSubscription_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *AdminService_GetPersonalSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AdminService_GetPersonalSubscription_Call) Return(_a0 models.AdminSubscription, _a1 error) *AdminService_GetPersonalSubscription_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminService_GetPersonalSubscription_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AdminSubscription, error)) *AdminService_GetPersonalSubscription_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetUser provides a mock function with given fields: ctx, userID
 func (_m *AdminService) GetUser(ctx context.Context, userID uuid.UUID) (models.AdminUser, error) {
 	ret := _m.Called(ctx, userID)
@@ -191,6 +419,120 @@ func (_c *AdminService_GetUser_Call) Return(_a0 models.AdminUser, _a1 error) *Ad
 }
 
 func (_c *AdminService_GetUser_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AdminUser, error)) *AdminService_GetUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GrantSubscription provides a mock function with given fields: ctx, input
+func (_m *AdminService) GrantSubscription(ctx context.Context, input models.GrantAdminSubscriptionInput) (models.AdminSubscription, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GrantSubscription")
+	}
+
+	var r0 models.AdminSubscription
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.GrantAdminSubscriptionInput) models.AdminSubscription); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.AdminSubscription)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.GrantAdminSubscriptionInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminService_GrantSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GrantSubscription'
+type AdminService_GrantSubscription_Call struct {
+	*mock.Call
+}
+
+// GrantSubscription is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.GrantAdminSubscriptionInput
+func (_e *AdminService_Expecter) GrantSubscription(ctx interface{}, input interface{}) *AdminService_GrantSubscription_Call {
+	return &AdminService_GrantSubscription_Call{Call: _e.mock.On("GrantSubscription", ctx, input)}
+}
+
+func (_c *AdminService_GrantSubscription_Call) Run(run func(ctx context.Context, input models.GrantAdminSubscriptionInput)) *AdminService_GrantSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.GrantAdminSubscriptionInput))
+	})
+	return _c
+}
+
+func (_c *AdminService_GrantSubscription_Call) Return(_a0 models.AdminSubscription, _a1 error) *AdminService_GrantSubscription_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminService_GrantSubscription_Call) RunAndReturn(run func(context.Context, models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)) *AdminService_GrantSubscription_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListCompanies provides a mock function with given fields: ctx, input
+func (_m *AdminService) ListCompanies(ctx context.Context, input models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListCompanies")
+	}
+
+	var r0 models.ListAdminCompaniesResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListAdminCompaniesInput) models.ListAdminCompaniesResult); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.ListAdminCompaniesResult)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.ListAdminCompaniesInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminService_ListCompanies_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListCompanies'
+type AdminService_ListCompanies_Call struct {
+	*mock.Call
+}
+
+// ListCompanies is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ListAdminCompaniesInput
+func (_e *AdminService_Expecter) ListCompanies(ctx interface{}, input interface{}) *AdminService_ListCompanies_Call {
+	return &AdminService_ListCompanies_Call{Call: _e.mock.On("ListCompanies", ctx, input)}
+}
+
+func (_c *AdminService_ListCompanies_Call) Run(run func(ctx context.Context, input models.ListAdminCompaniesInput)) *AdminService_ListCompanies_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ListAdminCompaniesInput))
+	})
+	return _c
+}
+
+func (_c *AdminService_ListCompanies_Call) Return(_a0 models.ListAdminCompaniesResult, _a1 error) *AdminService_ListCompanies_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminService_ListCompanies_Call) RunAndReturn(run func(context.Context, models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error)) *AdminService_ListCompanies_Call {
 	_c.Call.Return(run)
 	return _c
 }

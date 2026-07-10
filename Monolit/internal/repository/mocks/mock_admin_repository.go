@@ -24,6 +24,63 @@ func (_m *AdminRepository) EXPECT() *AdminRepository_Expecter {
 	return &AdminRepository_Expecter{mock: &_m.Mock}
 }
 
+// CancelAdminSubscription provides a mock function with given fields: ctx, input
+func (_m *AdminRepository) CancelAdminSubscription(ctx context.Context, input models.CancelAdminSubscriptionInput) (models.AdminSubscription, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CancelAdminSubscription")
+	}
+
+	var r0 models.AdminSubscription
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.CancelAdminSubscriptionInput) models.AdminSubscription); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.AdminSubscription)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.CancelAdminSubscriptionInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminRepository_CancelAdminSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelAdminSubscription'
+type AdminRepository_CancelAdminSubscription_Call struct {
+	*mock.Call
+}
+
+// CancelAdminSubscription is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.CancelAdminSubscriptionInput
+func (_e *AdminRepository_Expecter) CancelAdminSubscription(ctx interface{}, input interface{}) *AdminRepository_CancelAdminSubscription_Call {
+	return &AdminRepository_CancelAdminSubscription_Call{Call: _e.mock.On("CancelAdminSubscription", ctx, input)}
+}
+
+func (_c *AdminRepository_CancelAdminSubscription_Call) Run(run func(ctx context.Context, input models.CancelAdminSubscriptionInput)) *AdminRepository_CancelAdminSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.CancelAdminSubscriptionInput))
+	})
+	return _c
+}
+
+func (_c *AdminRepository_CancelAdminSubscription_Call) Return(_a0 models.AdminSubscription, _a1 error) *AdminRepository_CancelAdminSubscription_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminRepository_CancelAdminSubscription_Call) RunAndReturn(run func(context.Context, models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)) *AdminRepository_CancelAdminSubscription_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ChangeAdminUserRole provides a mock function with given fields: ctx, input
 func (_m *AdminRepository) ChangeAdminUserRole(ctx context.Context, input models.ChangeAdminUserRoleInput) (models.AdminUser, error) {
 	ret := _m.Called(ctx, input)
@@ -138,6 +195,177 @@ func (_c *AdminRepository_CreateAdminAuditLog_Call) RunAndReturn(run func(contex
 	return _c
 }
 
+// GetAdminCompanyByUUID provides a mock function with given fields: ctx, companyID
+func (_m *AdminRepository) GetAdminCompanyByUUID(ctx context.Context, companyID uuid.UUID) (models.AdminCompany, error) {
+	ret := _m.Called(ctx, companyID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAdminCompanyByUUID")
+	}
+
+	var r0 models.AdminCompany
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.AdminCompany, error)); ok {
+		return rf(ctx, companyID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.AdminCompany); ok {
+		r0 = rf(ctx, companyID)
+	} else {
+		r0 = ret.Get(0).(models.AdminCompany)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, companyID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminRepository_GetAdminCompanyByUUID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAdminCompanyByUUID'
+type AdminRepository_GetAdminCompanyByUUID_Call struct {
+	*mock.Call
+}
+
+// GetAdminCompanyByUUID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+func (_e *AdminRepository_Expecter) GetAdminCompanyByUUID(ctx interface{}, companyID interface{}) *AdminRepository_GetAdminCompanyByUUID_Call {
+	return &AdminRepository_GetAdminCompanyByUUID_Call{Call: _e.mock.On("GetAdminCompanyByUUID", ctx, companyID)}
+}
+
+func (_c *AdminRepository_GetAdminCompanyByUUID_Call) Run(run func(ctx context.Context, companyID uuid.UUID)) *AdminRepository_GetAdminCompanyByUUID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AdminRepository_GetAdminCompanyByUUID_Call) Return(_a0 models.AdminCompany, _a1 error) *AdminRepository_GetAdminCompanyByUUID_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminRepository_GetAdminCompanyByUUID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AdminCompany, error)) *AdminRepository_GetAdminCompanyByUUID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetAdminCompanySubscription provides a mock function with given fields: ctx, companyID
+func (_m *AdminRepository) GetAdminCompanySubscription(ctx context.Context, companyID uuid.UUID) (models.AdminSubscription, error) {
+	ret := _m.Called(ctx, companyID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAdminCompanySubscription")
+	}
+
+	var r0 models.AdminSubscription
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.AdminSubscription, error)); ok {
+		return rf(ctx, companyID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.AdminSubscription); ok {
+		r0 = rf(ctx, companyID)
+	} else {
+		r0 = ret.Get(0).(models.AdminSubscription)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, companyID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminRepository_GetAdminCompanySubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAdminCompanySubscription'
+type AdminRepository_GetAdminCompanySubscription_Call struct {
+	*mock.Call
+}
+
+// GetAdminCompanySubscription is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+func (_e *AdminRepository_Expecter) GetAdminCompanySubscription(ctx interface{}, companyID interface{}) *AdminRepository_GetAdminCompanySubscription_Call {
+	return &AdminRepository_GetAdminCompanySubscription_Call{Call: _e.mock.On("GetAdminCompanySubscription", ctx, companyID)}
+}
+
+func (_c *AdminRepository_GetAdminCompanySubscription_Call) Run(run func(ctx context.Context, companyID uuid.UUID)) *AdminRepository_GetAdminCompanySubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AdminRepository_GetAdminCompanySubscription_Call) Return(_a0 models.AdminSubscription, _a1 error) *AdminRepository_GetAdminCompanySubscription_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminRepository_GetAdminCompanySubscription_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AdminSubscription, error)) *AdminRepository_GetAdminCompanySubscription_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetAdminPersonalSubscription provides a mock function with given fields: ctx, userID
+func (_m *AdminRepository) GetAdminPersonalSubscription(ctx context.Context, userID uuid.UUID) (models.AdminSubscription, error) {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAdminPersonalSubscription")
+	}
+
+	var r0 models.AdminSubscription
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.AdminSubscription, error)); ok {
+		return rf(ctx, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.AdminSubscription); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Get(0).(models.AdminSubscription)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminRepository_GetAdminPersonalSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAdminPersonalSubscription'
+type AdminRepository_GetAdminPersonalSubscription_Call struct {
+	*mock.Call
+}
+
+// GetAdminPersonalSubscription is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *AdminRepository_Expecter) GetAdminPersonalSubscription(ctx interface{}, userID interface{}) *AdminRepository_GetAdminPersonalSubscription_Call {
+	return &AdminRepository_GetAdminPersonalSubscription_Call{Call: _e.mock.On("GetAdminPersonalSubscription", ctx, userID)}
+}
+
+func (_c *AdminRepository_GetAdminPersonalSubscription_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *AdminRepository_GetAdminPersonalSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AdminRepository_GetAdminPersonalSubscription_Call) Return(_a0 models.AdminSubscription, _a1 error) *AdminRepository_GetAdminPersonalSubscription_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminRepository_GetAdminPersonalSubscription_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AdminSubscription, error)) *AdminRepository_GetAdminPersonalSubscription_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetAdminUserByUUID provides a mock function with given fields: ctx, userID
 func (_m *AdminRepository) GetAdminUserByUUID(ctx context.Context, userID uuid.UUID) (models.AdminUser, error) {
 	ret := _m.Called(ctx, userID)
@@ -191,6 +419,120 @@ func (_c *AdminRepository_GetAdminUserByUUID_Call) Return(_a0 models.AdminUser, 
 }
 
 func (_c *AdminRepository_GetAdminUserByUUID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AdminUser, error)) *AdminRepository_GetAdminUserByUUID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GrantAdminSubscription provides a mock function with given fields: ctx, input
+func (_m *AdminRepository) GrantAdminSubscription(ctx context.Context, input models.GrantAdminSubscriptionInput) (models.AdminSubscription, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GrantAdminSubscription")
+	}
+
+	var r0 models.AdminSubscription
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.GrantAdminSubscriptionInput) models.AdminSubscription); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.AdminSubscription)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.GrantAdminSubscriptionInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminRepository_GrantAdminSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GrantAdminSubscription'
+type AdminRepository_GrantAdminSubscription_Call struct {
+	*mock.Call
+}
+
+// GrantAdminSubscription is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.GrantAdminSubscriptionInput
+func (_e *AdminRepository_Expecter) GrantAdminSubscription(ctx interface{}, input interface{}) *AdminRepository_GrantAdminSubscription_Call {
+	return &AdminRepository_GrantAdminSubscription_Call{Call: _e.mock.On("GrantAdminSubscription", ctx, input)}
+}
+
+func (_c *AdminRepository_GrantAdminSubscription_Call) Run(run func(ctx context.Context, input models.GrantAdminSubscriptionInput)) *AdminRepository_GrantAdminSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.GrantAdminSubscriptionInput))
+	})
+	return _c
+}
+
+func (_c *AdminRepository_GrantAdminSubscription_Call) Return(_a0 models.AdminSubscription, _a1 error) *AdminRepository_GrantAdminSubscription_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminRepository_GrantAdminSubscription_Call) RunAndReturn(run func(context.Context, models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)) *AdminRepository_GrantAdminSubscription_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListAdminCompanies provides a mock function with given fields: ctx, input
+func (_m *AdminRepository) ListAdminCompanies(ctx context.Context, input models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListAdminCompanies")
+	}
+
+	var r0 models.ListAdminCompaniesResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.ListAdminCompaniesInput) models.ListAdminCompaniesResult); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.ListAdminCompaniesResult)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.ListAdminCompaniesInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminRepository_ListAdminCompanies_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListAdminCompanies'
+type AdminRepository_ListAdminCompanies_Call struct {
+	*mock.Call
+}
+
+// ListAdminCompanies is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ListAdminCompaniesInput
+func (_e *AdminRepository_Expecter) ListAdminCompanies(ctx interface{}, input interface{}) *AdminRepository_ListAdminCompanies_Call {
+	return &AdminRepository_ListAdminCompanies_Call{Call: _e.mock.On("ListAdminCompanies", ctx, input)}
+}
+
+func (_c *AdminRepository_ListAdminCompanies_Call) Run(run func(ctx context.Context, input models.ListAdminCompaniesInput)) *AdminRepository_ListAdminCompanies_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ListAdminCompaniesInput))
+	})
+	return _c
+}
+
+func (_c *AdminRepository_ListAdminCompanies_Call) Return(_a0 models.ListAdminCompaniesResult, _a1 error) *AdminRepository_ListAdminCompanies_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminRepository_ListAdminCompanies_Call) RunAndReturn(run func(context.Context, models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error)) *AdminRepository_ListAdminCompanies_Call {
 	_c.Call.Return(run)
 	return _c
 }

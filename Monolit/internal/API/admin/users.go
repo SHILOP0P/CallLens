@@ -224,6 +224,12 @@ func writeAdminError(w http.ResponseWriter, err error, fallbackCode, fallbackMes
 		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidAdminInput, "invalid admin input")
 	case errors.Is(err, models.ErrUserNotFound):
 		response.WriteError(w, http.StatusNotFound, response.CodeUserNotFound, "user not found")
+	case errors.Is(err, models.ErrCompanyNotFound):
+		response.WriteError(w, http.StatusNotFound, response.CodeCompanyNotFound, "company not found")
+	case errors.Is(err, models.ErrSubscriptionNotFound):
+		response.WriteError(w, http.StatusNotFound, response.CodeSubscriptionNotFound, "subscription not found")
+	case errors.Is(err, models.ErrPlanNotFound), errors.Is(err, models.ErrInvalidBillingInput):
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidBillingInput, "invalid billing input")
 	case errors.Is(err, models.ErrForbidden), errors.Is(err, models.ErrRoleTransitionForbidden), errors.Is(err, models.ErrProtectedSuperAdmin), errors.Is(err, models.ErrCannotChangeOwnRole), errors.Is(err, models.ErrAdminSessionManagementForbidden):
 		response.WriteError(w, http.StatusForbidden, response.CodeForbidden, "forbidden")
 	case errors.Is(err, models.ErrUserRoleChanged):

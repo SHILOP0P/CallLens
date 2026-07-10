@@ -23,6 +23,49 @@ type AuditRepository interface {
 	ListAdminUserSessions(ctx context.Context, userID uuid.UUID) ([]models.AdminUserSession, error)
 	RevokeAdminUserSession(ctx context.Context, input models.AdminSessionMutationInput) error
 	RevokeAllAdminUserSessions(ctx context.Context, input models.AdminSessionMutationInput) error
+	ListAdminCompanies(ctx context.Context, input models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error)
+	GetAdminCompanyByUUID(ctx context.Context, companyID uuid.UUID) (models.AdminCompany, error)
+	GetAdminPersonalSubscription(ctx context.Context, userID uuid.UUID) (models.AdminSubscription, error)
+	GetAdminCompanySubscription(ctx context.Context, companyID uuid.UUID) (models.AdminSubscription, error)
+	GrantAdminSubscription(ctx context.Context, input models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)
+	CancelAdminSubscription(ctx context.Context, input models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)
+}
+
+func (s *Service) ListCompanies(ctx context.Context, input models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error) {
+	if s.auditRepository == nil || input.Limit < 1 || input.Limit > 100 || input.Offset < 0 {
+		return models.ListAdminCompaniesResult{}, models.ErrInvalidAdminInput
+	}
+	return s.auditRepository.ListAdminCompanies(ctx, input)
+}
+func (s *Service) GetCompany(ctx context.Context, id uuid.UUID) (models.AdminCompany, error) {
+	if s.auditRepository == nil || id == uuid.Nil {
+		return models.AdminCompany{}, models.ErrInvalidAdminInput
+	}
+	return s.auditRepository.GetAdminCompanyByUUID(ctx, id)
+}
+func (s *Service) GetPersonalSubscription(ctx context.Context, id uuid.UUID) (models.AdminSubscription, error) {
+	if s.auditRepository == nil || id == uuid.Nil {
+		return models.AdminSubscription{}, models.ErrInvalidAdminInput
+	}
+	return s.auditRepository.GetAdminPersonalSubscription(ctx, id)
+}
+func (s *Service) GetCompanySubscription(ctx context.Context, id uuid.UUID) (models.AdminSubscription, error) {
+	if s.auditRepository == nil || id == uuid.Nil {
+		return models.AdminSubscription{}, models.ErrInvalidAdminInput
+	}
+	return s.auditRepository.GetAdminCompanySubscription(ctx, id)
+}
+func (s *Service) GrantSubscription(ctx context.Context, in models.GrantAdminSubscriptionInput) (models.AdminSubscription, error) {
+	if s.auditRepository == nil || in.ActorUserUUID == uuid.Nil || in.PlanCode == "" || in.EndsAt.IsZero() || in.StartsAt.IsZero() || !in.EndsAt.After(in.StartsAt) || strings.TrimSpace(in.Metadata.Reason) == "" || ((in.UserUUID == uuid.Nil) == (in.CompanyUUID == uuid.Nil)) || in.StartsAt.After(s.now().Add(time.Minute)) {
+		return models.AdminSubscription{}, models.ErrInvalidAdminInput
+	}
+	return s.auditRepository.GrantAdminSubscription(ctx, in)
+}
+func (s *Service) CancelSubscription(ctx context.Context, in models.CancelAdminSubscriptionInput) (models.AdminSubscription, error) {
+	if s.auditRepository == nil || in.ActorUserUUID == uuid.Nil || strings.TrimSpace(in.Metadata.Reason) == "" || ((in.UserUUID == uuid.Nil) == (in.CompanyUUID == uuid.Nil)) {
+		return models.AdminSubscription{}, models.ErrInvalidAdminInput
+	}
+	return s.auditRepository.CancelAdminSubscription(ctx, in)
 }
 
 func (s *Service) ListUsers(ctx context.Context, input models.ListAdminUsersInput) (models.ListAdminUsersResult, error) {

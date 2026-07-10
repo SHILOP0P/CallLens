@@ -92,6 +92,12 @@ type AdminService interface {
 	ListUserSessions(ctx context.Context, actorUserID uuid.UUID, targetUserID uuid.UUID) ([]models.AdminUserSession, error)
 	RevokeUserSession(ctx context.Context, input models.AdminSessionMutationInput) error
 	RevokeAllUserSessions(ctx context.Context, input models.AdminSessionMutationInput) error
+	ListCompanies(ctx context.Context, input models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error)
+	GetCompany(ctx context.Context, companyID uuid.UUID) (models.AdminCompany, error)
+	GetPersonalSubscription(ctx context.Context, userID uuid.UUID) (models.AdminSubscription, error)
+	GetCompanySubscription(ctx context.Context, companyID uuid.UUID) (models.AdminSubscription, error)
+	GrantSubscription(ctx context.Context, input models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)
+	CancelSubscription(ctx context.Context, input models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)
 }
 
 type CompanyService interface {

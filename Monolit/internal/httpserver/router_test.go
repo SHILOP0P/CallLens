@@ -79,10 +79,18 @@ func (stubNotificationAPI) MarkAllRead(w http.ResponseWriter, r *http.Request) {
 
 type stubAdminAPI struct{}
 
-func (stubAdminAPI) GetCapabilities(w http.ResponseWriter, r *http.Request)       {}
-func (stubAdminAPI) ListUsers(w http.ResponseWriter, r *http.Request)             {}
-func (stubAdminAPI) GetUser(w http.ResponseWriter, r *http.Request)               {}
-func (stubAdminAPI) ChangeUserRole(w http.ResponseWriter, r *http.Request)        {}
-func (stubAdminAPI) ListUserSessions(w http.ResponseWriter, r *http.Request)      {}
-func (stubAdminAPI) RevokeUserSession(w http.ResponseWriter, r *http.Request)     {}
-func (stubAdminAPI) RevokeAllUserSessions(w http.ResponseWriter, r *http.Request) {}
+func (stubAdminAPI) GetCapabilities(w http.ResponseWriter, r *http.Request)            {}
+func (stubAdminAPI) ListUsers(w http.ResponseWriter, r *http.Request)                  {}
+func (stubAdminAPI) GetUser(w http.ResponseWriter, r *http.Request)                    {}
+func (stubAdminAPI) ChangeUserRole(w http.ResponseWriter, r *http.Request)             {}
+func (stubAdminAPI) ListUserSessions(w http.ResponseWriter, r *http.Request)           {}
+func (stubAdminAPI) RevokeUserSession(w http.ResponseWriter, r *http.Request)          {}
+func (stubAdminAPI) RevokeAllUserSessions(w http.ResponseWriter, r *http.Request)      {}
+func (stubAdminAPI) ListCompanies(w http.ResponseWriter, r *http.Request)              {}
+func (stubAdminAPI) GetCompany(w http.ResponseWriter, r *http.Request)                 {}
+func (stubAdminAPI) GetPersonalSubscription(w http.ResponseWriter, r *http.Request)    {}
+func (stubAdminAPI) GetCompanySubscription(w http.ResponseWriter, r *http.Request)     {}
+func (stubAdminAPI) GrantPersonalSubscription(w http.ResponseWriter, r *http.Request)  {}
+func (stubAdminAPI) GrantCompanySubscription(w http.ResponseWriter, r *http.Request)   {}
+func (stubAdminAPI) CancelPersonalSubscription(w http.ResponseWriter, r *http.Request) {}
+func (stubAdminAPI) CancelCompanySubscription(w http.ResponseWriter, r *http.Request)  {}

@@ -182,6 +182,51 @@ type AdminUserSessions struct {
 	Sessions []AdminUserSession
 }
 
+type AdminCompany struct {
+	ID              uuid.UUID
+	Name            string
+	ManagerUserUUID uuid.UUID
+	CreatedAt       time.Time
+}
+type ListAdminCompaniesInput struct {
+	Query  string
+	Limit  int
+	Offset int
+}
+type ListAdminCompaniesResult struct {
+	Companies []AdminCompany
+	Total     int
+	Limit     int
+	Offset    int
+}
+type AdminSubscription struct {
+	ID          uuid.UUID
+	PlanCode    PlanCode
+	Type        PlanType
+	Status      SubscriptionStatus
+	UserUUID    uuid.NullUUID
+	CompanyUUID uuid.NullUUID
+	StartsAt    time.Time
+	EndsAt      *time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+type GrantAdminSubscriptionInput struct {
+	ActorUserUUID uuid.UUID
+	UserUUID      uuid.UUID
+	CompanyUUID   uuid.UUID
+	PlanCode      PlanCode
+	StartsAt      time.Time
+	EndsAt        time.Time
+	Metadata      AdminMutationMetadata
+}
+type CancelAdminSubscriptionInput struct {
+	ActorUserUUID uuid.UUID
+	UserUUID      uuid.UUID
+	CompanyUUID   uuid.UUID
+	Metadata      AdminMutationMetadata
+}
+
 type AdminSessionMutationInput struct {
 	ActorUserUUID  uuid.UUID
 	TargetUserUUID uuid.UUID

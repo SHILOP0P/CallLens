@@ -144,6 +144,24 @@ func (r *auditRepositoryStub) RevokeAdminUserSession(context.Context, models.Adm
 func (r *auditRepositoryStub) RevokeAllAdminUserSessions(context.Context, models.AdminSessionMutationInput) error {
 	return r.err
 }
+func (r *auditRepositoryStub) ListAdminCompanies(context.Context, models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error) {
+	return models.ListAdminCompaniesResult{}, r.err
+}
+func (r *auditRepositoryStub) GetAdminCompanyByUUID(context.Context, uuid.UUID) (models.AdminCompany, error) {
+	return models.AdminCompany{}, r.err
+}
+func (r *auditRepositoryStub) GetAdminPersonalSubscription(context.Context, uuid.UUID) (models.AdminSubscription, error) {
+	return models.AdminSubscription{}, r.err
+}
+func (r *auditRepositoryStub) GetAdminCompanySubscription(context.Context, uuid.UUID) (models.AdminSubscription, error) {
+	return models.AdminSubscription{}, r.err
+}
+func (r *auditRepositoryStub) GrantAdminSubscription(context.Context, models.GrantAdminSubscriptionInput) (models.AdminSubscription, error) {
+	return models.AdminSubscription{}, r.err
+}
+func (r *auditRepositoryStub) CancelAdminSubscription(context.Context, models.CancelAdminSubscriptionInput) (models.AdminSubscription, error) {
+	return models.AdminSubscription{}, r.err
+}
 
 func (r *auditRepositoryStub) CreateAdminAuditLog(_ context.Context, audit models.AdminAuditLog) (models.AdminAuditLog, error) {
 	if r.err != nil {

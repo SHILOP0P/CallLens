@@ -21,6 +21,74 @@ func (_m *AdminAPI) EXPECT() *AdminAPI_Expecter {
 	return &AdminAPI_Expecter{mock: &_m.Mock}
 }
 
+// CancelCompanySubscription provides a mock function with given fields: w, r
+func (_m *AdminAPI) CancelCompanySubscription(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_CancelCompanySubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelCompanySubscription'
+type AdminAPI_CancelCompanySubscription_Call struct {
+	*mock.Call
+}
+
+// CancelCompanySubscription is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) CancelCompanySubscription(w interface{}, r interface{}) *AdminAPI_CancelCompanySubscription_Call {
+	return &AdminAPI_CancelCompanySubscription_Call{Call: _e.mock.On("CancelCompanySubscription", w, r)}
+}
+
+func (_c *AdminAPI_CancelCompanySubscription_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_CancelCompanySubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_CancelCompanySubscription_Call) Return() *AdminAPI_CancelCompanySubscription_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_CancelCompanySubscription_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_CancelCompanySubscription_Call {
+	_c.Run(run)
+	return _c
+}
+
+// CancelPersonalSubscription provides a mock function with given fields: w, r
+func (_m *AdminAPI) CancelPersonalSubscription(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_CancelPersonalSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelPersonalSubscription'
+type AdminAPI_CancelPersonalSubscription_Call struct {
+	*mock.Call
+}
+
+// CancelPersonalSubscription is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) CancelPersonalSubscription(w interface{}, r interface{}) *AdminAPI_CancelPersonalSubscription_Call {
+	return &AdminAPI_CancelPersonalSubscription_Call{Call: _e.mock.On("CancelPersonalSubscription", w, r)}
+}
+
+func (_c *AdminAPI_CancelPersonalSubscription_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_CancelPersonalSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_CancelPersonalSubscription_Call) Return() *AdminAPI_CancelPersonalSubscription_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_CancelPersonalSubscription_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_CancelPersonalSubscription_Call {
+	_c.Run(run)
+	return _c
+}
+
 // ChangeUserRole provides a mock function with given fields: w, r
 func (_m *AdminAPI) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -89,6 +157,108 @@ func (_c *AdminAPI_GetCapabilities_Call) RunAndReturn(run func(http.ResponseWrit
 	return _c
 }
 
+// GetCompany provides a mock function with given fields: w, r
+func (_m *AdminAPI) GetCompany(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_GetCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCompany'
+type AdminAPI_GetCompany_Call struct {
+	*mock.Call
+}
+
+// GetCompany is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) GetCompany(w interface{}, r interface{}) *AdminAPI_GetCompany_Call {
+	return &AdminAPI_GetCompany_Call{Call: _e.mock.On("GetCompany", w, r)}
+}
+
+func (_c *AdminAPI_GetCompany_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_GetCompany_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_GetCompany_Call) Return() *AdminAPI_GetCompany_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_GetCompany_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_GetCompany_Call {
+	_c.Run(run)
+	return _c
+}
+
+// GetCompanySubscription provides a mock function with given fields: w, r
+func (_m *AdminAPI) GetCompanySubscription(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_GetCompanySubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCompanySubscription'
+type AdminAPI_GetCompanySubscription_Call struct {
+	*mock.Call
+}
+
+// GetCompanySubscription is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) GetCompanySubscription(w interface{}, r interface{}) *AdminAPI_GetCompanySubscription_Call {
+	return &AdminAPI_GetCompanySubscription_Call{Call: _e.mock.On("GetCompanySubscription", w, r)}
+}
+
+func (_c *AdminAPI_GetCompanySubscription_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_GetCompanySubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_GetCompanySubscription_Call) Return() *AdminAPI_GetCompanySubscription_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_GetCompanySubscription_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_GetCompanySubscription_Call {
+	_c.Run(run)
+	return _c
+}
+
+// GetPersonalSubscription provides a mock function with given fields: w, r
+func (_m *AdminAPI) GetPersonalSubscription(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_GetPersonalSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPersonalSubscription'
+type AdminAPI_GetPersonalSubscription_Call struct {
+	*mock.Call
+}
+
+// GetPersonalSubscription is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) GetPersonalSubscription(w interface{}, r interface{}) *AdminAPI_GetPersonalSubscription_Call {
+	return &AdminAPI_GetPersonalSubscription_Call{Call: _e.mock.On("GetPersonalSubscription", w, r)}
+}
+
+func (_c *AdminAPI_GetPersonalSubscription_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_GetPersonalSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_GetPersonalSubscription_Call) Return() *AdminAPI_GetPersonalSubscription_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_GetPersonalSubscription_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_GetPersonalSubscription_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetUser provides a mock function with given fields: w, r
 func (_m *AdminAPI) GetUser(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -119,6 +289,108 @@ func (_c *AdminAPI_GetUser_Call) Return() *AdminAPI_GetUser_Call {
 }
 
 func (_c *AdminAPI_GetUser_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_GetUser_Call {
+	_c.Run(run)
+	return _c
+}
+
+// GrantCompanySubscription provides a mock function with given fields: w, r
+func (_m *AdminAPI) GrantCompanySubscription(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_GrantCompanySubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GrantCompanySubscription'
+type AdminAPI_GrantCompanySubscription_Call struct {
+	*mock.Call
+}
+
+// GrantCompanySubscription is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) GrantCompanySubscription(w interface{}, r interface{}) *AdminAPI_GrantCompanySubscription_Call {
+	return &AdminAPI_GrantCompanySubscription_Call{Call: _e.mock.On("GrantCompanySubscription", w, r)}
+}
+
+func (_c *AdminAPI_GrantCompanySubscription_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_GrantCompanySubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_GrantCompanySubscription_Call) Return() *AdminAPI_GrantCompanySubscription_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_GrantCompanySubscription_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_GrantCompanySubscription_Call {
+	_c.Run(run)
+	return _c
+}
+
+// GrantPersonalSubscription provides a mock function with given fields: w, r
+func (_m *AdminAPI) GrantPersonalSubscription(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_GrantPersonalSubscription_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GrantPersonalSubscription'
+type AdminAPI_GrantPersonalSubscription_Call struct {
+	*mock.Call
+}
+
+// GrantPersonalSubscription is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) GrantPersonalSubscription(w interface{}, r interface{}) *AdminAPI_GrantPersonalSubscription_Call {
+	return &AdminAPI_GrantPersonalSubscription_Call{Call: _e.mock.On("GrantPersonalSubscription", w, r)}
+}
+
+func (_c *AdminAPI_GrantPersonalSubscription_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_GrantPersonalSubscription_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_GrantPersonalSubscription_Call) Return() *AdminAPI_GrantPersonalSubscription_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_GrantPersonalSubscription_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_GrantPersonalSubscription_Call {
+	_c.Run(run)
+	return _c
+}
+
+// ListCompanies provides a mock function with given fields: w, r
+func (_m *AdminAPI) ListCompanies(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_ListCompanies_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListCompanies'
+type AdminAPI_ListCompanies_Call struct {
+	*mock.Call
+}
+
+// ListCompanies is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) ListCompanies(w interface{}, r interface{}) *AdminAPI_ListCompanies_Call {
+	return &AdminAPI_ListCompanies_Call{Call: _e.mock.On("ListCompanies", w, r)}
+}
+
+func (_c *AdminAPI_ListCompanies_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_ListCompanies_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_ListCompanies_Call) Return() *AdminAPI_ListCompanies_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_ListCompanies_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_ListCompanies_Call {
 	_c.Run(run)
 	return _c
 }

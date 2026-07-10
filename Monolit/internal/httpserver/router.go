@@ -50,6 +50,14 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionSessionsRead)).Get("/users/{user_uuid}/sessions", adminAPI.ListUserSessions)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionSessionsManage)).Delete("/users/{user_uuid}/sessions", adminAPI.RevokeAllUserSessions)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionSessionsManage)).Delete("/users/{user_uuid}/sessions/{session_uuid}", adminAPI.RevokeUserSession)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionCompaniesRead)).Get("/companies", adminAPI.ListCompanies)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionCompaniesRead)).Get("/companies/{company_uuid}", adminAPI.GetCompany)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsRead)).Get("/users/{user_uuid}/subscription", adminAPI.GetPersonalSubscription)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsRead)).Get("/companies/{company_uuid}/subscription", adminAPI.GetCompanySubscription)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsManage)).Post("/users/{user_uuid}/subscription/grant", adminAPI.GrantPersonalSubscription)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsManage)).Post("/companies/{company_uuid}/subscription/grant", adminAPI.GrantCompanySubscription)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsManage)).Post("/users/{user_uuid}/subscription/cancel", adminAPI.CancelPersonalSubscription)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsManage)).Post("/companies/{company_uuid}/subscription/cancel", adminAPI.CancelCompanySubscription)
 			})
 
 			//CALL
@@ -105,11 +113,8 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 			r.Get("/plans", billingAPI.ListPlans)
 			r.With(authGuard).Get("/subscription", billingAPI.GetPersonalSubscription)
 			r.With(authGuard).Get("/subscription/usage", billingAPI.GetPersonalSubscriptionUsage)
-			r.With(authGuard).Post("/subscription/activate", billingAPI.ActivatePersonalSubscription)
 			r.With(authGuard).Get("/companies/{uuid}/subscription", billingAPI.GetCompanySubscription)
 			r.With(authGuard).Get("/companies/{uuid}/subscription/usage", billingAPI.GetCompanySubscriptionUsage)
-			r.With(authGuard).Post("/companies/{uuid}/subscription/activate", billingAPI.ActivateCompanySubscription)
-			r.With(authGuard).Post("/companies/{uuid}/subscription/cancel", billingAPI.CancelCompanySubscription)
 
 			//INVITATIONS
 			r.With(authGuard).Get("/invitations", invitationAPI.ListUserInvitations)
