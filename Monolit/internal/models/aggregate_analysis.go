@@ -7,7 +7,8 @@ import (
 	"github.com/google/uuid"
 )
 
-const DeepAnalysisWeeklyLimit = 2
+// DeepAnalysisWeeklyLimit is deliberately elevated while deep analysis is being tested.
+const DeepAnalysisWeeklyLimit = 100
 
 type AggregateAnalysisScope string
 
