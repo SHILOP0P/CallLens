@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"calllens/monolit/internal/models"
 
@@ -26,6 +27,16 @@ func TestNewRequiresModel(t *testing.T) {
 	_, err := New("sk-or-v1-test", "")
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestNewUsesExtendedHTTPTimeout(t *testing.T) {
+	analyzer, err := New("sk-or-v1-test", "google/gemini-2.5-flash")
+	if err != nil {
+		t.Fatalf("new analyzer: %v", err)
+	}
+	if analyzer.client.Timeout < 5*time.Minute {
+		t.Fatalf("timeout = %s, want at least 5m", analyzer.client.Timeout)
 	}
 }
 

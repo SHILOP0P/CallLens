@@ -18,6 +18,7 @@ const (
 	defaultBaseURL = "https://openrouter.ai/api/v1"
 	chatPath       = "/chat/completions"
 	providerName   = "openrouter"
+	httpTimeout    = 5 * time.Minute
 )
 
 type Analyzer struct {
@@ -81,7 +82,7 @@ func New(apiKey string, model string) (*Analyzer, error) {
 		model:   model,
 		baseURL: defaultBaseURL,
 		client: &http.Client{
-			Timeout: 90 * time.Second,
+			Timeout: httpTimeout,
 		},
 	}, nil
 }
