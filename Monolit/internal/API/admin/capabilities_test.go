@@ -13,6 +13,7 @@ import (
 	"calllens/monolit/internal/httpserver/middleware"
 	"calllens/monolit/internal/models"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,6 +91,24 @@ func (s *adminServiceStub) GetCapabilities(_ context.Context, role models.UserRo
 
 func (s *adminServiceStub) RecordAudit(_ context.Context, _ models.CreateAdminAuditLogInput) (models.AdminAuditLog, error) {
 	return models.AdminAuditLog{}, nil
+}
+func (s *adminServiceStub) ListUsers(context.Context, models.ListAdminUsersInput) (models.ListAdminUsersResult, error) {
+	return models.ListAdminUsersResult{}, s.err
+}
+func (s *adminServiceStub) GetUser(context.Context, uuid.UUID) (models.AdminUser, error) {
+	return models.AdminUser{}, s.err
+}
+func (s *adminServiceStub) ChangeUserRole(context.Context, models.ChangeAdminUserRoleInput) (models.AdminUser, error) {
+	return models.AdminUser{}, s.err
+}
+func (s *adminServiceStub) ListUserSessions(context.Context, uuid.UUID, uuid.UUID) ([]models.AdminUserSession, error) {
+	return nil, s.err
+}
+func (s *adminServiceStub) RevokeUserSession(context.Context, models.AdminSessionMutationInput) error {
+	return s.err
+}
+func (s *adminServiceStub) RevokeAllUserSessions(context.Context, models.AdminSessionMutationInput) error {
+	return s.err
 }
 
 func requireErrorCode(t *testing.T, rec *httptest.ResponseRecorder, code string) {

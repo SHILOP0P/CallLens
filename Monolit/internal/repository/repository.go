@@ -74,6 +74,12 @@ type UserPreferencesRepository interface {
 
 type AdminRepository interface {
 	CreateAdminAuditLog(ctx context.Context, audit models.AdminAuditLog) (models.AdminAuditLog, error)
+	ListAdminUsers(ctx context.Context, input models.ListAdminUsersInput) (models.ListAdminUsersResult, error)
+	GetAdminUserByUUID(ctx context.Context, userID uuid.UUID) (models.AdminUser, error)
+	ChangeAdminUserRole(ctx context.Context, input models.ChangeAdminUserRoleInput) (models.AdminUser, error)
+	ListAdminUserSessions(ctx context.Context, userID uuid.UUID) ([]models.AdminUserSession, error)
+	RevokeAdminUserSession(ctx context.Context, input models.AdminSessionMutationInput) error
+	RevokeAllAdminUserSessions(ctx context.Context, input models.AdminSessionMutationInput) error
 }
 
 type CompanyRepository interface {

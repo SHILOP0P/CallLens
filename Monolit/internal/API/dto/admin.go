@@ -4,3 +4,42 @@ type AdminCapabilitiesResponse struct {
 	Role        string   `json:"role"`
 	Permissions []string `json:"permissions"`
 }
+
+type AdminUserResponse struct {
+	ID          string  `json:"id"`
+	Email       string  `json:"email"`
+	FullName    string  `json:"full_name"`
+	FullSurname string  `json:"full_surname"`
+	Username    string  `json:"username"`
+	Role        string  `json:"role"`
+	Post        *string `json:"post,omitempty"`
+	Phone       *string `json:"phone,omitempty"`
+	Timezone    *string `json:"timezone,omitempty"`
+	CreatedAt   string  `json:"created_at"`
+}
+type AdminUsersResponse struct {
+	Items  []AdminUserResponse `json:"items"`
+	Total  int                 `json:"total"`
+	Limit  int                 `json:"limit"`
+	Offset int                 `json:"offset"`
+}
+type ChangeAdminUserRoleRequest struct {
+	Role         string `json:"role"`
+	ExpectedRole string `json:"expected_role"`
+	Reason       string `json:"reason"`
+}
+type AdminSessionResponse struct {
+	ID         string  `json:"id"`
+	UserAgent  *string `json:"user_agent,omitempty"`
+	IP         *string `json:"ip,omitempty"`
+	CreatedAt  string  `json:"created_at"`
+	LastSeenAt *string `json:"last_seen_at,omitempty"`
+	ExpiresAt  string  `json:"expires_at"`
+}
+type AdminSessionsResponse struct {
+	UserUUID string                 `json:"user_uuid"`
+	Sessions []AdminSessionResponse `json:"sessions"`
+}
+type AdminReasonRequest struct {
+	Reason string `json:"reason"`
+}

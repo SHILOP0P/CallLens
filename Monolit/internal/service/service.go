@@ -86,6 +86,12 @@ type AuthService interface {
 type AdminService interface {
 	GetCapabilities(ctx context.Context, role models.UserRole) (models.AdminCapabilities, error)
 	RecordAudit(ctx context.Context, input models.CreateAdminAuditLogInput) (models.AdminAuditLog, error)
+	ListUsers(ctx context.Context, input models.ListAdminUsersInput) (models.ListAdminUsersResult, error)
+	GetUser(ctx context.Context, userID uuid.UUID) (models.AdminUser, error)
+	ChangeUserRole(ctx context.Context, input models.ChangeAdminUserRoleInput) (models.AdminUser, error)
+	ListUserSessions(ctx context.Context, actorUserID uuid.UUID, targetUserID uuid.UUID) ([]models.AdminUserSession, error)
+	RevokeUserSession(ctx context.Context, input models.AdminSessionMutationInput) error
+	RevokeAllUserSessions(ctx context.Context, input models.AdminSessionMutationInput) error
 }
 
 type CompanyService interface {

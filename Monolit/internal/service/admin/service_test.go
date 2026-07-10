@@ -126,6 +126,25 @@ type auditRepositoryStub struct {
 	err     error
 }
 
+func (r *auditRepositoryStub) ListAdminUsers(context.Context, models.ListAdminUsersInput) (models.ListAdminUsersResult, error) {
+	return models.ListAdminUsersResult{}, r.err
+}
+func (r *auditRepositoryStub) GetAdminUserByUUID(context.Context, uuid.UUID) (models.AdminUser, error) {
+	return models.AdminUser{}, r.err
+}
+func (r *auditRepositoryStub) ChangeAdminUserRole(context.Context, models.ChangeAdminUserRoleInput) (models.AdminUser, error) {
+	return models.AdminUser{}, r.err
+}
+func (r *auditRepositoryStub) ListAdminUserSessions(context.Context, uuid.UUID) ([]models.AdminUserSession, error) {
+	return nil, r.err
+}
+func (r *auditRepositoryStub) RevokeAdminUserSession(context.Context, models.AdminSessionMutationInput) error {
+	return r.err
+}
+func (r *auditRepositoryStub) RevokeAllAdminUserSessions(context.Context, models.AdminSessionMutationInput) error {
+	return r.err
+}
+
 func (r *auditRepositoryStub) CreateAdminAuditLog(_ context.Context, audit models.AdminAuditLog) (models.AdminAuditLog, error) {
 	if r.err != nil {
 		return models.AdminAuditLog{}, r.err

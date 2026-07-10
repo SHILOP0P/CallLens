@@ -112,3 +112,131 @@ type CreateAdminAuditLogInput struct {
 	IPAddress     *string
 	UserAgent     *string
 }
+
+type AdminSubscriptionStatusFilter string
+
+const (
+	AdminSubscriptionStatusActive   AdminSubscriptionStatusFilter = "active"
+	AdminSubscriptionStatusCanceled AdminSubscriptionStatusFilter = "canceled"
+	AdminSubscriptionStatusExpired  AdminSubscriptionStatusFilter = "expired"
+	AdminSubscriptionStatusNone     AdminSubscriptionStatusFilter = "none"
+)
+
+type AdminUser struct {
+	ID          uuid.UUID
+	Email       string
+	FullName    string
+	FullSurname string
+	Username    string
+	Role        UserRole
+	Post        *string
+	Phone       *string
+	Timezone    *string
+	CreatedAt   time.Time
+}
+
+type ListAdminUsersInput struct {
+	Query              string
+	Role               *UserRole
+	SubscriptionStatus *AdminSubscriptionStatusFilter
+	PlanCode           *PlanCode
+	CreatedFrom        *time.Time
+	CreatedTo          *time.Time
+	Limit              int
+	Offset             int
+}
+
+type ListAdminUsersResult struct {
+	Users  []AdminUser
+	Total  int
+	Limit  int
+	Offset int
+}
+
+type AdminMutationMetadata struct {
+	Reason    string
+	RequestID *string
+	IPAddress *string
+	UserAgent *string
+}
+
+type ChangeAdminUserRoleInput struct {
+	ActorUserUUID  uuid.UUID
+	TargetUserUUID uuid.UUID
+	ExpectedRole   UserRole
+	Role           UserRole
+	Metadata       AdminMutationMetadata
+}
+
+type AdminUserSession struct {
+	ID         uuid.UUID
+	UserAgent  *string
+	IPAddress  *string
+	CreatedAt  time.Time
+	LastSeenAt *time.Time
+	ExpiresAt  time.Time
+}
+
+type AdminUserSessions struct {
+	UserUUID uuid.UUID
+	Sessions []AdminUserSession
+}
+
+type AdminSessionMutationInput struct {
+	ActorUserUUID  uuid.UUID
+	TargetUserUUID uuid.UUID
+	SessionUUID    uuid.UUID
+	Metadata       AdminMutationMetadata
+}
+
+func IsValidUserRole(role UserRole) bool {
+	switch role {
+	case UserRoleUser, UserRoleHelper, UserRoleAdmin, UserRoleSuperAdmin:
+		return true
+	default:
+		return false
+	}
+}
+
+func ValidateAdminRoleTransition(actorRole UserRole, targetRole UserRole, requestedRole UserRole) error {
+	if targetRole == UserRoleSuperAdmin || requestedRole == UserRoleSuperAdmin {
+		return ErrProtectedSuperAdmin
+	}
+	if targetRole == requestedRole {
+		return ErrRoleTransitionForbidden
+	}
+
+	switch actorRole {
+	case UserRoleAdmin:
+		if (targetRole == UserRoleUser && requestedRole == UserRoleHelper) ||
+			(targetRole == UserRoleHelper && requestedRole == UserRoleUser) {
+			return nil
+		}
+	case UserRoleSuperAdmin:
+		if (targetRole == UserRoleUser || targetRole == UserRoleHelper || targetRole == UserRoleAdmin) &&
+			(requestedRole == UserRoleUser || requestedRole == UserRoleHelper || requestedRole == UserRoleAdmin) {
+			return nil
+		}
+	}
+
+	return ErrRoleTransitionForbidden
+}
+
+func ValidateAdminSessionTarget(actorRole UserRole, targetRole UserRole) error {
+	if targetRole == UserRoleSuperAdmin {
+		return ErrProtectedSuperAdmin
+	}
+
+	switch actorRole {
+	case UserRoleAdmin:
+		if targetRole == UserRoleUser || targetRole == UserRoleHelper {
+			return nil
+		}
+	case UserRoleSuperAdmin:
+		if targetRole == UserRoleUser || targetRole == UserRoleHelper || targetRole == UserRoleAdmin {
+			return nil
+		}
+	}
+
+	return ErrAdminSessionManagementForbidden
+}

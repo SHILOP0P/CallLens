@@ -17,6 +17,76 @@ var errAuditRepositoryNotConfigured = errors.New("admin audit repository is not 
 
 type AuditRepository interface {
 	CreateAdminAuditLog(ctx context.Context, audit models.AdminAuditLog) (models.AdminAuditLog, error)
+	ListAdminUsers(ctx context.Context, input models.ListAdminUsersInput) (models.ListAdminUsersResult, error)
+	GetAdminUserByUUID(ctx context.Context, userID uuid.UUID) (models.AdminUser, error)
+	ChangeAdminUserRole(ctx context.Context, input models.ChangeAdminUserRoleInput) (models.AdminUser, error)
+	ListAdminUserSessions(ctx context.Context, userID uuid.UUID) ([]models.AdminUserSession, error)
+	RevokeAdminUserSession(ctx context.Context, input models.AdminSessionMutationInput) error
+	RevokeAllAdminUserSessions(ctx context.Context, input models.AdminSessionMutationInput) error
+}
+
+func (s *Service) ListUsers(ctx context.Context, input models.ListAdminUsersInput) (models.ListAdminUsersResult, error) {
+	if s.auditRepository == nil || input.Limit < 1 || input.Limit > 100 || input.Offset < 0 || (input.Role != nil && !models.IsValidUserRole(*input.Role)) {
+		return models.ListAdminUsersResult{}, models.ErrInvalidAdminInput
+	}
+	return s.auditRepository.ListAdminUsers(ctx, input)
+}
+
+func (s *Service) GetUser(ctx context.Context, userID uuid.UUID) (models.AdminUser, error) {
+	if s.auditRepository == nil || userID == uuid.Nil {
+		return models.AdminUser{}, models.ErrInvalidAdminInput
+	}
+	return s.auditRepository.GetAdminUserByUUID(ctx, userID)
+}
+
+func (s *Service) ChangeUserRole(ctx context.Context, input models.ChangeAdminUserRoleInput) (models.AdminUser, error) {
+	if s.auditRepository == nil || input.ActorUserUUID == uuid.Nil || input.TargetUserUUID == uuid.Nil || !models.IsValidUserRole(input.ExpectedRole) || !models.IsValidUserRole(input.Role) || strings.TrimSpace(input.Metadata.Reason) == "" {
+		return models.AdminUser{}, models.ErrInvalidAdminInput
+	}
+	if input.ActorUserUUID == input.TargetUserUUID {
+		return models.AdminUser{}, models.ErrCannotChangeOwnRole
+	}
+	return s.auditRepository.ChangeAdminUserRole(ctx, input)
+}
+
+func (s *Service) ListUserSessions(ctx context.Context, actorUserID uuid.UUID, targetUserID uuid.UUID) ([]models.AdminUserSession, error) {
+	if s.auditRepository == nil || actorUserID == uuid.Nil || targetUserID == uuid.Nil {
+		return nil, models.ErrInvalidAdminInput
+	}
+	actor, err := s.auditRepository.GetAdminUserByUUID(ctx, actorUserID)
+	if err != nil {
+		return nil, err
+	}
+	target, err := s.auditRepository.GetAdminUserByUUID(ctx, targetUserID)
+	if err != nil {
+		return nil, err
+	}
+	if actor.ID == target.ID {
+		return nil, models.ErrAdminSessionManagementForbidden
+	}
+	if err := models.ValidateAdminSessionTarget(actor.Role, target.Role); err != nil {
+		return nil, err
+	}
+	return s.auditRepository.ListAdminUserSessions(ctx, targetUserID)
+}
+
+func (s *Service) RevokeUserSession(ctx context.Context, input models.AdminSessionMutationInput) error {
+	return s.validateSessionMutation(ctx, input, false)
+}
+func (s *Service) RevokeAllUserSessions(ctx context.Context, input models.AdminSessionMutationInput) error {
+	return s.validateSessionMutation(ctx, input, true)
+}
+func (s *Service) validateSessionMutation(ctx context.Context, input models.AdminSessionMutationInput, all bool) error {
+	if s.auditRepository == nil || input.ActorUserUUID == uuid.Nil || input.TargetUserUUID == uuid.Nil || (!all && input.SessionUUID == uuid.Nil) || strings.TrimSpace(input.Metadata.Reason) == "" {
+		return models.ErrInvalidAdminInput
+	}
+	if input.ActorUserUUID == input.TargetUserUUID {
+		return models.ErrAdminSessionManagementForbidden
+	}
+	if all {
+		return s.auditRepository.RevokeAllAdminUserSessions(ctx, input)
+	}
+	return s.auditRepository.RevokeAdminUserSession(ctx, input)
 }
 
 type Service struct {

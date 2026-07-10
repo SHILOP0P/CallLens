@@ -78,6 +78,12 @@ type AuthAPI interface {
 
 type AdminAPI interface {
 	GetCapabilities(w http.ResponseWriter, r *http.Request)
+	ListUsers(w http.ResponseWriter, r *http.Request)
+	GetUser(w http.ResponseWriter, r *http.Request)
+	ChangeUserRole(w http.ResponseWriter, r *http.Request)
+	ListUserSessions(w http.ResponseWriter, r *http.Request)
+	RevokeUserSession(w http.ResponseWriter, r *http.Request)
+	RevokeAllUserSessions(w http.ResponseWriter, r *http.Request)
 }
 
 type CompanyAPI interface {

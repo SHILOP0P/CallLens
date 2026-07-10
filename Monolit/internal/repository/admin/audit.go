@@ -12,6 +12,18 @@ import (
 )
 
 func (r *Repository) CreateAdminAuditLog(ctx context.Context, audit models.AdminAuditLog) (models.AdminAuditLog, error) {
+	created, err := insertAuditReturning(ctx, r.db, audit)
+	if err != nil {
+		return models.AdminAuditLog{}, fmt.Errorf("create admin audit log: %w", err)
+	}
+	return created, nil
+}
+
+type queryRowerAudit interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}
+
+func insertAuditReturning(ctx context.Context, db queryRowerAudit, audit models.AdminAuditLog) (models.AdminAuditLog, error) {
 	query := `
 	INSERT INTO admin_audit_logs (
 	    audit_uuid,
@@ -44,7 +56,7 @@ func (r *Repository) CreateAdminAuditLog(ctx context.Context, audit models.Admin
 	          created_at
 	`
 
-	created, err := scanAdminAuditLog(r.db.QueryRowContext(
+	created, err := scanAdminAuditLog(db.QueryRowContext(
 		ctx,
 		query,
 		audit.ID,
@@ -61,11 +73,12 @@ func (r *Repository) CreateAdminAuditLog(ctx context.Context, audit models.Admin
 		audit.UserAgent,
 		audit.CreatedAt,
 	))
-	if err != nil {
-		return models.AdminAuditLog{}, fmt.Errorf("create admin audit log: %w", err)
-	}
+	return created, err
+}
 
-	return created, nil
+func insertAudit(ctx context.Context, tx *sql.Tx, audit models.AdminAuditLog) error {
+	_, err := insertAuditReturning(ctx, tx, audit)
+	return err
 }
 
 type auditRowScanner interface {

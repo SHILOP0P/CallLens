@@ -37,6 +37,13 @@ var ErrInvalidUserInput = errors.New("invalid user input")
 
 // ADMIN
 var ErrInvalidAdminInput = errors.New("invalid admin input")
+var ErrInvalidUserRole = errors.New("invalid user role")
+var ErrAdminReasonRequired = errors.New("admin reason is required")
+var ErrRoleTransitionForbidden = errors.New("role transition is forbidden")
+var ErrProtectedSuperAdmin = errors.New("superadmin is protected")
+var ErrCannotChangeOwnRole = errors.New("cannot change own role")
+var ErrUserRoleChanged = errors.New("user role changed")
+var ErrAdminSessionManagementForbidden = errors.New("admin session management is forbidden")
 
 // COMPANY
 var ErrCompanyNotFound = errors.New("company not found")

@@ -44,6 +44,12 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 				r.Use(authGuard)
 				r.Use(authMiddleware.RequirePermission(models.AdminPermissionPanelAccess))
 				r.Get("/capabilities", adminAPI.GetCapabilities)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionUsersRead)).Get("/users", adminAPI.ListUsers)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionUsersRead)).Get("/users/{user_uuid}", adminAPI.GetUser)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionRolesManageHelpers)).Patch("/users/{user_uuid}/role", adminAPI.ChangeUserRole)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionSessionsRead)).Get("/users/{user_uuid}/sessions", adminAPI.ListUserSessions)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionSessionsManage)).Delete("/users/{user_uuid}/sessions", adminAPI.RevokeAllUserSessions)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionSessionsManage)).Delete("/users/{user_uuid}/sessions/{session_uuid}", adminAPI.RevokeUserSession)
 			})
 
 			//CALL
