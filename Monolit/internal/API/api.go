@@ -76,6 +76,10 @@ type AuthAPI interface {
 	UpdatePreferences(w http.ResponseWriter, r *http.Request)
 }
 
+type AdminAPI interface {
+	GetCapabilities(w http.ResponseWriter, r *http.Request)
+}
+
 type CompanyAPI interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	Update(w http.ResponseWriter, r *http.Request)

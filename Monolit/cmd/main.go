@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	adminAPI "calllens/monolit/internal/API/admin"
 	analysisAPI "calllens/monolit/internal/API/analysis"
 	instructionAPI "calllens/monolit/internal/API/analysis_instruction"
 	analyticsAPI "calllens/monolit/internal/API/analytics"
@@ -29,6 +30,7 @@ import (
 	"calllens/monolit/internal/httpserver"
 	"calllens/monolit/internal/logger"
 	"calllens/monolit/internal/migrator"
+	adminRepo "calllens/monolit/internal/repository/admin"
 	analysisRepo "calllens/monolit/internal/repository/analysis"
 	analysisInstructionRepo "calllens/monolit/internal/repository/analysis_instruction"
 	billingRepo "calllens/monolit/internal/repository/billing"
@@ -45,6 +47,7 @@ import (
 	transcriptionRepo "calllens/monolit/internal/repository/transcription"
 	userRepo "calllens/monolit/internal/repository/user"
 	userPreferencesRepo "calllens/monolit/internal/repository/user_preferences"
+	adminService "calllens/monolit/internal/service/admin"
 	analysisService "calllens/monolit/internal/service/analysis"
 	analysisInstructionService "calllens/monolit/internal/service/analysis_instruction"
 	analyticsService "calllens/monolit/internal/service/analytics"
@@ -158,6 +161,7 @@ func main() {
 	instructionStorage := instruction.NewLocalStorage(instructionUploadPath)
 	reportsStorage := reportStorage.NewLocalStorage(reportUploadPath)
 
+	adminRepository := adminRepo.NewRepository(sqlDB)
 	analysisInstructionRepository := analysisInstructionRepo.NewRepository(sqlDB)
 	analysisRepository := analysisRepo.NewRepository(sqlDB)
 	callRepository := callRepo.NewRepository(sqlDB)
@@ -234,6 +238,7 @@ func main() {
 	authSvc.SetCompanyRepository(companyRepository)
 	authSvc.SetPreferencesRepository(userPreferencesRepository)
 	authSvc.SetAvatarStorage(avatarsStorage)
+	adminSvc := adminService.NewService(adminRepository)
 	companySvc := companyService.NewService(companyRepository, appLogger)
 	departmentSvc := departmentService.NewService(companyRepository, departmentRepository, appLogger)
 	invitationSvc := invitationService.NewService(invitationRepository, userRepository, companyRepository, departmentRepository, appLogger)
@@ -260,6 +265,7 @@ func main() {
 	reportSvc.SetBillingLimiter(billingSvc)
 	invitationSvc.SetNotificationService(notificationSvc)
 
+	adminHandler := adminAPI.NewHandler(adminSvc)
 	callHandler := call.NewCallHandler(callSvc)
 	callFolderHandler := callFolderAPI.NewHandler(callFolderSvc)
 	authHandler := authAPI.NewAuthHandler(authSvc, config.AppConfig().Auth.AccessTokenTTL(), config.AppConfig().Auth.RefreshTokenTTL())
@@ -275,7 +281,7 @@ func main() {
 	searchHandler := searchAPI.NewHandler(searchSvc)
 	notificationHandler := notificationAPI.NewHandler(notificationSvc)
 
-	r := httpserver.NewRouter(callHandler, callFolderHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, analyticsHandler, monitoringHandler, searchHandler, notificationHandler, healthHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, callFolderHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, analyticsHandler, monitoringHandler, searchHandler, notificationHandler, adminHandler, healthHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

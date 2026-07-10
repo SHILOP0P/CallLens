@@ -28,6 +28,7 @@ func TestNewRouterRegistersPublicAndProtectedRoutes(t *testing.T) {
 		apiMocks.NewMonitoringAPI(t),
 		stubSearchAPI{},
 		stubNotificationAPI{},
+		stubAdminAPI{},
 		nil,
 		"test-secret",
 		repositoryMocks.NewRefreshSessionRepository(t),
@@ -45,6 +46,10 @@ func TestNewRouterRegistersPublicAndProtectedRoutes(t *testing.T) {
 	protectedRecorder := httptest.NewRecorder()
 	router.ServeHTTP(protectedRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/calls", nil))
 	require.Equal(t, http.StatusUnauthorized, protectedRecorder.Code)
+
+	adminRecorder := httptest.NewRecorder()
+	router.ServeHTTP(adminRecorder, httptest.NewRequest(http.MethodGet, "/api/v1/admin/capabilities", nil))
+	require.Equal(t, http.StatusUnauthorized, adminRecorder.Code)
 
 	notFoundRecorder := httptest.NewRecorder()
 	router.ServeHTTP(notFoundRecorder, httptest.NewRequest(http.MethodGet, "/missing", nil))
@@ -71,3 +76,7 @@ type stubNotificationAPI struct{}
 func (stubNotificationAPI) List(w http.ResponseWriter, r *http.Request)        {}
 func (stubNotificationAPI) MarkRead(w http.ResponseWriter, r *http.Request)    {}
 func (stubNotificationAPI) MarkAllRead(w http.ResponseWriter, r *http.Request) {}
+
+type stubAdminAPI struct{}
+
+func (stubAdminAPI) GetCapabilities(w http.ResponseWriter, r *http.Request) {}

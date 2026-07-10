@@ -83,6 +83,11 @@ type AuthService interface {
 	UpdatePreferences(ctx context.Context, input models.UpdateUserPreferencesInput) (models.UserPreferences, error)
 }
 
+type AdminService interface {
+	GetCapabilities(ctx context.Context, role models.UserRole) (models.AdminCapabilities, error)
+	RecordAudit(ctx context.Context, input models.CreateAdminAuditLogInput) (models.AdminAuditLog, error)
+}
+
 type CompanyService interface {
 	CreateCompany(ctx context.Context, input models.CreateCompanyInput) (models.Company, error)
 	UpdateCompany(ctx context.Context, input models.UpdateCompanyInput) (models.Company, error)

@@ -72,6 +72,10 @@ type UserPreferencesRepository interface {
 	Upsert(ctx context.Context, input models.UpdateUserPreferencesInput) (models.UserPreferences, error)
 }
 
+type AdminRepository interface {
+	CreateAdminAuditLog(ctx context.Context, audit models.AdminAuditLog) (models.AdminAuditLog, error)
+}
+
 type CompanyRepository interface {
 	CreateCompany(ctx context.Context, company models.Company, member models.CompanyMember) (models.Company, error)
 	UpdateCompany(ctx context.Context, companyID uuid.UUID, name string) (models.Company, error)

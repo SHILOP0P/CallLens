@@ -66,6 +66,7 @@ func TruncateTables(t *testing.T, db *sql.DB) {
 
 	query := `
 	TRUNCATE TABLE
+	    admin_audit_logs,
 	    notifications,
 	    usage_counters,
 	    subscriptions,

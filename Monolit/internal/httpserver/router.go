@@ -8,13 +8,14 @@ import (
 	"calllens/monolit/internal/API/health"
 	authMiddleware "calllens/monolit/internal/httpserver/middleware"
 	"calllens/monolit/internal/logger"
+	"calllens/monolit/internal/models"
 	"calllens/monolit/internal/repository"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, reportAPI API.ReportAPI, billingAPI API.BillingAPI, invitationAPI API.InvitationAPI, analyticsAPI API.AnalyticsAPI, monitoringAPI API.MonitoringAPI, searchAPI API.SearchAPI, notificationAPI API.NotificationAPI, healthHandler *health.Handler, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
+func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, reportAPI API.ReportAPI, billingAPI API.BillingAPI, invitationAPI API.InvitationAPI, analyticsAPI API.AnalyticsAPI, monitoringAPI API.MonitoringAPI, searchAPI API.SearchAPI, notificationAPI API.NotificationAPI, adminAPI API.AdminAPI, healthHandler *health.Handler, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	authGuard := authMiddleware.Auth(jwtSecret, refreshSessionRepository)
@@ -37,6 +38,13 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Timeout(10 * time.Second))
+
+			// ADMIN
+			r.Route("/admin", func(r chi.Router) {
+				r.Use(authGuard)
+				r.Use(authMiddleware.RequirePermission(models.AdminPermissionPanelAccess))
+				r.Get("/capabilities", adminAPI.GetCapabilities)
+			})
 
 			//CALL
 			//POST

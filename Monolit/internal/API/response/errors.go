@@ -31,6 +31,7 @@ const (
 	CodeFailedToListDepartments          = "failed_to_list_departments"
 	CodeFailedToConvertDepartment        = "failed_to_convert_department"
 	CodeForbidden                        = "forbidden"
+	CodeFailedToGetAdminCapabilities     = "failed_to_get_admin_capabilities"
 	CodeRefreshSessionNotFound           = "refresh_session_not_found"
 	CodeFailedToRegisterUser             = "failed_to_register_user"
 	CodeFailedToLogin                    = "failed_to_login"
