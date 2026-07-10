@@ -144,7 +144,9 @@ type Service struct {
 
 func (s *Service) SetCallReader(reader interface {
 	GetByUUIDForProcessing(context.Context, uuid.UUID) (models.Call, error)
-})                                                                   { s.callReader = reader }
+}) {
+	s.callReader = reader
+}
 func (s *Service) SetAudioStorage(audioStorage storage.AudioStorage) { s.audioStorage = audioStorage }
 func (s *Service) GetCall(ctx context.Context, id uuid.UUID) (models.Call, error) {
 	if s.callReader == nil || id == uuid.Nil {
