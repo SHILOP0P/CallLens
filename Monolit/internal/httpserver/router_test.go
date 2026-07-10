@@ -94,3 +94,5 @@ func (stubAdminAPI) GrantPersonalSubscription(w http.ResponseWriter, r *http.Req
 func (stubAdminAPI) GrantCompanySubscription(w http.ResponseWriter, r *http.Request)   {}
 func (stubAdminAPI) CancelPersonalSubscription(w http.ResponseWriter, r *http.Request) {}
 func (stubAdminAPI) CancelCompanySubscription(w http.ResponseWriter, r *http.Request)  {}
+func (stubAdminAPI) GetCall(w http.ResponseWriter, r *http.Request)                    {}
+func (stubAdminAPI) GetCallAudio(w http.ResponseWriter, r *http.Request)               {}

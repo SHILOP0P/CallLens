@@ -128,6 +128,12 @@ func (s *adminServiceStub) GrantSubscription(context.Context, models.GrantAdminS
 func (s *adminServiceStub) CancelSubscription(context.Context, models.CancelAdminSubscriptionInput) (models.AdminSubscription, error) {
 	return models.AdminSubscription{}, s.err
 }
+func (s *adminServiceStub) GetCall(context.Context, uuid.UUID) (models.Call, error) {
+	return models.Call{}, s.err
+}
+func (s *adminServiceStub) GetCallAudio(context.Context, uuid.UUID) (models.File, error) {
+	return models.File{}, s.err
+}
 
 func requireErrorCode(t *testing.T, rec *httptest.ResponseRecorder, code string) {
 	t.Helper()

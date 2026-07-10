@@ -58,6 +58,8 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsManage)).Post("/companies/{company_uuid}/subscription/grant", adminAPI.GrantCompanySubscription)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsManage)).Post("/users/{user_uuid}/subscription/cancel", adminAPI.CancelPersonalSubscription)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsManage)).Post("/companies/{company_uuid}/subscription/cancel", adminAPI.CancelCompanySubscription)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionCallsRead)).Get("/calls/{call_uuid}", adminAPI.GetCall)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionCallsRead)).Get("/calls/{call_uuid}/audio", adminAPI.GetCallAudio)
 			})
 
 			//CALL

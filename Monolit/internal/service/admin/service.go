@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"calllens/monolit/internal/models"
+	"calllens/monolit/internal/storage"
 
 	"github.com/google/uuid"
 )
@@ -135,6 +136,35 @@ func (s *Service) validateSessionMutation(ctx context.Context, input models.Admi
 type Service struct {
 	auditRepository AuditRepository
 	now             func() time.Time
+	callReader      interface {
+		GetByUUIDForProcessing(context.Context, uuid.UUID) (models.Call, error)
+	}
+	audioStorage storage.AudioStorage
+}
+
+func (s *Service) SetCallReader(reader interface {
+	GetByUUIDForProcessing(context.Context, uuid.UUID) (models.Call, error)
+})                                                                   { s.callReader = reader }
+func (s *Service) SetAudioStorage(audioStorage storage.AudioStorage) { s.audioStorage = audioStorage }
+func (s *Service) GetCall(ctx context.Context, id uuid.UUID) (models.Call, error) {
+	if s.callReader == nil || id == uuid.Nil {
+		return models.Call{}, models.ErrInvalidAdminInput
+	}
+	return s.callReader.GetByUUIDForProcessing(ctx, id)
+}
+func (s *Service) GetCallAudio(ctx context.Context, id uuid.UUID) (models.File, error) {
+	call, err := s.GetCall(ctx, id)
+	if err != nil {
+		return models.File{}, err
+	}
+	if s.audioStorage == nil {
+		return models.File{}, errAuditRepositoryNotConfigured
+	}
+	content, err := s.audioStorage.OpenReadSeeker(ctx, call.AudioPath)
+	if err != nil {
+		return models.File{}, err
+	}
+	return models.File{Content: content, ReadSeeker: content, Path: call.AudioPath, OriginalFilename: call.OriginalFilename, MimeType: call.MimeType, SizeBytes: call.SizeBytes}, nil
 }
 
 func NewService(auditRepository AuditRepository) *Service {

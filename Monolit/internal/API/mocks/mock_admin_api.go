@@ -123,6 +123,74 @@ func (_c *AdminAPI_ChangeUserRole_Call) RunAndReturn(run func(http.ResponseWrite
 	return _c
 }
 
+// GetCall provides a mock function with given fields: w, r
+func (_m *AdminAPI) GetCall(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_GetCall_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCall'
+type AdminAPI_GetCall_Call struct {
+	*mock.Call
+}
+
+// GetCall is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) GetCall(w interface{}, r interface{}) *AdminAPI_GetCall_Call {
+	return &AdminAPI_GetCall_Call{Call: _e.mock.On("GetCall", w, r)}
+}
+
+func (_c *AdminAPI_GetCall_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_GetCall_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_GetCall_Call) Return() *AdminAPI_GetCall_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_GetCall_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_GetCall_Call {
+	_c.Run(run)
+	return _c
+}
+
+// GetCallAudio provides a mock function with given fields: w, r
+func (_m *AdminAPI) GetCallAudio(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_GetCallAudio_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCallAudio'
+type AdminAPI_GetCallAudio_Call struct {
+	*mock.Call
+}
+
+// GetCallAudio is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) GetCallAudio(w interface{}, r interface{}) *AdminAPI_GetCallAudio_Call {
+	return &AdminAPI_GetCallAudio_Call{Call: _e.mock.On("GetCallAudio", w, r)}
+}
+
+func (_c *AdminAPI_GetCallAudio_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_GetCallAudio_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_GetCallAudio_Call) Return() *AdminAPI_GetCallAudio_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_GetCallAudio_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_GetCallAudio_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetCapabilities provides a mock function with given fields: w, r
 func (_m *AdminAPI) GetCapabilities(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)

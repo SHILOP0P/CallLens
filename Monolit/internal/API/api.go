@@ -92,6 +92,8 @@ type AdminAPI interface {
 	GrantCompanySubscription(w http.ResponseWriter, r *http.Request)
 	CancelPersonalSubscription(w http.ResponseWriter, r *http.Request)
 	CancelCompanySubscription(w http.ResponseWriter, r *http.Request)
+	GetCall(w http.ResponseWriter, r *http.Request)
+	GetCallAudio(w http.ResponseWriter, r *http.Request)
 }
 
 type CompanyAPI interface {

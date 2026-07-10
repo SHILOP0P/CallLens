@@ -98,6 +98,8 @@ type AdminService interface {
 	GetCompanySubscription(ctx context.Context, companyID uuid.UUID) (models.AdminSubscription, error)
 	GrantSubscription(ctx context.Context, input models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)
 	CancelSubscription(ctx context.Context, input models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)
+	GetCall(ctx context.Context, id uuid.UUID) (models.Call, error)
+	GetCallAudio(ctx context.Context, id uuid.UUID) (models.File, error)
 }
 
 type CompanyService interface {

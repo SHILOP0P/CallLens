@@ -239,6 +239,8 @@ func main() {
 	authSvc.SetPreferencesRepository(userPreferencesRepository)
 	authSvc.SetAvatarStorage(avatarsStorage)
 	adminSvc := adminService.NewService(adminRepository)
+	adminSvc.SetCallReader(callRepository)
+	adminSvc.SetAudioStorage(audioStorage)
 	companySvc := companyService.NewService(companyRepository, appLogger)
 	departmentSvc := departmentService.NewService(companyRepository, departmentRepository, appLogger)
 	invitationSvc := invitationService.NewService(invitationRepository, userRepository, companyRepository, departmentRepository, appLogger)
