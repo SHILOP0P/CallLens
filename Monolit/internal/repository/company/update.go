@@ -12,6 +12,7 @@ import (
 	"calllens/monolit/internal/repository/scaner"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func (r *Repository) UpdateCompany(ctx context.Context, companyID uuid.UUID, name string) (model.Company, error) {
@@ -22,6 +23,7 @@ func (r *Repository) UpdateCompany(ctx context.Context, companyID uuid.UUID, nam
 	  AND deleted_at IS NULL
 	RETURNING company_uuid,
 	          name,
+	          tag,
 	          manager_user_uuid,
 	          member_limit,
 	          created_at,
@@ -41,6 +43,25 @@ func (r *Repository) UpdateCompany(ctx context.Context, companyID uuid.UUID, nam
 	}
 
 	return converter.RepoCompanyToModel(repoCompany)
+}
+
+func (r *Repository) UpdateCompanyTag(ctx context.Context, companyID uuid.UUID, tag string) (model.Company, error) {
+	row := r.db.QueryRowContext(ctx, `
+		UPDATE companies SET tag=$2
+		WHERE company_uuid=$1 AND deleted_at IS NULL
+		RETURNING company_uuid,name,tag,manager_user_uuid,member_limit,created_at,deleted_at`, companyID, tag)
+	company, err := scaner.ScanCompany(row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return model.Company{}, model.ErrCompanyNotFound
+	}
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return model.Company{}, model.ErrCompanyTagAlreadyExists
+		}
+		return model.Company{}, fmt.Errorf("update company tag: %w", err)
+	}
+	return converter.RepoCompanyToModel(company)
 }
 
 func (r *Repository) ArchiveCompany(ctx context.Context, companyID uuid.UUID) error {

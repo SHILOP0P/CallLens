@@ -18,6 +18,7 @@ func (r *Repository) GetManagedCompanyByUserUUID(ctx context.Context, userID uui
 	query := `
 	SELECT company_uuid,
 	       name,
+	       tag,
 	       manager_user_uuid,
 	       member_limit,
 	       created_at,

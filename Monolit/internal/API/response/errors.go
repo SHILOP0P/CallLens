@@ -14,6 +14,7 @@ const (
 	CodeUserNotFound                     = "user_not_found"
 	CodeCompanyNotFound                  = "company_not_found"
 	CodeInvalidCompanyInput              = "invalid_company_input"
+	CodeCompanyTagAlreadyExists          = "company_tag_already_exists"
 	CodeUserAlreadyManagesCompany        = "user_already_manages_company"
 	CodeFailedToCreateCompany            = "failed_to_create_company"
 	CodeFailedToAddCompanyMember         = "failed_to_add_company_member"

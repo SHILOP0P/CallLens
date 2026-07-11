@@ -230,6 +230,10 @@ func (_m *CompanyAPI) Update(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
 }
 
+func (_m *CompanyAPI) UpdateTag(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
 // CompanyAPI_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
 type CompanyAPI_Update_Call struct {
 	*mock.Call

@@ -11,6 +11,7 @@ func CompanyModelToAPI(company models.Company) (dto.CompanyResponse, error) {
 	return dto.CompanyResponse{
 		ID:              company.ID.String(),
 		Name:            company.Name,
+		Tag:             company.Tag,
 		ManagerUserUUID: company.ManagerUserUUID.String(),
 		MemberLimit:     company.MemberLimit,
 		CreatedAt:       company.CreatedAt.Format(time.RFC3339),

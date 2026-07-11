@@ -48,6 +48,7 @@ var ErrAdminSessionManagementForbidden = errors.New("admin session management is
 // COMPANY
 var ErrCompanyNotFound = errors.New("company not found")
 var ErrInvalidCompanyInput = errors.New("invalid company input")
+var ErrCompanyTagAlreadyExists = errors.New("company tag already exists")
 var ErrUserAlreadyManagesCompany = errors.New("user already manages company")
 var ErrLastCompanyManager = errors.New("last company manager cannot be removed")
 

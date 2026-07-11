@@ -106,6 +106,7 @@ type AdminService interface {
 type CompanyService interface {
 	CreateCompany(ctx context.Context, input models.CreateCompanyInput) (models.Company, error)
 	UpdateCompany(ctx context.Context, input models.UpdateCompanyInput) (models.Company, error)
+	UpdateCompanyTag(ctx context.Context, input models.UpdateCompanyTagInput) (models.Company, error)
 	DeleteCompany(ctx context.Context, input models.DeleteCompanyInput) error
 	AddCompanyMember(ctx context.Context, input models.AddCompanyMemberInput) (models.CompanyMember, error)
 	UpdateCompanyMemberRole(ctx context.Context, input models.UpdateCompanyMemberRoleInput) (models.CompanyMember, error)

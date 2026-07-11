@@ -618,6 +618,23 @@ func (_m *CompanyRepository) UpdateCompany(ctx context.Context, companyID uuid.U
 	return r0, r1
 }
 
+func (_m *CompanyRepository) UpdateCompanyTag(ctx context.Context, companyID uuid.UUID, tag string) (models.Company, error) {
+	ret := _m.Called(ctx, companyID, tag)
+	var r0 models.Company
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) models.Company); ok {
+		r0 = rf(ctx, companyID, tag)
+	} else if ret.Get(0) != nil {
+		r0 = ret.Get(0).(models.Company)
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, companyID, tag)
+	} else if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+	return r0, r1
+}
+
 // CompanyRepository_UpdateCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCompany'
 type CompanyRepository_UpdateCompany_Call struct {
 	*mock.Call

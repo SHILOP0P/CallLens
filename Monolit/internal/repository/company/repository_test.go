@@ -65,6 +65,7 @@ func (s *RepositorySuite) TestCreateCompanyCreatesManagerMember() {
 
 	s.Require().Equal("CallLens", company.Name)
 	s.Require().Equal(manager.ID, company.ManagerUserUUID)
+	s.Require().Equal("@"+company.ID.String(), company.Tag)
 
 	gotCompany, err := s.repository.GetManagedCompanyByUserUUID(s.ctx, manager.ID)
 	s.Require().NoError(err)
@@ -74,6 +75,13 @@ func (s *RepositorySuite) TestCreateCompanyCreatesManagerMember() {
 	s.Require().NoError(err)
 	s.Require().Equal(models.CompanyMemberRoleManager, member.Role)
 	s.Require().Equal(models.MembershipStatusActive, member.Status)
+}
+
+func (s *RepositorySuite) TestUpdateCompanyTag() {
+	company, _ := s.createCompanyWithManager()
+	updated, err := s.repository.UpdateCompanyTag(s.ctx, company.ID, "@calllens_team")
+	s.Require().NoError(err)
+	s.Require().Equal("@calllens_team", updated.Tag)
 }
 
 func (s *RepositorySuite) TestCreateCompanyAllowsSecondManagedCompanyForSameUser() {

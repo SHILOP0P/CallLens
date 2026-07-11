@@ -147,6 +147,7 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 			r.With(authGuard).Get("/companies", companyAPI.List)
 			r.With(authGuard).Get("/companies/{uuid}", companyAPI.GetByUUID)
 			r.With(authGuard).Patch("/companies/{uuid}", companyAPI.Update)
+			r.With(authGuard).Patch("/companies/{uuid}/tag", companyAPI.UpdateTag)
 			r.With(authGuard).Delete("/companies/{uuid}", companyAPI.Delete)
 			r.With(authGuard).Get("/companies/{uuid}/members", companyAPI.GetCompanyMembersOverview)
 			r.With(authGuard).Post("/companies/{uuid}/members", companyAPI.AddCompanyMember)

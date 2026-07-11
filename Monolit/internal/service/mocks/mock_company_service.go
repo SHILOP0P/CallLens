@@ -445,6 +445,23 @@ func (_m *CompanyService) UpdateCompany(ctx context.Context, input models.Update
 	return r0, r1
 }
 
+func (_m *CompanyService) UpdateCompanyTag(ctx context.Context, input models.UpdateCompanyTagInput) (models.Company, error) {
+	ret := _m.Called(ctx, input)
+	var r0 models.Company
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateCompanyTagInput) models.Company); ok {
+		r0 = rf(ctx, input)
+	} else if ret.Get(0) != nil {
+		r0 = ret.Get(0).(models.Company)
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateCompanyTagInput) error); ok {
+		r1 = rf(ctx, input)
+	} else if ret.Get(1) != nil {
+		r1 = ret.Get(1).(error)
+	}
+	return r0, r1
+}
+
 // CompanyService_UpdateCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCompany'
 type CompanyService_UpdateCompany_Call struct {
 	*mock.Call

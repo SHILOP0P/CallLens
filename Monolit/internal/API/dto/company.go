@@ -7,10 +7,14 @@ type CreateCompanyRequest struct {
 type UpdateCompanyRequest struct {
 	Name string `json:"name"`
 }
+type UpdateCompanyTagRequest struct {
+	Tag string `json:"tag"`
+}
 
 type CompanyResponse struct {
 	ID              string `json:"id"`
 	Name            string `json:"name"`
+	Tag             string `json:"tag"`
 	ManagerUserUUID string `json:"manager_user_uuid"`
 	MemberLimit     int    `json:"member_limit"`
 	CreatedAt       string `json:"created_at"`

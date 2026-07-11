@@ -40,6 +40,21 @@ func (s *ServiceSuite) TestUpdateCompanyRejectsEmptyName() {
 	s.Require().ErrorIs(err, models.ErrInvalidCompanyInput)
 }
 
+func (s *ServiceSuite) TestUpdateCompanyTagRequiresManagerAndNormalizesTag() {
+	companyID := uuid.New()
+	managerID := uuid.New()
+	s.repository.EXPECT().
+		GetCompanyMember(mock.Anything, companyID, managerID).
+		Return(models.CompanyMember{CompanyUUID: companyID, UserUUID: managerID, Role: models.CompanyMemberRoleManager, Status: models.MembershipStatusActive}, nil).
+		Once()
+	s.repository.On("UpdateCompanyTag", mock.Anything, companyID, "@calllens_team").
+		Return(models.Company{ID: companyID, Tag: "@calllens_team"}, nil).Once()
+
+	updated, err := s.service.UpdateCompanyTag(s.ctx, models.UpdateCompanyTagInput{CompanyUUID: companyID, RequestUser: managerID, Tag: " CallLens Team "})
+	s.Require().NoError(err)
+	s.Require().Equal("@calllens_team", updated.Tag)
+}
+
 func (s *ServiceSuite) TestDeleteCompanySuccess() {
 	companyID := uuid.New()
 	managerID := uuid.New()

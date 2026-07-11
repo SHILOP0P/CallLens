@@ -52,6 +52,35 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	_ = response.WriteJSON(w, http.StatusOK, resp)
 }
 
+func (h *Handler) UpdateTag(w http.ResponseWriter, r *http.Request) {
+	userID, ok := userIDFromRequest(r)
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+	companyID, err := uuid.Parse(chi.URLParam(r, "uuid"))
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCompanyInput, "invalid company uuid")
+		return
+	}
+	var req dto.UpdateCompanyTagRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidCompanyInput, "invalid request body")
+		return
+	}
+	company, err := h.service.UpdateCompanyTag(r.Context(), models.UpdateCompanyTagInput{CompanyUUID: companyID, RequestUser: userID, Tag: req.Tag})
+	if err != nil {
+		writeCompanyError(w, err, response.CodeFailedToConvertCompany, "failed to update company tag")
+		return
+	}
+	resp, err := converter.CompanyModelToAPI(company)
+	if err != nil {
+		response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertCompany, "failed to convert company")
+		return
+	}
+	_ = response.WriteJSON(w, http.StatusOK, resp)
+}
+
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	userID, ok := userIDFromRequest(r)
 	if !ok {
@@ -84,6 +113,10 @@ func writeCompanyError(w http.ResponseWriter, err error, code string, message st
 	}
 	if errors.Is(err, models.ErrCompanyNotFound) {
 		response.WriteError(w, http.StatusNotFound, response.CodeCompanyNotFound, "company not found")
+		return
+	}
+	if errors.Is(err, models.ErrCompanyTagAlreadyExists) {
+		response.WriteError(w, http.StatusConflict, response.CodeCompanyTagAlreadyExists, "company tag already exists")
 		return
 	}
 	if errors.Is(err, models.ErrForbidden) {

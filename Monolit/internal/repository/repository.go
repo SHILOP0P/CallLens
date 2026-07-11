@@ -91,6 +91,7 @@ type AdminRepository interface {
 type CompanyRepository interface {
 	CreateCompany(ctx context.Context, company models.Company, member models.CompanyMember) (models.Company, error)
 	UpdateCompany(ctx context.Context, companyID uuid.UUID, name string) (models.Company, error)
+	UpdateCompanyTag(ctx context.Context, companyID uuid.UUID, tag string) (models.Company, error)
 	ArchiveCompany(ctx context.Context, companyID uuid.UUID) error
 	AddCompanyMember(ctx context.Context, member models.CompanyMember) (models.CompanyMember, error)
 	UpdateCompanyMemberRole(ctx context.Context, companyID uuid.UUID, userID uuid.UUID, role models.CompanyMemberRole) (models.CompanyMember, error)

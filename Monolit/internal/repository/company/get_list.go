@@ -16,6 +16,7 @@ func (r *Repository) ListUserCompanies(ctx context.Context, userID uuid.UUID) ([
 	query := `
 	SELECT c.company_uuid,
 	       c.name,
+	       c.tag,
 	       c.manager_user_uuid,
 	       c.member_limit,
 	       c.created_at,

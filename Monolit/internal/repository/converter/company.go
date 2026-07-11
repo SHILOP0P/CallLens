@@ -9,6 +9,7 @@ func RepoCompanyToModel(repoCompany repoModel.Company) (model.Company, error) {
 	return model.Company{
 		ID:              repoCompany.ID,
 		Name:            repoCompany.Name,
+		Tag:             repoCompany.Tag,
 		ManagerUserUUID: repoCompany.ManagerUserUUID,
 		MemberLimit:     repoCompany.MemberLimit,
 		CreatedAt:       repoCompany.CreatedAt,
@@ -29,6 +30,7 @@ func ModelCompanyToRepoCompany(modelCompany model.Company) (repoModel.Company, e
 	return repoModel.Company{
 		ID:              modelCompany.ID,
 		Name:            modelCompany.Name,
+		Tag:             modelCompany.Tag,
 		ManagerUserUUID: modelCompany.ManagerUserUUID,
 		MemberLimit:     modelCompany.MemberLimit,
 		CreatedAt:       modelCompany.CreatedAt,

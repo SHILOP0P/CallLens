@@ -242,9 +242,10 @@ func (s *RepositorySuite) createCompany(ownerID uuid.UUID) uuid.UUID {
 	companyID := uuid.New()
 	_, err := s.db.ExecContext(
 		s.ctx,
-		`INSERT INTO companies (company_uuid, name, manager_user_uuid, member_limit, created_at)
-		 VALUES ($1, 'CallLens', $2, 25, $3)`,
+		`INSERT INTO companies (company_uuid, name, tag, manager_user_uuid, member_limit, created_at)
+		 VALUES ($1, 'CallLens', $2, $3, 25, $4)`,
 		companyID,
+		"@"+companyID.String(),
 		ownerID,
 		time.Now().UTC(),
 	)

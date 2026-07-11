@@ -39,9 +39,9 @@ func TestGetMonitoringAggregatesQueueAndLastFailures(t *testing.T) {
 	`, managerID, now)
 	require.NoError(t, err)
 	_, err = db.ExecContext(ctx, `
-		INSERT INTO companies (company_uuid, name, manager_user_uuid, member_limit, created_at)
-		VALUES ($1, 'CallLens', $2, 5, $3)
-	`, companyID, managerID, now)
+		INSERT INTO companies (company_uuid, name, tag, manager_user_uuid, member_limit, created_at)
+		VALUES ($1, 'CallLens', $2, $3, 5, $4)
+	`, companyID, "@"+companyID.String(), managerID, now)
 	require.NoError(t, err)
 	_, err = db.ExecContext(ctx, `
 		INSERT INTO company_members (company_uuid, user_uuid, role, status, created_at)

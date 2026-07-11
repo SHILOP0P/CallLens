@@ -310,6 +310,10 @@ func (f *serviceFixture) UpdateCompany(ctx context.Context, companyID uuid.UUID,
 	return models.Company{ID: companyID, Name: name}, nil
 }
 
+func (f *serviceFixture) UpdateCompanyTag(ctx context.Context, companyID uuid.UUID, tag string) (models.Company, error) {
+	return models.Company{ID: companyID, Tag: tag}, nil
+}
+
 func (f *serviceFixture) ArchiveCompany(ctx context.Context, companyID uuid.UUID) error {
 	return nil
 }

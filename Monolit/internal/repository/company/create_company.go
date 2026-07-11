@@ -11,6 +11,9 @@ import (
 )
 
 func (r *Repository) CreateCompany(ctx context.Context, company model.Company, member model.CompanyMember) (model.Company, error) {
+	if company.Tag == "" {
+		company.Tag = "@" + company.ID.String()
+	}
 	repoCompany, err := converter.ModelCompanyToRepoCompany(company)
 	if err != nil {
 		return model.Company{}, fmt.Errorf("convert company: %w", err)
@@ -31,13 +34,15 @@ func (r *Repository) CreateCompany(ctx context.Context, company model.Company, m
 	INSERT INTO companies (
 		company_uuid,
 		name,
+		tag,
 		manager_user_uuid,
 		member_limit,
 		created_at
 	)
-	VALUES ($1, $2, $3, $4, $5)
+	VALUES ($1, $2, $3, $4, $5, $6)
 	RETURNING company_uuid,
 	          name,
+	          tag,
 	          manager_user_uuid,
 	          member_limit,
 	          created_at,
@@ -49,6 +54,7 @@ func (r *Repository) CreateCompany(ctx context.Context, company model.Company, m
 		createCompanyQuery,
 		repoCompany.ID,
 		repoCompany.Name,
+		repoCompany.Tag,
 		repoCompany.ManagerUserUUID,
 		repoCompany.MemberLimit,
 		repoCompany.CreatedAt,

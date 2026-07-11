@@ -9,6 +9,7 @@ import (
 type Company struct {
 	ID              uuid.UUID
 	Name            string
+	Tag             string
 	ManagerUserUUID uuid.UUID
 	MemberLimit     int
 	CreatedAt       time.Time

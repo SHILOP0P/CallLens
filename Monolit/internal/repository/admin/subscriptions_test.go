@@ -15,8 +15,8 @@ func (s *RepositorySuite) TestListAndGetAdminCompanies() {
 	companyID := uuid.New()
 	createdAt := time.Now().UTC().Truncate(time.Microsecond)
 	_, err := s.db.ExecContext(s.ctx, `
-		INSERT INTO companies (company_uuid, name, manager_user_uuid, member_limit, created_at)
-		VALUES ($1, $2, $3, $4, $5)`, companyID, "CallLens", manager.ID, 10, createdAt)
+		INSERT INTO companies (company_uuid, name, tag, manager_user_uuid, member_limit, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)`, companyID, "CallLens", "@"+companyID.String(), manager.ID, 10, createdAt)
 	s.Require().NoError(err)
 
 	listed, err := s.repository.ListAdminCompanies(s.ctx, models.ListAdminCompaniesInput{Query: "call", Limit: 50})

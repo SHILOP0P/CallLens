@@ -8,6 +8,7 @@ func ScanCompany(row rowScanner) (repoModel.Company, error) {
 	err := row.Scan(
 		&company.ID,
 		&company.Name,
+		&company.Tag,
 		&company.ManagerUserUUID,
 		&company.MemberLimit,
 		&company.CreatedAt,

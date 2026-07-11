@@ -9,6 +9,7 @@ import (
 type Company struct {
 	ID              uuid.UUID
 	Name            string
+	Tag             string
 	ManagerUserUUID uuid.UUID
 	MemberLimit     int
 	CreatedAt       time.Time
@@ -71,6 +72,12 @@ type UpdateCompanyInput struct {
 	CompanyUUID uuid.UUID
 	RequestUser uuid.UUID
 	Name        string
+}
+
+type UpdateCompanyTagInput struct {
+	CompanyUUID uuid.UUID
+	RequestUser uuid.UUID
+	Tag         string
 }
 
 type DeleteCompanyInput struct {

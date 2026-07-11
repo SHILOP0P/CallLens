@@ -28,6 +28,7 @@ func (s *Service) CreateCompany(ctx context.Context, input models.CreateCompanyI
 	company := models.Company{
 		ID:              companyID,
 		Name:            name,
+		Tag:             "@" + companyID.String(),
 		ManagerUserUUID: input.ManagerUserID,
 		MemberLimit:     defaultMemberLimit,
 		CreatedAt:       now,
