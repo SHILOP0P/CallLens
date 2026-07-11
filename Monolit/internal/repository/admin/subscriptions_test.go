@@ -6,7 +6,31 @@ import (
 	"time"
 
 	"calllens/monolit/internal/models"
+
+	"github.com/google/uuid"
 )
+
+func (s *RepositorySuite) TestListAndGetAdminCompanies() {
+	manager := s.createUser(models.UserRoleUser)
+	companyID := uuid.New()
+	createdAt := time.Now().UTC().Truncate(time.Microsecond)
+	_, err := s.db.ExecContext(s.ctx, `
+		INSERT INTO companies (company_uuid, name, manager_user_uuid, member_limit, created_at)
+		VALUES ($1, $2, $3, $4, $5)`, companyID, "CallLens", manager.ID, 10, createdAt)
+	s.Require().NoError(err)
+
+	listed, err := s.repository.ListAdminCompanies(s.ctx, models.ListAdminCompaniesInput{Query: "call", Limit: 50})
+	s.Require().NoError(err)
+	s.Require().Equal(1, listed.Total)
+	s.Require().Len(listed.Companies, 1)
+	s.Require().Equal(companyID, listed.Companies[0].ID)
+	s.Require().Equal(manager.ID, listed.Companies[0].ManagerUserUUID)
+
+	company, err := s.repository.GetAdminCompanyByUUID(s.ctx, companyID)
+	s.Require().NoError(err)
+	s.Require().Equal(companyID, company.ID)
+	s.Require().Equal(manager.ID, company.ManagerUserUUID)
+}
 
 func (s *RepositorySuite) TestGrantExtendAndCancelPersonalSubscription() {
 	actor := s.createUser(models.UserRoleAdmin)
