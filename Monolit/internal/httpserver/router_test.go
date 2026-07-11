@@ -82,6 +82,7 @@ type stubAdminAPI struct{}
 func (stubAdminAPI) GetCapabilities(w http.ResponseWriter, r *http.Request)            {}
 func (stubAdminAPI) ListUsers(w http.ResponseWriter, r *http.Request)                  {}
 func (stubAdminAPI) GetUser(w http.ResponseWriter, r *http.Request)                    {}
+func (stubAdminAPI) ListUserCalls(w http.ResponseWriter, r *http.Request)              {}
 func (stubAdminAPI) UpdateUserProfile(w http.ResponseWriter, r *http.Request)          {}
 func (stubAdminAPI) ChangeUserRole(w http.ResponseWriter, r *http.Request)             {}
 func (stubAdminAPI) ListUserSessions(w http.ResponseWriter, r *http.Request)           {}

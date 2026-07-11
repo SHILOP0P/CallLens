@@ -11,6 +11,7 @@ import (
 
 	"calllens/monolit/internal/API/dto"
 	"calllens/monolit/internal/API/response"
+	"calllens/monolit/internal/converter"
 	"calllens/monolit/internal/httpserver/middleware"
 	"calllens/monolit/internal/models"
 
@@ -47,6 +48,44 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = response.WriteJSON(w, http.StatusOK, adminUserResponse(user))
+}
+func (h *Handler) ListUserCalls(w http.ResponseWriter, r *http.Request) {
+	userID, ok := adminUserID(w, r)
+	if !ok {
+		return
+	}
+	limit, offset := 50, 0
+	var err error
+	if raw := r.URL.Query().Get("limit"); raw != "" {
+		limit, err = strconv.Atoi(raw)
+		if err != nil {
+			response.WriteError(w, http.StatusBadRequest, response.CodeInvalidAdminInput, "invalid pagination")
+			return
+		}
+	}
+	if raw := r.URL.Query().Get("offset"); raw != "" {
+		offset, err = strconv.Atoi(raw)
+		if err != nil {
+			response.WriteError(w, http.StatusBadRequest, response.CodeInvalidAdminInput, "invalid pagination")
+			return
+		}
+	}
+	result, err := h.service.ListUserCalls(r.Context(), userID, limit, offset)
+	if err != nil {
+		writeAdminError(w, err, response.CodeFailedToGetAdminUser, "failed to list user calls")
+		return
+	}
+	items := make([]dto.CallResponse, 0, len(result.Items))
+	for _, call := range result.Items {
+		item, err := converter.CallModelToAPI(call)
+		if err != nil {
+			response.WriteError(w, http.StatusInternalServerError, response.CodeFailedToConvertCall, "failed to convert call")
+			return
+		}
+		item.AudioURL = "/api/v1/admin/calls/" + call.ID.String() + "/audio"
+		items = append(items, item)
+	}
+	_ = response.WriteJSON(w, http.StatusOK, dto.CallsListResponse{Items: items, Total: result.Total, Limit: result.Limit, Offset: result.Offset})
 }
 func (h *Handler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 	actor, ok := middleware.UserIDFromContext(r.Context())

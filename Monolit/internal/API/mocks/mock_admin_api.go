@@ -336,6 +336,10 @@ func (_m *AdminAPI) GetUser(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
 }
 
+func (_m *AdminAPI) ListUserCalls(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
 // AdminAPI_GetUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUser'
 type AdminAPI_GetUser_Call struct {
 	*mock.Call

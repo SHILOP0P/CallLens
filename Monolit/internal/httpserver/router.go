@@ -46,6 +46,7 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 				r.Get("/capabilities", adminAPI.GetCapabilities)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionUsersRead)).Get("/users", adminAPI.ListUsers)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionUsersRead)).Get("/users/{user_uuid}", adminAPI.GetUser)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionCallsRead)).Get("/users/{user_uuid}/calls", adminAPI.ListUserCalls)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionUsersManage)).Patch("/users/{user_uuid}/profile", adminAPI.UpdateUserProfile)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionRolesManageHelpers)).Patch("/users/{user_uuid}/role", adminAPI.ChangeUserRole)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionSessionsRead)).Get("/users/{user_uuid}/sessions", adminAPI.ListUserSessions)

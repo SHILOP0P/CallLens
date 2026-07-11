@@ -167,12 +167,14 @@ type Service struct {
 	now             func() time.Time
 	callReader      interface {
 		GetByUUIDForProcessing(context.Context, uuid.UUID) (models.Call, error)
+		ListFiltered(context.Context, models.ListCallsInput) (models.ListCallsResult, error)
 	}
 	audioStorage storage.AudioStorage
 }
 
 func (s *Service) SetCallReader(reader interface {
 	GetByUUIDForProcessing(context.Context, uuid.UUID) (models.Call, error)
+	ListFiltered(context.Context, models.ListCallsInput) (models.ListCallsResult, error)
 }) {
 	s.callReader = reader
 }
@@ -182,6 +184,12 @@ func (s *Service) GetCall(ctx context.Context, id uuid.UUID) (models.Call, error
 		return models.Call{}, models.ErrInvalidAdminInput
 	}
 	return s.callReader.GetByUUIDForProcessing(ctx, id)
+}
+func (s *Service) ListUserCalls(ctx context.Context, userID uuid.UUID, limit int, offset int) (models.ListCallsResult, error) {
+	if s.callReader == nil || userID == uuid.Nil || limit < 1 || limit > 100 || offset < 0 {
+		return models.ListCallsResult{}, models.ErrInvalidAdminInput
+	}
+	return s.callReader.ListFiltered(ctx, models.ListCallsInput{UserID: userID, UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true}, Limit: limit, Offset: offset})
 }
 func (s *Service) GetCallAudio(ctx context.Context, id uuid.UUID) (models.File, error) {
 	call, err := s.GetCall(ctx, id)

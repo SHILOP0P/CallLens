@@ -100,6 +100,7 @@ type AdminService interface {
 	GrantSubscription(ctx context.Context, input models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)
 	CancelSubscription(ctx context.Context, input models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)
 	GetCall(ctx context.Context, id uuid.UUID) (models.Call, error)
+	ListUserCalls(ctx context.Context, userID uuid.UUID, limit int, offset int) (models.ListCallsResult, error)
 	GetCallAudio(ctx context.Context, id uuid.UUID) (models.File, error)
 }
 
