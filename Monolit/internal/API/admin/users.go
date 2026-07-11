@@ -70,6 +70,32 @@ func (h *Handler) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = response.WriteJSON(w, http.StatusOK, adminUserResponse(user))
 }
+func (h *Handler) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
+	actor, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+	target, ok := adminUserID(w, r)
+	if !ok {
+		return
+	}
+	var req dto.UpdateAdminUserProfileRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidRequestBody, "invalid request body")
+		return
+	}
+	user, err := h.service.UpdateUserProfile(r.Context(), models.UpdateAdminUserProfileInput{
+		ActorUserUUID: actor, TargetUserUUID: target, FullName: req.FullName, FullSurname: req.FullSurname,
+		Username: req.Username, Post: req.Post, Phone: req.Phone, Timezone: req.Timezone,
+		Metadata: adminMetadata(r, req.Reason),
+	})
+	if err != nil {
+		writeAdminError(w, err, response.CodeFailedToGetAdminUser, "failed to update user profile")
+		return
+	}
+	_ = response.WriteJSON(w, http.StatusOK, adminUserResponse(user))
+}
 func (h *Handler) ListUserSessions(w http.ResponseWriter, r *http.Request) {
 	actor, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {

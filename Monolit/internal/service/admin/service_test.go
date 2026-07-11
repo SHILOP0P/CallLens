@@ -24,8 +24,8 @@ func TestGetCapabilities(t *testing.T) {
 	}{
 		{name: "user denied", role: models.UserRoleUser, wantErr: models.ErrForbidden},
 		{name: "helper", role: models.UserRoleHelper, permissions: 4},
-		{name: "admin", role: models.UserRoleAdmin, permissions: 12},
-		{name: "superadmin", role: models.UserRoleSuperAdmin, permissions: 13},
+		{name: "admin", role: models.UserRoleAdmin, permissions: 13},
+		{name: "superadmin", role: models.UserRoleSuperAdmin, permissions: 14},
 	}
 
 	for _, tt := range tests {
@@ -130,6 +130,9 @@ func (r *auditRepositoryStub) ListAdminUsers(context.Context, models.ListAdminUs
 	return models.ListAdminUsersResult{}, r.err
 }
 func (r *auditRepositoryStub) GetAdminUserByUUID(context.Context, uuid.UUID) (models.AdminUser, error) {
+	return models.AdminUser{}, r.err
+}
+func (r *auditRepositoryStub) UpdateAdminUserProfile(context.Context, models.UpdateAdminUserProfileInput) (models.AdminUser, error) {
 	return models.AdminUser{}, r.err
 }
 func (r *auditRepositoryStub) ChangeAdminUserRole(context.Context, models.ChangeAdminUserRoleInput) (models.AdminUser, error) {

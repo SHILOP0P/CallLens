@@ -98,6 +98,9 @@ func (s *adminServiceStub) ListUsers(context.Context, models.ListAdminUsersInput
 func (s *adminServiceStub) GetUser(context.Context, uuid.UUID) (models.AdminUser, error) {
 	return models.AdminUser{}, s.err
 }
+func (s *adminServiceStub) UpdateUserProfile(context.Context, models.UpdateAdminUserProfileInput) (models.AdminUser, error) {
+	return models.AdminUser{}, s.err
+}
 func (s *adminServiceStub) ChangeUserRole(context.Context, models.ChangeAdminUserRoleInput) (models.AdminUser, error) {
 	return models.AdminUser{}, s.err
 }

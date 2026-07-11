@@ -10,6 +10,7 @@ import (
 
 	"calllens/monolit/internal/models"
 	"calllens/monolit/internal/storage"
+	"calllens/monolit/internal/username"
 
 	"github.com/google/uuid"
 )
@@ -20,6 +21,7 @@ type AuditRepository interface {
 	CreateAdminAuditLog(ctx context.Context, audit models.AdminAuditLog) (models.AdminAuditLog, error)
 	ListAdminUsers(ctx context.Context, input models.ListAdminUsersInput) (models.ListAdminUsersResult, error)
 	GetAdminUserByUUID(ctx context.Context, userID uuid.UUID) (models.AdminUser, error)
+	UpdateAdminUserProfile(ctx context.Context, input models.UpdateAdminUserProfileInput) (models.AdminUser, error)
 	ChangeAdminUserRole(ctx context.Context, input models.ChangeAdminUserRoleInput) (models.AdminUser, error)
 	ListAdminUserSessions(ctx context.Context, userID uuid.UUID) ([]models.AdminUserSession, error)
 	RevokeAdminUserSession(ctx context.Context, input models.AdminSessionMutationInput) error
@@ -81,6 +83,33 @@ func (s *Service) GetUser(ctx context.Context, userID uuid.UUID) (models.AdminUs
 		return models.AdminUser{}, models.ErrInvalidAdminInput
 	}
 	return s.auditRepository.GetAdminUserByUUID(ctx, userID)
+}
+
+func (s *Service) UpdateUserProfile(ctx context.Context, input models.UpdateAdminUserProfileInput) (models.AdminUser, error) {
+	if s.auditRepository == nil || input.ActorUserUUID == uuid.Nil || input.TargetUserUUID == uuid.Nil || strings.TrimSpace(input.Metadata.Reason) == "" || (input.FullName == nil && input.FullSurname == nil && input.Username == nil && input.Post == nil && input.Phone == nil && input.Timezone == nil) {
+		return models.AdminUser{}, models.ErrInvalidAdminInput
+	}
+	input.FullName = normalizeRequiredPatchString(input.FullName)
+	input.FullSurname = normalizeRequiredPatchString(input.FullSurname)
+	input.Post = normalizeOptionalString(input.Post)
+	input.Phone = normalizeOptionalString(input.Phone)
+	input.Timezone = normalizeOptionalString(input.Timezone)
+	if (input.FullName != nil && *input.FullName == "") || (input.FullSurname != nil && *input.FullSurname == "") {
+		return models.AdminUser{}, models.ErrInvalidAdminInput
+	}
+	if input.Timezone != nil {
+		if _, err := time.LoadLocation(*input.Timezone); err != nil {
+			return models.AdminUser{}, models.ErrInvalidAdminInput
+		}
+	}
+	if input.Username != nil {
+		normalized, ok := username.Normalize(*input.Username)
+		if !ok {
+			return models.AdminUser{}, models.ErrInvalidAdminInput
+		}
+		input.Username = &normalized
+	}
+	return s.auditRepository.UpdateAdminUserProfile(ctx, input)
 }
 
 func (s *Service) ChangeUserRole(ctx context.Context, input models.ChangeAdminUserRoleInput) (models.AdminUser, error) {
@@ -254,5 +283,13 @@ func normalizeOptionalString(value *string) *string {
 		return nil
 	}
 
+	return &trimmed
+}
+
+func normalizeRequiredPatchString(value *string) *string {
+	if value == nil {
+		return nil
+	}
+	trimmed := strings.TrimSpace(*value)
 	return &trimmed
 }

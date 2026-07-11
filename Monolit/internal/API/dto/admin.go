@@ -28,6 +28,15 @@ type ChangeAdminUserRoleRequest struct {
 	ExpectedRole string `json:"expected_role"`
 	Reason       string `json:"reason"`
 }
+type UpdateAdminUserProfileRequest struct {
+	FullName    *string `json:"full_name"`
+	FullSurname *string `json:"full_surname"`
+	Username    *string `json:"username"`
+	Post        *string `json:"post"`
+	Phone       *string `json:"phone"`
+	Timezone    *string `json:"timezone"`
+	Reason      string  `json:"reason"`
+}
 type AdminSessionResponse struct {
 	ID         string  `json:"id"`
 	UserAgent  *string `json:"user_agent,omitempty"`

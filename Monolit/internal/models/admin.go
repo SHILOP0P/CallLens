@@ -12,6 +12,7 @@ type AdminPermission string
 const (
 	AdminPermissionPanelAccess         AdminPermission = "admin.panel.access"
 	AdminPermissionUsersRead           AdminPermission = "admin.users.read"
+	AdminPermissionUsersManage         AdminPermission = "admin.users.manage"
 	AdminPermissionCompaniesRead       AdminPermission = "admin.companies.read"
 	AdminPermissionRolesManageHelpers  AdminPermission = "admin.roles.manage_helpers"
 	AdminPermissionRolesManageAdmins   AdminPermission = "admin.roles.manage_admins"
@@ -35,6 +36,7 @@ var adminPermissionsByRole = map[UserRole][]AdminPermission{
 	UserRoleAdmin: {
 		AdminPermissionPanelAccess,
 		AdminPermissionUsersRead,
+		AdminPermissionUsersManage,
 		AdminPermissionCompaniesRead,
 		AdminPermissionRolesManageHelpers,
 		AdminPermissionSessionsRead,
@@ -49,6 +51,7 @@ var adminPermissionsByRole = map[UserRole][]AdminPermission{
 	UserRoleSuperAdmin: {
 		AdminPermissionPanelAccess,
 		AdminPermissionUsersRead,
+		AdminPermissionUsersManage,
 		AdminPermissionCompaniesRead,
 		AdminPermissionRolesManageHelpers,
 		AdminPermissionRolesManageAdmins,
@@ -165,6 +168,18 @@ type ChangeAdminUserRoleInput struct {
 	TargetUserUUID uuid.UUID
 	ExpectedRole   UserRole
 	Role           UserRole
+	Metadata       AdminMutationMetadata
+}
+
+type UpdateAdminUserProfileInput struct {
+	ActorUserUUID  uuid.UUID
+	TargetUserUUID uuid.UUID
+	FullName       *string
+	FullSurname    *string
+	Username       *string
+	Post           *string
+	Phone          *string
+	Timezone       *string
 	Metadata       AdminMutationMetadata
 }
 

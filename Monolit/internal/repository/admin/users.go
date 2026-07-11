@@ -12,6 +12,7 @@ import (
 	"calllens/monolit/internal/models"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func (r *Repository) ListAdminUsers(ctx context.Context, input models.ListAdminUsersInput) (models.ListAdminUsersResult, error) {
@@ -93,6 +94,49 @@ func adminUsersWhere(input models.ListAdminUsersInput) (string, []any) {
 
 func (r *Repository) GetAdminUserByUUID(ctx context.Context, userID uuid.UUID) (models.AdminUser, error) {
 	return getAdminUser(ctx, r.db, userID)
+}
+
+func (r *Repository) UpdateAdminUserProfile(ctx context.Context, input models.UpdateAdminUserProfileInput) (models.AdminUser, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return models.AdminUser{}, fmt.Errorf("begin admin profile update: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	actor, err := getAdminUserForUpdate(ctx, tx, input.ActorUserUUID)
+	if err != nil {
+		return models.AdminUser{}, err
+	}
+	target, err := getAdminUserForUpdate(ctx, tx, input.TargetUserUUID)
+	if err != nil {
+		return models.AdminUser{}, err
+	}
+	if err := models.ValidateAdminSessionTarget(actor.Role, target.Role); err != nil {
+		return models.AdminUser{}, err
+	}
+	before, _ := json.Marshal(target)
+	row := tx.QueryRowContext(ctx, `
+		UPDATE users
+		SET full_name=COALESCE($2,full_name), full_surname=COALESCE($3,full_surname),
+			username=COALESCE($4,username), post=COALESCE($5,post), phone=COALESCE($6,phone), timezone=COALESCE($7,timezone)
+		WHERE user_uuid=$1
+		RETURNING user_uuid,email,full_name,full_surname,username,role,post,phone,timezone,created_at`,
+		target.ID, input.FullName, input.FullSurname, input.Username, input.Post, input.Phone, input.Timezone)
+	updated, err := scanAdminUser(row)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return models.AdminUser{}, models.ErrUserAlreadyExists
+		}
+		return models.AdminUser{}, fmt.Errorf("update admin user profile: %w", err)
+	}
+	after, _ := json.Marshal(updated)
+	if err := insertAudit(ctx, tx, models.AdminAuditLog{ID: mustUUIDv7(), ActorUserUUID: actor.ID, ActorRole: actor.Role, Action: "user.profile_updated", TargetType: "user", TargetUUID: uuid.NullUUID{UUID: target.ID, Valid: true}, BeforeData: before, AfterData: after, Reason: &input.Metadata.Reason, RequestID: input.Metadata.RequestID, IPAddress: input.Metadata.IPAddress, UserAgent: input.Metadata.UserAgent, CreatedAt: time.Now().UTC()}); err != nil {
+		return models.AdminUser{}, err
+	}
+	if err := tx.Commit(); err != nil {
+		return models.AdminUser{}, fmt.Errorf("commit admin profile update: %w", err)
+	}
+	return updated, nil
 }
 
 func getAdminUser(ctx context.Context, q queryRower, userID uuid.UUID) (models.AdminUser, error) {

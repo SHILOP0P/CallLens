@@ -47,3 +47,31 @@ func (s *RepositorySuite) TestAdminCannotRevokeAdminSession() {
 	})
 	s.Require().ErrorIs(err, models.ErrAdminSessionManagementForbidden)
 }
+
+func (s *RepositorySuite) TestUpdateAdminUserProfileAuditsChanges() {
+	actor := s.createUser(models.UserRoleAdmin)
+	target := s.createUser(models.UserRoleUser)
+	name := "Updated"
+	surname := "Profile"
+	username := "@updated_profile"
+	post := "Support"
+	phone := "+79990000000"
+	timezone := "Europe/Moscow"
+
+	updated, err := s.repository.UpdateAdminUserProfile(s.ctx, models.UpdateAdminUserProfileInput{
+		ActorUserUUID: actor.ID, TargetUserUUID: target.ID,
+		FullName: &name, FullSurname: &surname, Username: &username, Post: &post, Phone: &phone, Timezone: &timezone,
+		Metadata: models.AdminMutationMetadata{Reason: "profile correction"},
+	})
+	s.Require().NoError(err)
+	s.Require().Equal(name, updated.FullName)
+	s.Require().Equal(surname, updated.FullSurname)
+	s.Require().Equal(username, updated.Username)
+	s.Require().Equal(post, *updated.Post)
+	s.Require().Equal(phone, *updated.Phone)
+	s.Require().Equal(timezone, *updated.Timezone)
+
+	var action string
+	s.Require().NoError(s.db.QueryRowContext(s.ctx, `SELECT action FROM admin_audit_logs`).Scan(&action))
+	s.Require().Equal("user.profile_updated", action)
+}
