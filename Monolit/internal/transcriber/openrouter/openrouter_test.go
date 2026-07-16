@@ -9,6 +9,9 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -146,6 +149,51 @@ func TestTranscribeRejectsUnsupportedFormat(t *testing.T) {
 	})
 	if !errors.Is(err, models.ErrUnsupportedAudioType) {
 		t.Fatalf("error = %v, want unsupported audio type", err)
+	}
+}
+
+func TestIsVideo(t *testing.T) {
+	for _, file := range []models.File{
+		{MimeType: "video/mp4"},
+		{MimeType: "video/webm; codecs=vp9"},
+		{OriginalFilename: "meeting.MOV"},
+	} {
+		if !isVideo(file) {
+			t.Fatalf("expected video: %+v", file)
+		}
+	}
+	if isVideo(models.File{MimeType: "audio/mp4", OriginalFilename: "call.m4a"}) {
+		t.Fatal("m4a audio detected as video")
+	}
+}
+
+func TestTranscriptionAudioExtractsVideoTrack(t *testing.T) {
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		t.Skip("ffmpeg is not installed")
+	}
+
+	videoPath := filepath.Join(t.TempDir(), "meeting.mp4")
+	cmd := exec.Command("ffmpeg", "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=black:s=32x32:d=0.2", "-f", "lavfi", "-i", "sine=frequency=440:duration=0.2", "-shortest", "-c:v", "mpeg4", "-c:a", "aac", videoPath)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("create fixture video: %v: %s", err, output)
+	}
+
+	video, err := os.Open(videoPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = video.Close() }()
+
+	audio, format, err := transcriptionAudio(context.Background(), models.File{
+		Content:          video,
+		OriginalFilename: "meeting.mp4",
+		MimeType:         "video/mp4",
+	})
+	if err != nil {
+		t.Fatalf("extract audio: %v", err)
+	}
+	if format != "wav" || len(audio) < 44 || string(audio[:4]) != "RIFF" {
+		t.Fatalf("unexpected extracted audio: format=%q size=%d", format, len(audio))
 	}
 }
 

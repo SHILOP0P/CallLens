@@ -12,6 +12,7 @@ func TestConfigsFromEnvironment(t *testing.T) {
 		"ANALYZER_API_KEY":       "analyzer-key",
 		"ANALYZER_MODEL":         "analyzer-model",
 		"UPLOAD_PATH":            "uploads",
+		"FFMPEG_PATH":            "custom-ffmpeg",
 		"FFPROBE_PATH":           "custom-ffprobe",
 		"PASSWORD_PEPPER":        "pepper",
 		"JWT_SECRET":             "jwt-secret",
@@ -50,7 +51,7 @@ func TestConfigsFromEnvironment(t *testing.T) {
 		t.Fatalf("analyzer config: %+v err=%v", analyzer, err)
 	}
 	upload, err := NewUploadConfig()
-	if err != nil || upload.Path() != "uploads" || upload.FFProbePath() != "custom-ffprobe" {
+	if err != nil || upload.Path() != "uploads" || upload.FFmpegPath() != "custom-ffmpeg" || upload.FFProbePath() != "custom-ffprobe" {
 		t.Fatalf("upload config: %+v err=%v", upload, err)
 	}
 	auth, err := NewAuthConfig()

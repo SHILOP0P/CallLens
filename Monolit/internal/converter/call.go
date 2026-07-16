@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"strings"
 	"time"
 
 	"calllens/monolit/internal/API/dto"
@@ -27,6 +28,12 @@ func CreateAPIToModel(callUUID uuid.UUID, title string, status models.CallStatus
 }
 
 func CallModelToAPI(call models.Call) (dto.CallResponse, error) {
+	audioURL := "/api/v1/calls/" + call.ID.String() + "/audio"
+	mediaURL := "/api/v1/calls/" + call.ID.String() + "/media"
+	mediaKind := "audio"
+	if strings.HasPrefix(strings.ToLower(call.MimeType), "video/") {
+		mediaKind = "video"
+	}
 	return dto.CallResponse{
 		ID:                    call.ID.String(),
 		Title:                 call.Title,
@@ -35,7 +42,9 @@ func CallModelToAPI(call models.Call) (dto.CallResponse, error) {
 		MimeType:              call.MimeType,
 		SizeBytes:             call.SizeBytes,
 		DurationSeconds:       call.DurationSeconds,
-		AudioURL:              "/api/v1/calls/" + call.ID.String() + "/audio",
+		AudioURL:              audioURL,
+		MediaURL:              mediaURL,
+		MediaKind:             mediaKind,
 		UploadedByUserUUID:    nullUUIDToStringPtr(call.UploadedByUserUUID),
 		CompanyUUID:           nullUUIDToStringPtr(call.CompanyUUID),
 		DepartmentUUID:        nullUUIDToStringPtr(call.DepartmentUUID),

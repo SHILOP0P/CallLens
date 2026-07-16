@@ -157,10 +157,24 @@ func (s *ServiceSuite) TestCreateCallAcceptsOGGAudioInput() {
 	input.OriginalFilename = "call.ogg"
 
 	input.MimeType = "audio/ogg; codecs=opus"
-	s.Require().NoError(validateAudioInput(input))
+	s.Require().NoError(validateMediaInput(input))
 
 	input.MimeType = "application/ogg"
-	s.Require().NoError(validateAudioInput(input))
+	s.Require().NoError(validateMediaInput(input))
+}
+
+func (s *ServiceSuite) TestCreateCallAcceptsVideoInput() {
+	input := validCreateCallInput(uuid.New())
+	for _, media := range []struct{ name, mime string }{
+		{name: "call.mp4", mime: "video/mp4"},
+		{name: "call.mov", mime: "video/quicktime"},
+		{name: "call.webm", mime: "video/webm"},
+		{name: "call.mkv", mime: "video/x-matroska"},
+	} {
+		input.OriginalFilename = media.name
+		input.MimeType = media.mime
+		s.Require().NoError(validateMediaInput(input), media.name)
+	}
 }
 
 func (s *ServiceSuite) TestCreateCallAllowsCompanyManagerUpload() {

@@ -153,6 +153,7 @@ func main() {
 		healthAPI.WritableDirectoryCheck("uploads.avatars", avatarUploadPath),
 		healthAPI.WritableDirectoryCheck("uploads.instructions", instructionUploadPath),
 		healthAPI.WritableDirectoryCheck("uploads.reports", reportUploadPath),
+		healthAPI.BinaryCheck("ffmpeg", config.AppConfig().Upload.FFmpegPath()),
 		healthAPI.BinaryCheck("ffprobe", config.AppConfig().Upload.FFProbePath()),
 	)
 

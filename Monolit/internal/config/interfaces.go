@@ -15,6 +15,7 @@ type PostgresConfig interface {
 
 type UploadConfig interface {
 	Path() string
+	FFmpegPath() string
 	FFProbePath() string
 }
 

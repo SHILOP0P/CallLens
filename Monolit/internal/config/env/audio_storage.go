@@ -4,6 +4,7 @@ import "github.com/caarlos0/env/v11"
 
 type uploadEnvConfig struct {
 	Path        string `env:"UPLOAD_PATH,required"`
+	FFmpegPath  string `env:"FFMPEG_PATH" envDefault:"ffmpeg"`
 	FFProbePath string `env:"FFPROBE_PATH" envDefault:"ffprobe"`
 }
 
@@ -25,4 +26,8 @@ func (config *uploadConfig) Path() string {
 
 func (config *uploadConfig) FFProbePath() string {
 	return config.raw.FFProbePath
+}
+
+func (config *uploadConfig) FFmpegPath() string {
+	return config.raw.FFmpegPath
 }

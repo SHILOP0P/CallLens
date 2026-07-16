@@ -62,6 +62,7 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionSubscriptionsManage)).Post("/companies/{company_uuid}/subscription/cancel", adminAPI.CancelCompanySubscription)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionCallsRead)).Get("/calls/{call_uuid}", adminAPI.GetCall)
 				r.With(authMiddleware.RequirePermission(models.AdminPermissionCallsRead)).Get("/calls/{call_uuid}/audio", adminAPI.GetCallAudio)
+				r.With(authMiddleware.RequirePermission(models.AdminPermissionCallsRead)).Get("/calls/{call_uuid}/media", adminAPI.GetCallAudio)
 			})
 
 			//CALL
@@ -72,6 +73,7 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 			r.With(authGuard).Get("/calls/filters", callAPI.GetFilterOptions)
 			r.With(authGuard).Get("/calls/{uuid}", callAPI.GetByUUID)
 			r.With(authGuard).Get("/calls/{uuid}/audio", callAPI.GetAudioByUUID)
+			r.With(authGuard).Get("/calls/{uuid}/media", callAPI.GetAudioByUUID)
 			r.With(authGuard).Get("/calls/{uuid}/transcription", callAPI.GetTranscriptionByCallUUID)
 			r.With(authGuard).Post("/calls/{uuid}/analysis", analysisAPI.AnalyzeCall)
 			r.With(authGuard).Get("/calls/{uuid}/analysis", analysisAPI.GetByCallUUID)

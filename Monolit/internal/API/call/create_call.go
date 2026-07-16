@@ -37,9 +37,12 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		response.WriteError(w, http.StatusBadRequest, response.CodeCallTitleRequired, "title is required")
 		return
 	}
-	file, fileHeader, err := r.FormFile("audio")
+	file, fileHeader, err := r.FormFile("media")
 	if err != nil {
-		response.WriteError(w, http.StatusBadRequest, response.CodeAudioFileRequired, "audio file is required")
+		file, fileHeader, err = r.FormFile("audio")
+	}
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeAudioFileRequired, "audio or video file is required")
 		return
 	}
 	defer func() { _ = file.Close() }()
@@ -51,12 +54,12 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	detectedMimeType := normalizeDetectedAudioMimeType(fileHeader.Filename, http.DetectContentType(buffer[:n]))
+	detectedMimeType := normalizeDetectedMediaMimeType(fileHeader.Filename, http.DetectContentType(buffer[:n]))
 	fileContent := io.MultiReader(bytes.NewReader(buffer[:n]), file)
 
 	req := dto.CreateCallRequest{
 		Title:                  title,
-		Audio:                  fileHeader,
+		Media:                  fileHeader,
 		CompanyUUID:            r.FormValue("company_uuid"),
 		DepartmentUUID:         r.FormValue("department_uuid"),
 		SkipCustomInstructions: parseSkipCustomInstructions(r.FormValue("use_custom_instructions"), r.FormValue("skip_custom_instructions")),
@@ -74,9 +77,9 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originalFilename := req.Audio.Filename
+	originalFilename := req.Media.Filename
 	//mimeType := req.Audio.Header.Get("Content-Type")
-	sizeBytes := req.Audio.Size
+	sizeBytes := req.Media.Size
 
 	input := model.CreateCallInput{
 		Title:                  title,
@@ -140,7 +143,7 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func normalizeDetectedAudioMimeType(filename string, detected string) string {
+func normalizeDetectedMediaMimeType(filename string, detected string) string {
 	detected = strings.ToLower(strings.TrimSpace(strings.Split(detected, ";")[0]))
 	ext := strings.ToLower(filepath.Ext(filename))
 	if ext == ".ogg" && detected == "application/ogg" {
@@ -159,6 +162,14 @@ func normalizeDetectedAudioMimeType(filename string, detected string) string {
 		return "audio/mp4"
 	case ".ogg":
 		return "audio/ogg"
+	case ".mp4":
+		return "video/mp4"
+	case ".mov":
+		return "video/quicktime"
+	case ".webm":
+		return "video/webm"
+	case ".mkv":
+		return "video/x-matroska"
 	default:
 		return detected
 	}

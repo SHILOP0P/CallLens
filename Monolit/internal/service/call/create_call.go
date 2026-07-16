@@ -12,8 +12,8 @@ import (
 )
 
 func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) (models.Call, error) {
-	if err := validateAudioInput(input); err != nil {
-		s.log.Warn(ctx, "create call failed", zap.String("reason", "invalid_audio_input"), zap.String("user_id", input.UploadedByUserUUID.String()), zap.Error(err))
+	if err := validateMediaInput(input); err != nil {
+		s.log.Warn(ctx, "create call failed", zap.String("reason", "invalid_media_input"), zap.String("user_id", input.UploadedByUserUUID.String()), zap.Error(err))
 		return models.Call{}, err
 	}
 

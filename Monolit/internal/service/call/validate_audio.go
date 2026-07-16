@@ -9,37 +9,45 @@ import (
 	"github.com/google/uuid"
 )
 
-var allowedAudioExtensions = map[string]struct{}{
-	".mp3": {},
-	".wav": {},
-	".m4a": {},
-	".ogg": {},
+var allowedMediaExtensions = map[string]struct{}{
+	".mp3":  {},
+	".wav":  {},
+	".m4a":  {},
+	".ogg":  {},
+	".mp4":  {},
+	".mov":  {},
+	".webm": {},
+	".mkv":  {},
 }
 
-var allowedAudioMimeTypes = map[string]struct{}{
-	"application/ogg": {},
-	"audio/mpeg":      {},
-	"audio/ogg":       {},
-	"audio/wav":       {},
-	"audio/x-wav":     {},
-	"audio/wave":      {},
-	"audio/vnd.wave":  {},
-	"audio/mp4":       {},
-	"audio/x-m4a":     {},
+var allowedMediaMimeTypes = map[string]struct{}{
+	"application/ogg":  {},
+	"audio/mpeg":       {},
+	"audio/ogg":        {},
+	"audio/wav":        {},
+	"audio/x-wav":      {},
+	"audio/wave":       {},
+	"audio/vnd.wave":   {},
+	"audio/mp4":        {},
+	"audio/x-m4a":      {},
+	"video/mp4":        {},
+	"video/quicktime":  {},
+	"video/webm":       {},
+	"video/x-matroska": {},
 }
 
-func validateAudioInput(input models.CreateCallInput) error {
+func validateMediaInput(input models.CreateCallInput) error {
 	if input.UploadedByUserUUID == uuid.Nil {
 		return models.ErrInvalidCallOwner
 	}
 
 	ext := strings.ToLower(filepath.Ext(input.OriginalFilename))
-	if _, ok := allowedAudioExtensions[ext]; !ok {
+	if _, ok := allowedMediaExtensions[ext]; !ok {
 		return models.ErrUnsupportedAudioType
 	}
 
 	mimeType := strings.ToLower(strings.TrimSpace(strings.Split(input.MimeType, ";")[0]))
-	if _, ok := allowedAudioMimeTypes[mimeType]; !ok {
+	if _, ok := allowedMediaMimeTypes[mimeType]; !ok {
 		return models.ErrUnsupportedAudioType
 	}
 

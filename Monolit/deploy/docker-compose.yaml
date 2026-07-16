@@ -17,6 +17,7 @@ services:
       POSTGRES_SSL_MODE: ${POSTGRES_SSL_MODE:-disable}
       MIGRATION_DIRECTORY: /app/migrations
       UPLOAD_PATH: /app/uploads
+      FFMPEG_PATH: ffmpeg
       FFPROBE_PATH: ffprobe
       LOG_LEVEL: ${LOG_LEVEL:-info}
       LOG_AS_JSON: "true"

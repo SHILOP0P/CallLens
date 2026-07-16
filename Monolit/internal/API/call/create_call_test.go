@@ -52,6 +52,37 @@ func (s *APISuite) TestCreateCallSuccess() {
 	s.Require().Equal(http.StatusCreated, rec.Code)
 }
 
+func (s *APISuite) TestCreateVideoCallUsingMediaField() {
+	userID := uuid.New()
+	callID := uuid.New()
+	videoHeader := []byte{0x00, 0x00, 0x00, 0x18, 'f', 't', 'y', 'p', 'm', 'p', '4', '2'}
+	body, contentType := multipartBody(s.T(), map[string]string{
+		"title": "Video meeting",
+	}, "media", "meeting.mp4", videoHeader)
+
+	s.service.On("CreateCall", mock.Anything, mock.MatchedBy(func(input models.CreateCallInput) bool {
+		return input.OriginalFilename == "meeting.mp4" && input.MimeType == "video/mp4"
+	})).Return(models.Call{
+		ID:                 callID,
+		Title:              "Video meeting",
+		Status:             models.CallStatusNew,
+		OriginalFilename:   "meeting.mp4",
+		MimeType:           "video/mp4",
+		SizeBytes:          int64(len(videoHeader)),
+		UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true},
+		VisibilityScope:    models.CallVisibilityScopePersonal,
+		CreatedAt:          time.Now().UTC(),
+	}, nil).Once()
+
+	rec, req := s.request(http.MethodPost, "/api/v1/calls", body.String(), userID, nil)
+	req.Header.Set("Content-Type", contentType)
+	s.api.Create(rec, req)
+
+	s.Require().Equal(http.StatusCreated, rec.Code)
+	s.Require().Contains(rec.Body.String(), `"media_kind":"video"`)
+	s.Require().Contains(rec.Body.String(), `"media_url":"/api/v1/calls/`)
+}
+
 func (s *APISuite) TestCreateCallAcceptsMP3SniffedAsOctetStream() {
 	userID := uuid.New()
 	callID := uuid.New()

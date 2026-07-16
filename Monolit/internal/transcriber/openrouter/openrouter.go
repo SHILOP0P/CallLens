@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -96,14 +98,9 @@ func (t *Transcriber) Transcribe(ctx context.Context, file models.File) (models.
 		return models.TranscriptionResult{}, fmt.Errorf("%w: empty audio content", models.ErrUnsupportedAudioType)
 	}
 
-	format, err := audioFormat(file)
+	audio, format, err := transcriptionAudio(ctx, file)
 	if err != nil {
 		return models.TranscriptionResult{}, err
-	}
-
-	audio, err := io.ReadAll(file.Content)
-	if err != nil {
-		return models.TranscriptionResult{}, fmt.Errorf("read audio content: %w", err)
 	}
 	if len(audio) == 0 {
 		return models.TranscriptionResult{}, fmt.Errorf("%w: empty audio content", models.ErrUnsupportedAudioType)
@@ -162,6 +159,55 @@ func (t *Transcriber) Transcribe(ctx context.Context, file models.File) (models.
 		Segments: segments,
 		Language: &language,
 	}, nil
+}
+
+func transcriptionAudio(ctx context.Context, file models.File) ([]byte, string, error) {
+	if isVideo(file) {
+		var stderr bytes.Buffer
+		ffmpegPath := strings.TrimSpace(os.Getenv("FFMPEG_PATH"))
+		if ffmpegPath == "" {
+			ffmpegPath = "ffmpeg"
+		}
+		cmd := exec.CommandContext(ctx, ffmpegPath, "-hide_banner", "-loglevel", "error", "-i", "pipe:0", "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", "pipe:1")
+		cmd.Stdin = file.Content
+		cmd.Stderr = &stderr
+
+		audio, err := cmd.Output()
+		if err != nil {
+			message := strings.TrimSpace(stderr.String())
+			if message == "" {
+				message = err.Error()
+			}
+			return nil, "", fmt.Errorf("extract video audio: %s", message)
+		}
+		if len(audio) == 0 {
+			return nil, "", errors.New("extract video audio: empty audio track")
+		}
+		return audio, "wav", nil
+	}
+
+	format, err := audioFormat(file)
+	if err != nil {
+		return nil, "", err
+	}
+	audio, err := io.ReadAll(file.Content)
+	if err != nil {
+		return nil, "", fmt.Errorf("read audio content: %w", err)
+	}
+	return audio, format, nil
+}
+
+func isVideo(file models.File) bool {
+	mimeType := strings.ToLower(strings.TrimSpace(strings.Split(file.MimeType, ";")[0]))
+	if strings.HasPrefix(mimeType, "video/") {
+		return true
+	}
+	switch strings.ToLower(filepath.Ext(file.OriginalFilename)) {
+	case ".mp4", ".mov", ".webm", ".mkv":
+		return true
+	default:
+		return false
+	}
 }
 
 func (t *Transcriber) endpoint() string {

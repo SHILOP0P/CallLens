@@ -4,7 +4,7 @@ import "mime/multipart"
 
 type CreateCallRequest struct {
 	Title                  string
-	Audio                  *multipart.FileHeader
+	Media                  *multipart.FileHeader
 	CompanyUUID            string
 	DepartmentUUID         string
 	SkipCustomInstructions bool
@@ -19,6 +19,8 @@ type CallResponse struct {
 	SizeBytes             int64   `json:"size_bytes"`
 	DurationSeconds       int     `json:"duration_seconds"`
 	AudioURL              string  `json:"audio_url"`
+	MediaURL              string  `json:"media_url"`
+	MediaKind             string  `json:"media_kind"`
 	UploadedByUserUUID    *string `json:"uploaded_by_user_uuid"`
 	CompanyUUID           *string `json:"company_uuid"`
 	DepartmentUUID        *string `json:"department_uuid"`
