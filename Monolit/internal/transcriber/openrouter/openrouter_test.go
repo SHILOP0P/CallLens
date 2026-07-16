@@ -3,6 +3,7 @@ package openrouter
 import (
 	"context"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -194,6 +195,12 @@ func TestTranscriptionAudioExtractsVideoTrack(t *testing.T) {
 	}
 	if format != "wav" || len(audio) < 44 || string(audio[:4]) != "RIFF" {
 		t.Fatalf("unexpected extracted audio: format=%q size=%d", format, len(audio))
+	}
+	if got, want := binary.LittleEndian.Uint32(audio[4:8]), uint32(len(audio)-8); got != want {
+		t.Fatalf("RIFF size = %d, want %d", got, want)
+	}
+	if got, want := binary.LittleEndian.Uint32(audio[40:44]), uint32(len(audio)-44); got != want {
+		t.Fatalf("data size = %d, want %d", got, want)
 	}
 }
 

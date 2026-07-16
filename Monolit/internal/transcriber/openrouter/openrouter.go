@@ -163,25 +163,9 @@ func (t *Transcriber) Transcribe(ctx context.Context, file models.File) (models.
 
 func transcriptionAudio(ctx context.Context, file models.File) ([]byte, string, error) {
 	if isVideo(file) {
-		var stderr bytes.Buffer
-		ffmpegPath := strings.TrimSpace(os.Getenv("FFMPEG_PATH"))
-		if ffmpegPath == "" {
-			ffmpegPath = "ffmpeg"
-		}
-		cmd := exec.CommandContext(ctx, ffmpegPath, "-hide_banner", "-loglevel", "error", "-i", "pipe:0", "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", "pipe:1")
-		cmd.Stdin = file.Content
-		cmd.Stderr = &stderr
-
-		audio, err := cmd.Output()
+		audio, err := extractVideoAudio(ctx, file)
 		if err != nil {
-			message := strings.TrimSpace(stderr.String())
-			if message == "" {
-				message = err.Error()
-			}
-			return nil, "", fmt.Errorf("extract video audio: %s", message)
-		}
-		if len(audio) == 0 {
-			return nil, "", errors.New("extract video audio: empty audio track")
+			return nil, "", fmt.Errorf("extract video audio: %w", err)
 		}
 		return audio, "wav", nil
 	}
@@ -195,6 +179,66 @@ func transcriptionAudio(ctx context.Context, file models.File) ([]byte, string, 
 		return nil, "", fmt.Errorf("read audio content: %w", err)
 	}
 	return audio, format, nil
+}
+
+func extractVideoAudio(ctx context.Context, file models.File) ([]byte, error) {
+	ext := strings.ToLower(filepath.Ext(file.OriginalFilename))
+	if ext == "" {
+		ext = ".media"
+	}
+	input, err := os.CreateTemp("", "calllens-video-*"+ext)
+	if err != nil {
+		return nil, fmt.Errorf("create temporary video: %w", err)
+	}
+	inputPath := input.Name()
+	defer func() { _ = os.Remove(inputPath) }()
+
+	written, copyErr := io.Copy(input, file.Content)
+	closeErr := input.Close()
+	if copyErr != nil {
+		return nil, fmt.Errorf("copy temporary video: %w", copyErr)
+	}
+	if closeErr != nil {
+		return nil, fmt.Errorf("close temporary video: %w", closeErr)
+	}
+	if written == 0 {
+		return nil, errors.New("empty video content")
+	}
+
+	output, err := os.CreateTemp("", "calllens-audio-*.wav")
+	if err != nil {
+		return nil, fmt.Errorf("create temporary audio: %w", err)
+	}
+	outputPath := output.Name()
+	if err = output.Close(); err != nil {
+		_ = os.Remove(outputPath)
+		return nil, fmt.Errorf("close temporary audio: %w", err)
+	}
+	defer func() { _ = os.Remove(outputPath) }()
+
+	ffmpegPath := strings.TrimSpace(os.Getenv("FFMPEG_PATH"))
+	if ffmpegPath == "" {
+		ffmpegPath = "ffmpeg"
+	}
+	var stderr bytes.Buffer
+	cmd := exec.CommandContext(ctx, ffmpegPath, "-hide_banner", "-loglevel", "error", "-i", inputPath, "-vn", "-ac", "1", "-ar", "16000", "-acodec", "pcm_s16le", "-f", "wav", "-y", outputPath)
+	cmd.Stderr = &stderr
+	if err = cmd.Run(); err != nil {
+		message := strings.TrimSpace(stderr.String())
+		if message == "" {
+			message = err.Error()
+		}
+		return nil, errors.New(message)
+	}
+
+	audio, err := os.ReadFile(outputPath)
+	if err != nil {
+		return nil, fmt.Errorf("read extracted audio: %w", err)
+	}
+	if len(audio) == 0 {
+		return nil, errors.New("empty audio track")
+	}
+	return audio, nil
 }
 
 func isVideo(file models.File) bool {
