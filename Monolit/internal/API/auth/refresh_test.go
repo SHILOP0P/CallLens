@@ -35,13 +35,18 @@ func (s *APISuite) TestRefreshSuccess() {
 	s.Require().NotContains(rec.Body.String(), "refresh_token")
 }
 
-func (s *APISuite) TestRefreshRejectsInvalidBody() {
-	rec, req := s.request(http.MethodPost, "/api/v1/auth/refresh", `{`)
+func (s *APISuite) TestRefreshIgnoresBodyTokenWithoutCookie() {
+	s.service.On("Refresh", mock.Anything, models.RefreshTokenInput{RefreshToken: ""}).
+		Return(models.User{}, "", "", models.ErrInvalidRefreshToken).
+		Once()
+
+	rec, req := s.request(http.MethodPost, "/api/v1/auth/refresh", `{"refresh_token":"body-token"}`)
 
 	s.api.Refresh(rec, req)
 
-	s.Require().Equal(http.StatusBadRequest, rec.Code)
-	s.requireErrorCode(rec, response.CodeInvalidRequestBody)
+	s.Require().Equal(http.StatusUnauthorized, rec.Code)
+	s.requireErrorCode(rec, response.CodeInvalidRefreshToken)
+	s.requireClearedAuthCookies(rec)
 }
 
 func (s *APISuite) TestRefreshMapsInvalidRefreshToken() {
@@ -57,4 +62,19 @@ func (s *APISuite) TestRefreshMapsInvalidRefreshToken() {
 	s.Require().Equal(http.StatusUnauthorized, rec.Code)
 	s.requireErrorCode(rec, response.CodeInvalidRefreshToken)
 	s.requireClearedAuthCookies(rec)
+}
+
+func (s *APISuite) TestRefreshConflictDoesNotClearWinningCookies() {
+	s.service.On("Refresh", mock.Anything, models.RefreshTokenInput{RefreshToken: "old"}).
+		Return(models.User{}, "", "", models.ErrRefreshRotationConflict).
+		Once()
+
+	rec, req := s.request(http.MethodPost, "/api/v1/auth/refresh", "")
+	req.AddCookie(&http.Cookie{Name: refreshTokenCookieName, Value: "old", Path: refreshTokenCookiePath})
+
+	s.api.Refresh(rec, req)
+
+	s.Require().Equal(http.StatusConflict, rec.Code)
+	s.requireErrorCode(rec, response.CodeRefreshRotationConflict)
+	s.Require().Empty(rec.Header().Values("Set-Cookie"))
 }

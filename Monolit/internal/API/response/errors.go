@@ -9,6 +9,7 @@ const (
 	CodeUnauthorized                     = "unauthorized"
 	CodeInvalidCredentials               = "invalid_credentials"
 	CodeInvalidRefreshToken              = "invalid_refresh_token"
+	CodeRefreshRotationConflict          = "refresh_rotation_conflict"
 	CodeInvalidUserInput                 = "invalid_user_input"
 	CodeUserAlreadyExists                = "user_already_exists"
 	CodeUserNotFound                     = "user_not_found"

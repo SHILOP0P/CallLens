@@ -60,6 +60,8 @@ var ErrForbidden = errors.New("forbidden")
 // REFRESH SESSION
 var ErrRefreshSessionNotFound = errors.New("refresh session not found")
 var ErrInvalidRefreshToken = errors.New("invalid refresh token")
+var ErrRefreshRotationConflict = errors.New("refresh rotation already completed")
+var ErrRefreshTokenReuse = errors.New("refresh token reuse detected")
 var ErrSessionNotTrusted = errors.New("session is not trusted yet")
 
 // TRANSCRIPT

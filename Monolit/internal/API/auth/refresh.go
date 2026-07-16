@@ -1,10 +1,7 @@
 package auth
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"strings"
 
@@ -25,6 +22,11 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		RefreshToken: refreshToken,
 	})
 	if err != nil {
+		if errors.Is(err, model.ErrRefreshRotationConflict) {
+			response.WriteError(w, http.StatusConflict, response.CodeRefreshRotationConflict, "refresh already completed")
+			return
+		}
+
 		if errors.Is(err, model.ErrInvalidRefreshToken) {
 			h.clearAuthCookies(w, r)
 			response.WriteError(w, http.StatusUnauthorized, response.CodeInvalidRefreshToken, "invalid refresh token")
@@ -56,20 +58,5 @@ func refreshTokenFromRequest(r *http.Request) (string, error) {
 	if cookie, err := r.Cookie(refreshTokenCookieName); err == nil {
 		return strings.TrimSpace(cookie.Value), nil
 	}
-
-	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
-	if err != nil {
-		return "", err
-	}
-
-	if len(bytes.TrimSpace(body)) == 0 {
-		return "", nil
-	}
-
-	var req dto.RefreshRequest
-	if err = json.Unmarshal(body, &req); err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(req.RefreshToken), nil
+	return "", nil
 }

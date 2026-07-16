@@ -30,11 +30,18 @@ func TestRequestIsHTTPS(t *testing.T) {
 	}
 }
 
-func TestAuthCookieWithoutTTL(t *testing.T) {
+func TestAuthCookieSecurityAttributes(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	cookie := authCookie(req, "name", "value", "/", 0)
+	if !cookie.HttpOnly || cookie.SameSite != http.SameSiteLaxMode {
+		t.Fatalf("cookie = %+v", cookie)
+	}
 	if cookie.MaxAge != 0 || !cookie.Expires.IsZero() {
 		t.Fatalf("cookie = %+v", cookie)
+	}
+	req.TLS = &tls.ConnectionState{}
+	if !authCookie(req, "name", "value", "/", time.Minute).Secure {
+		t.Fatal("HTTPS cookie must be Secure")
 	}
 }
 
@@ -68,26 +75,15 @@ func TestOptionalStringIPAddressAndFirstNonEmpty(t *testing.T) {
 	}
 }
 
-func TestRefreshTokenFromRequestBranches(t *testing.T) {
+func TestRefreshTokenFromRequestOnlyAcceptsCookie(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", nil)
 	req.AddCookie(&http.Cookie{Name: refreshTokenCookieName, Value: " token "})
 	if got, err := refreshTokenFromRequest(req); err != nil || got != "token" {
 		t.Fatalf("cookie token = %q, %v", got, err)
 	}
-
-	req = httptest.NewRequest(http.MethodPost, "/", nil)
+	req = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"refresh_token":"body"}`))
 	if got, err := refreshTokenFromRequest(req); err != nil || got != "" {
-		t.Fatalf("empty token = %q, %v", got, err)
-	}
-
-	req = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"refresh_token":" body "}`))
-	if got, err := refreshTokenFromRequest(req); err != nil || got != "body" {
-		t.Fatalf("body token = %q, %v", got, err)
-	}
-
-	req = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{`))
-	if _, err := refreshTokenFromRequest(req); err == nil {
-		t.Fatal("expected invalid JSON error")
+		t.Fatalf("body token must be ignored, got %q, %v", got, err)
 	}
 
 	handler := NewAuthHandler(nil, time.Minute, time.Hour)

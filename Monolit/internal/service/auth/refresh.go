@@ -63,6 +63,16 @@ func (s *Service) Refresh(ctx context.Context, input model.RefreshTokenInput) (m
 		now.Add(s.refreshTokenTTL),
 	)
 	if err != nil {
+		if errors.Is(err, model.ErrRefreshRotationConflict) {
+			s.log.Info(ctx, "concurrent refresh already completed", zap.String("session_id", currentSession.ID.String()))
+			return model.User{}, "", "", model.ErrRefreshRotationConflict
+		}
+
+		if errors.Is(err, model.ErrRefreshTokenReuse) {
+			s.log.Warn(ctx, "refresh token reuse detected", zap.String("session_id", currentSession.ID.String()))
+			return model.User{}, "", "", model.ErrInvalidRefreshToken
+		}
+
 		if errors.Is(err, model.ErrRefreshSessionNotFound) {
 			s.log.Warn(ctx, "refresh failed", zap.String("reason", "session_rotation_failed"), zap.String("user_id", currentSession.UserID.String()), zap.String("session_id", currentSession.ID.String()))
 			return model.User{}, "", "", model.ErrInvalidRefreshToken
