@@ -46,7 +46,7 @@ CallLens - backend-монолит на Go для будущего продукт
 - Локальное сохранение исходного медиа; для STT из видео извлекается mono WAV 16 kHz через `ffmpeg`.
 - Список/получение/скачивание аудио/получение транскрипции/обновление title/удаление звонка.
 - Очередь `processing_jobs` и worker для фоновой транскрибации и анализа.
-- Абстракция transcriber с mock-провайдером, OpenRouter-провайдером и factory-заглушкой для OpenAI.
+- Абстракция transcriber с mock-, OpenRouter- и локальным `faster-whisper + pyannote.audio` провайдерами, а также factory-заглушкой для OpenAI.
 - Сохранение транскрипций звонков в `call_transcriptions`.
 - Управление markdown-инструкциями анализа для личного, корпоративного и отделского scope.
 - Абстракция analyzer с mock-провайдером, OpenRouter-провайдером и factory-заглушкой для OpenAI.
@@ -1136,6 +1136,21 @@ department_uuid = optional UUID
 ```
 
 Поддерживаемые форматы загрузки: `.mp3`, `.wav`, `.m4a`, `.ogg`, `.mp4`, `.mov`, `.webm`, `.mkv`.
+
+### Локальная транскрибация с разделением спикеров
+
+OpenRouter `/audio/transcriptions` гарантирует текст, но не гарантирует временные сегменты. Поэтому режим диаризации использует отдельный локальный provider: `faster-whisper` строит временные сегменты речи, `pyannote.audio Community-1` определяет exclusive speaker turns, а CallLens назначает каждому сегменту спикера по максимальному пересечению интервалов. В `call_transcriptions.text` сохраняется готовый диалог вида `Спикер 1: ...`, а в `segments` — те же реплики с `speaker`, `start_seconds` и `end_seconds`. Анализ звонка получает уже размеченный диалог.
+
+Перед первым запуском необходимо принять условия модели `pyannote/speaker-diarization-community-1` на Hugging Face и создать read token. Затем:
+
+```powershell
+$env:HF_TOKEN='hf_...'
+$env:TRANSCRIBER_PROVIDER='local'
+$env:TRANSCRIBER_URL='http://transcriber:8090'
+docker compose -f Monolit/deploy/docker-compose.yaml --profile diarization up --build
+```
+
+На CPU по умолчанию используются `WHISPER_DEVICE=cpu` и `WHISPER_COMPUTE_TYPE=int8`. Для CUDA задаются совместимые `WHISPER_DEVICE=cuda` и `WHISPER_COMPUTE_TYPE=float16`; сам Docker runtime при этом также должен получить GPU. Модели загружаются один раз при старте sidecar и кэшируются в volume `transcription_models`.
 
 Запуск анализа не требует body и возвращает `202 Accepted` с записью анализа в статусе `pending`:
 

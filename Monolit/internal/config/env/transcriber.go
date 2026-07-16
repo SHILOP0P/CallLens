@@ -6,6 +6,7 @@ type transcriberEnvConfig struct {
 	Provider string `env:"TRANSCRIBER_PROVIDER" envDefault:"mock"`
 	APIKey   string `env:"TRANSCRIBER_API_KEY"`
 	Model    string `env:"TRANSCRIBER_MODEL"`
+	URL      string `env:"TRANSCRIBER_URL" envDefault:"http://localhost:8090"`
 }
 
 type transcriberConfig struct {
@@ -30,4 +31,8 @@ func (cfg *transcriberConfig) APIKey() string {
 
 func (cfg *transcriberConfig) Model() string {
 	return cfg.raw.Model
+}
+
+func (cfg *transcriberConfig) URL() string {
+	return cfg.raw.URL
 }

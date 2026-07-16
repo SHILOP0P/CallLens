@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	localTranscriber "calllens/monolit/internal/transcriber/local"
 	mockTranscriber "calllens/monolit/internal/transcriber/mock"
 	openrouterTranscriber "calllens/monolit/internal/transcriber/openrouter"
 )
@@ -12,6 +13,7 @@ type Config interface {
 	Provider() string
 	APIKey() string
 	Model() string
+	URL() string
 }
 
 func NewFromConfig(cfg Config) (Transcriber, error) {
@@ -22,6 +24,8 @@ func NewFromConfig(cfg Config) (Transcriber, error) {
 		return mockTranscriber.New(), nil
 	case "openrouter":
 		return openrouterTranscriber.New(cfg.APIKey(), cfg.Model())
+	case "local":
+		return localTranscriber.New(cfg.URL())
 	case "openai":
 		return nil, fmt.Errorf("openai transcriber is not implemented yet")
 	default:

@@ -23,6 +23,8 @@ dist/
 *.test
 *.out
 coverage.out
+__pycache__/
+*.py[cod]
 
 # Runtime data
 /storage/

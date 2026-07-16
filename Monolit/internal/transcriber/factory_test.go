@@ -8,11 +8,12 @@ import (
 	"calllens/monolit/internal/models"
 )
 
-type testConfig struct{ provider, apiKey, model string }
+type testConfig struct{ provider, apiKey, model, url string }
 
 func (c testConfig) Provider() string { return c.provider }
 func (c testConfig) APIKey() string   { return c.apiKey }
 func (c testConfig) Model() string    { return c.model }
+func (c testConfig) URL() string      { return c.url }
 
 func TestNewFromConfigAndMockTranscriber(t *testing.T) {
 	for _, provider := range []string{"", "mock", " MOCK "} {
@@ -41,5 +42,9 @@ func TestNewFromConfigAndMockTranscriber(t *testing.T) {
 	cancel()
 	if _, err := got.Transcribe(ctx, models.File{}); err == nil {
 		t.Fatal("expected canceled context error")
+	}
+	local, err := NewFromConfig(testConfig{provider: "local", url: "http://localhost:8090"})
+	if err != nil || local.Provider() != "local-pyannote" {
+		t.Fatalf("local provider = %T, %v", local, err)
 	}
 }
