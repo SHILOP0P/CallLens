@@ -30,7 +30,7 @@ services:
       TRANSCRIBER_PROVIDER: ${TRANSCRIBER_PROVIDER:-mock}
       TRANSCRIBER_API_KEY: ${TRANSCRIBER_API_KEY:-}
       TRANSCRIBER_MODEL: ${TRANSCRIBER_MODEL:-}
-      TRANSCRIBER_URL: ${TRANSCRIBER_URL:-http://transcriber:8090}
+      TRANSCRIBER_URL: ${TRANSCRIBER_URL:-http://diarizer:8090}
       ANALYZER_PROVIDER: ${ANALYZER_PROVIDER:-mock}
       ANALYZER_API_KEY: ${ANALYZER_API_KEY:-}
       ANALYZER_MODEL: ${ANALYZER_MODEL:-mistralai/mistral-nemo}
@@ -53,19 +53,16 @@ services:
       timeout: 5s
       retries: 6
 
-  transcriber:
+  diarizer:
     profiles: ["diarization"]
     build:
-      context: ..
-      dockerfile: services/transcriber/Dockerfile
-    container_name: call-transcriber
+      context: .
+      dockerfile: services/diarizer/Dockerfile
+    container_name: call-diarizer
     restart: unless-stopped
     environment:
       HF_TOKEN: ${HF_TOKEN:-}
-      WHISPER_MODEL: ${WHISPER_MODEL:-large-v3}
-      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
-      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8}
-      TRANSCRIPTION_LANGUAGE: ${TRANSCRIPTION_LANGUAGE:-ru}
+      PYANNOTE_DEVICE: ${PYANNOTE_DEVICE:-cpu}
       PYANNOTE_MODEL: ${PYANNOTE_MODEL:-pyannote/speaker-diarization-community-1}
       MODEL_CACHE: /models
     volumes:

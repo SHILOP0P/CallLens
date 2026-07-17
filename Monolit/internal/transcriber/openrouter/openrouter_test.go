@@ -59,6 +59,12 @@ func TestTranscribeSendsOpenRouterRequest(t *testing.T) {
 		if req.Temperature == nil || *req.Temperature != 0 {
 			t.Fatalf("temperature = %v", req.Temperature)
 		}
+		if req.ResponseFormat != "verbose_json" {
+			t.Fatalf("response format = %q", req.ResponseFormat)
+		}
+		if len(req.TimestampGranularities) != 1 || req.TimestampGranularities[0] != "segment" {
+			t.Fatalf("timestamp granularities = %#v", req.TimestampGranularities)
+		}
 		if req.InputAudio.Format != "mp3" {
 			t.Fatalf("format = %q", req.InputAudio.Format)
 		}

@@ -35,10 +35,12 @@ type Transcriber struct {
 }
 
 type transcriptionRequest struct {
-	Model       string     `json:"model"`
-	InputAudio  inputAudio `json:"input_audio"`
-	Language    string     `json:"language,omitempty"`
-	Temperature *float64   `json:"temperature,omitempty"`
+	Model                  string     `json:"model"`
+	InputAudio             inputAudio `json:"input_audio"`
+	Language               string     `json:"language,omitempty"`
+	Temperature            *float64   `json:"temperature,omitempty"`
+	ResponseFormat         string     `json:"response_format,omitempty"`
+	TimestampGranularities []string   `json:"timestamp_granularities,omitempty"`
 }
 
 type inputAudio struct {
@@ -113,8 +115,10 @@ func (t *Transcriber) Transcribe(ctx context.Context, file models.File) (models.
 			Data:   base64.StdEncoding.EncodeToString(audio),
 			Format: format,
 		},
-		Language:    t.language,
-		Temperature: &temperature,
+		Language:               t.language,
+		Temperature:            &temperature,
+		ResponseFormat:         "verbose_json",
+		TimestampGranularities: []string{"segment"},
 	}
 
 	requestBody, err := json.Marshal(payload)

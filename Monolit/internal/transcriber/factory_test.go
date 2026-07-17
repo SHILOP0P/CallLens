@@ -43,8 +43,8 @@ func TestNewFromConfigAndMockTranscriber(t *testing.T) {
 	if _, err := got.Transcribe(ctx, models.File{}); err == nil {
 		t.Fatal("expected canceled context error")
 	}
-	local, err := NewFromConfig(testConfig{provider: "local", url: "http://localhost:8090"})
-	if err != nil || local.Provider() != "local-pyannote" {
-		t.Fatalf("local provider = %T, %v", local, err)
+	hybrid, err := NewFromConfig(testConfig{provider: "hybrid", apiKey: "key", model: "openai/whisper-large-v3", url: "http://localhost:8090"})
+	if err != nil || hybrid.Provider() != "openrouter-pyannote" {
+		t.Fatalf("hybrid provider = %T, %v", hybrid, err)
 	}
 }

@@ -9,15 +9,15 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY services/transcriber/requirements.txt ./requirements.txt
+COPY services/diarizer/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY services/transcriber/app.py services/transcriber/alignment.py ./
+COPY services/diarizer/app.py ./
 
-RUN useradd --system --create-home --uid 10001 transcriber \
+RUN useradd --system --create-home --uid 10001 diarizer \
     && mkdir -p /models \
-    && chown -R transcriber:transcriber /app /models
-USER transcriber
+    && chown -R diarizer:diarizer /app /models
+USER diarizer
 
 EXPOSE 8090
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8090"]
