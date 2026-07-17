@@ -108,13 +108,69 @@ func TestAssignMismatchedCallReturnsScopeMismatch(t *testing.T) {
 	require.ErrorIs(t, err, models.ErrCallFolderScopeMismatch)
 }
 
+func TestPersonalFolderRejectsCompanyCall(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	callID := uuid.New()
+	repo := newFolderRepoStub()
+	svc := NewService(repo, &callRepoStub{calls: map[uuid.UUID]models.Call{
+		callID: {ID: callID, CompanyUUID: uuid.NullUUID{UUID: uuid.New(), Valid: true}, VisibilityScope: models.CallVisibilityScopeCompany},
+	}}, &companyRepoStub{}, &departmentRepoStub{})
+
+	folder, err := svc.Create(ctx, models.CreateCallFolderInput{UserID: userID, Scope: models.CallFolderScopePersonal, Name: "Private"})
+	require.NoError(t, err)
+	err = svc.AssignCall(ctx, models.AssignCallToFolderInput{UserID: userID, FolderUUID: folder.ID, CallUUID: callID})
+	require.ErrorIs(t, err, models.ErrCallFolderScopeMismatch)
+}
+
+func TestOtherUserCannotManagePersonalFolder(t *testing.T) {
+	ctx := context.Background()
+	ownerID := uuid.New()
+	repo := newFolderRepoStub()
+	svc := NewService(repo, &callRepoStub{}, &companyRepoStub{}, &departmentRepoStub{})
+	folder, err := svc.Create(ctx, models.CreateCallFolderInput{UserID: ownerID, Scope: models.CallFolderScopePersonal, Name: "Private"})
+	require.NoError(t, err)
+	require.ErrorIs(t, svc.Delete(ctx, folder.ID, uuid.New()), models.ErrForbidden)
+}
+
+func TestManagerCanGrantEmployeeDepartmentAccessButNotLeader(t *testing.T) {
+	ctx := context.Background()
+	managerID := uuid.New()
+	companyID := uuid.New()
+	departmentID := uuid.New()
+	folderID := uuid.New()
+	employeeID := uuid.New()
+	leaderID := uuid.New()
+	repo := newFolderRepoStub()
+	repo.folders[folderID] = models.CallFolder{ID: folderID, Scope: models.CallFolderScopeDepartment, CompanyUUID: uuid.NullUUID{UUID: companyID, Valid: true}, DepartmentUUID: uuid.NullUUID{UUID: departmentID, Valid: true}}
+	companyRepo := &companyRepoStub{members: map[uuid.UUID]models.CompanyMember{
+		managerID:  {UserUUID: managerID, CompanyUUID: companyID, Role: models.CompanyMemberRoleManager, Status: models.MembershipStatusActive},
+		employeeID: {UserUUID: employeeID, CompanyUUID: companyID, Role: models.CompanyMemberRoleEmployee, Status: models.MembershipStatusActive},
+		leaderID:   {UserUUID: leaderID, CompanyUUID: companyID, Role: models.CompanyMemberRoleEmployee, Status: models.MembershipStatusActive},
+	}}
+	employeeRepo := &departmentRepoStub{members: map[uuid.UUID]models.DepartmentMember{
+		departmentID: {UserUUID: employeeID, DepartmentUUID: departmentID, Role: models.DepartmentMemberRoleEmployee, Status: models.MembershipStatusActive},
+	}}
+	svc := NewService(repo, &callRepoStub{}, companyRepo, employeeRepo)
+	_, err := svc.GrantAccess(ctx, models.GrantCallFolderAccessInput{UserID: managerID, FolderUUID: folderID, TargetUserUUID: employeeID})
+	require.NoError(t, err)
+
+	leaderRepo := &departmentRepoStub{members: map[uuid.UUID]models.DepartmentMember{
+		departmentID: {UserUUID: leaderID, DepartmentUUID: departmentID, Role: models.DepartmentMemberRoleLeader, Status: models.MembershipStatusActive},
+	}}
+	svc = NewService(repo, &callRepoStub{}, companyRepo, leaderRepo)
+	_, err = svc.GrantAccess(ctx, models.GrantCallFolderAccessInput{UserID: managerID, FolderUUID: folderID, TargetUserUUID: leaderID})
+	require.ErrorIs(t, err, models.ErrForbidden)
+}
+
 type folderRepoStub struct {
-	folders map[uuid.UUID]models.CallFolder
-	deleted map[uuid.UUID]bool
+	folders  map[uuid.UUID]models.CallFolder
+	deleted  map[uuid.UUID]bool
+	accesses map[uuid.UUID]map[uuid.UUID]models.CallFolderAccess
 }
 
 func newFolderRepoStub() *folderRepoStub {
-	return &folderRepoStub{folders: map[uuid.UUID]models.CallFolder{}, deleted: map[uuid.UUID]bool{}}
+	return &folderRepoStub{folders: map[uuid.UUID]models.CallFolder{}, deleted: map[uuid.UUID]bool{}, accesses: map[uuid.UUID]map[uuid.UUID]models.CallFolderAccess{}}
 }
 
 func (r *folderRepoStub) Create(_ context.Context, folder models.CallFolder) (models.CallFolder, error) {
@@ -166,6 +222,28 @@ func (r *folderRepoStub) RemoveCall(context.Context, models.RemoveCallFromFolder
 }
 func (r *folderRepoStub) ListFolderCalls(_ context.Context, input models.ListFolderCallsInput) (models.ListCallsResult, error) {
 	return models.ListCallsResult{Limit: input.Limit, Offset: input.Offset}, nil
+}
+func (r *folderRepoStub) GrantAccess(_ context.Context, input models.GrantCallFolderAccessInput) (models.CallFolderAccess, error) {
+	if r.accesses[input.FolderUUID] == nil {
+		r.accesses[input.FolderUUID] = map[uuid.UUID]models.CallFolderAccess{}
+	}
+	access := models.CallFolderAccess{FolderUUID: input.FolderUUID, UserUUID: input.TargetUserUUID, GrantedByUserUUID: input.UserID}
+	r.accesses[input.FolderUUID][input.TargetUserUUID] = access
+	return access, nil
+}
+func (r *folderRepoStub) RevokeAccess(_ context.Context, folderID uuid.UUID, userID uuid.UUID) error {
+	if _, ok := r.accesses[folderID][userID]; !ok {
+		return models.ErrCallFolderNotFound
+	}
+	delete(r.accesses[folderID], userID)
+	return nil
+}
+func (r *folderRepoStub) ListAccesses(_ context.Context, folderID uuid.UUID) ([]models.CallFolderAccess, error) {
+	items := []models.CallFolderAccess{}
+	for _, item := range r.accesses[folderID] {
+		items = append(items, item)
+	}
+	return items, nil
 }
 
 type callRepoStub struct {

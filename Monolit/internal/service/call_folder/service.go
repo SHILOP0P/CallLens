@@ -162,8 +162,69 @@ func (s *Service) ListFolderCalls(ctx context.Context, input models.ListFolderCa
 	return s.repository.ListFolderCalls(ctx, input)
 }
 
+func (s *Service) GrantAccess(ctx context.Context, input models.GrantCallFolderAccessInput) (models.CallFolderAccess, error) {
+	folder, err := s.repository.GetByUUID(ctx, input.FolderUUID)
+	if err != nil {
+		return models.CallFolderAccess{}, err
+	}
+	if err := s.authorizeManageAccess(ctx, folder, input.UserID, input.TargetUserUUID); err != nil {
+		return models.CallFolderAccess{}, err
+	}
+	return s.repository.GrantAccess(ctx, input)
+}
+
+func (s *Service) RevokeAccess(ctx context.Context, input models.RevokeCallFolderAccessInput) error {
+	folder, err := s.repository.GetByUUID(ctx, input.FolderUUID)
+	if err != nil {
+		return err
+	}
+	if err := s.authorizeManageAccess(ctx, folder, input.UserID, input.TargetUserUUID); err != nil {
+		return err
+	}
+	return s.repository.RevokeAccess(ctx, input.FolderUUID, input.TargetUserUUID)
+}
+
+func (s *Service) ListAccesses(ctx context.Context, folderID uuid.UUID, userID uuid.UUID) ([]models.CallFolderAccess, error) {
+	folder, err := s.repository.GetByUUID(ctx, folderID)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.authorizeManageFolder(ctx, folder, userID); err != nil {
+		return nil, err
+	}
+	return s.repository.ListAccesses(ctx, folderID)
+}
+
 func (s *Service) authorizeManageFolder(ctx context.Context, folder models.CallFolder, userID uuid.UUID) error {
+	if folder.Scope == models.CallFolderScopePersonal {
+		if folder.UserUUID.Valid && folder.UserUUID.UUID == userID {
+			return nil
+		}
+		return models.ErrForbidden
+	}
 	return s.authorizeManage(ctx, folder.Scope, userID, folder.CompanyUUID, folder.DepartmentUUID)
+}
+
+func (s *Service) authorizeManageAccess(ctx context.Context, folder models.CallFolder, userID uuid.UUID, targetUserID uuid.UUID) error {
+	if targetUserID == uuid.Nil || targetUserID == userID || folder.Scope == models.CallFolderScopePersonal {
+		return models.ErrForbidden
+	}
+	if err := s.authorizeManageFolder(ctx, folder, userID); err != nil {
+		return err
+	}
+	companyMember, err := s.companyRepository.GetCompanyMember(ctx, folder.CompanyUUID.UUID, targetUserID)
+	if err != nil || companyMember.Status != models.MembershipStatusActive {
+		return models.ErrForbidden
+	}
+	if folder.Scope == models.CallFolderScopeCompany {
+		return nil
+	}
+	departmentMember, err := s.departmentRepository.GetDepartmentMember(ctx, folder.CompanyUUID.UUID, folder.DepartmentUUID.UUID, targetUserID)
+	if err != nil || departmentMember.Status != models.MembershipStatusActive || departmentMember.Role != models.DepartmentMemberRoleEmployee {
+		// A department leader has access to their department by role. The manager cannot alter it.
+		return models.ErrForbidden
+	}
+	return nil
 }
 
 func (s *Service) authorizeManage(ctx context.Context, scope models.CallFolderScope, userID uuid.UUID, companyID uuid.NullUUID, departmentID uuid.NullUUID) error {
@@ -197,29 +258,10 @@ func (s *Service) authorizeManage(ctx context.Context, scope models.CallFolderSc
 }
 
 func (s *Service) authorizeRead(ctx context.Context, folder models.CallFolder, userID uuid.UUID) error {
-	switch folder.Scope {
-	case models.CallFolderScopePersonal:
-		if folder.UserUUID.Valid && folder.UserUUID.UUID == userID {
-			return nil
-		}
-	case models.CallFolderScopeCompany:
-		if member, err := s.companyRepository.GetCompanyMember(ctx, folder.CompanyUUID.UUID, userID); err == nil {
-			if member.Role == models.CompanyMemberRoleManager {
-				return nil
-			}
-			if departments, err := s.departmentRepository.ListVisibleCompanyDepartments(ctx, folder.CompanyUUID.UUID, userID); err == nil && len(departments) > 0 {
-				return nil
-			}
-		}
-	case models.CallFolderScopeDepartment:
-		if member, err := s.companyRepository.GetCompanyMember(ctx, folder.CompanyUUID.UUID, userID); err == nil && member.Role == models.CompanyMemberRoleManager {
-			return nil
-		}
-		if _, err := s.departmentRepository.GetDepartmentMember(ctx, folder.CompanyUUID.UUID, folder.DepartmentUUID.UUID, userID); err == nil {
-			return nil
-		}
+	if _, err := s.repository.GetVisibleByUUID(ctx, folder.ID, userID); err != nil {
+		return models.ErrForbidden
 	}
-	return models.ErrForbidden
+	return nil
 }
 
 func callMatchesFolder(call models.Call, folder models.CallFolder) bool {

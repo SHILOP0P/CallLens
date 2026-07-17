@@ -83,3 +83,22 @@ type ListFolderCallsInput struct {
 	Limit      int
 	Offset     int
 }
+
+type CallFolderAccess struct {
+	FolderUUID        uuid.UUID
+	UserUUID          uuid.UUID
+	GrantedByUserUUID uuid.UUID
+	CreatedAt         time.Time
+}
+
+type GrantCallFolderAccessInput struct {
+	UserID         uuid.UUID
+	FolderUUID     uuid.UUID
+	TargetUserUUID uuid.UUID
+}
+
+type RevokeCallFolderAccessInput struct {
+	UserID         uuid.UUID
+	FolderUUID     uuid.UUID
+	TargetUserUUID uuid.UUID
+}

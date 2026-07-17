@@ -41,6 +41,9 @@ type CallFolderAPI interface {
 	ListCalls(w http.ResponseWriter, r *http.Request)
 	AssignCall(w http.ResponseWriter, r *http.Request)
 	RemoveCall(w http.ResponseWriter, r *http.Request)
+	GrantAccess(w http.ResponseWriter, r *http.Request)
+	RevokeAccess(w http.ResponseWriter, r *http.Request)
+	ListAccesses(w http.ResponseWriter, r *http.Request)
 }
 
 type MonitoringAPI interface {

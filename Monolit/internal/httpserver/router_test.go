@@ -62,14 +62,17 @@ func (stubSearchAPI) Search(w http.ResponseWriter, r *http.Request) {}
 
 type stubCallFolderAPI struct{}
 
-func (stubCallFolderAPI) Create(w http.ResponseWriter, r *http.Request)     {}
-func (stubCallFolderAPI) List(w http.ResponseWriter, r *http.Request)       {}
-func (stubCallFolderAPI) Get(w http.ResponseWriter, r *http.Request)        {}
-func (stubCallFolderAPI) Update(w http.ResponseWriter, r *http.Request)     {}
-func (stubCallFolderAPI) Delete(w http.ResponseWriter, r *http.Request)     {}
-func (stubCallFolderAPI) ListCalls(w http.ResponseWriter, r *http.Request)  {}
-func (stubCallFolderAPI) AssignCall(w http.ResponseWriter, r *http.Request) {}
-func (stubCallFolderAPI) RemoveCall(w http.ResponseWriter, r *http.Request) {}
+func (stubCallFolderAPI) Create(w http.ResponseWriter, r *http.Request)       {}
+func (stubCallFolderAPI) List(w http.ResponseWriter, r *http.Request)         {}
+func (stubCallFolderAPI) Get(w http.ResponseWriter, r *http.Request)          {}
+func (stubCallFolderAPI) Update(w http.ResponseWriter, r *http.Request)       {}
+func (stubCallFolderAPI) Delete(w http.ResponseWriter, r *http.Request)       {}
+func (stubCallFolderAPI) ListCalls(w http.ResponseWriter, r *http.Request)    {}
+func (stubCallFolderAPI) AssignCall(w http.ResponseWriter, r *http.Request)   {}
+func (stubCallFolderAPI) RemoveCall(w http.ResponseWriter, r *http.Request)   {}
+func (stubCallFolderAPI) GrantAccess(w http.ResponseWriter, r *http.Request)  {}
+func (stubCallFolderAPI) RevokeAccess(w http.ResponseWriter, r *http.Request) {}
+func (stubCallFolderAPI) ListAccesses(w http.ResponseWriter, r *http.Request) {}
 
 type stubNotificationAPI struct{}
 

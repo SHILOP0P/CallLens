@@ -97,6 +97,9 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 			r.With(authGuard).Get("/call-folders/{folder_uuid}/calls", callFolderAPI.ListCalls)
 			r.With(authGuard).Post("/call-folders/{folder_uuid}/calls", callFolderAPI.AssignCall)
 			r.With(authGuard).Delete("/call-folders/{folder_uuid}/calls/{call_uuid}", callFolderAPI.RemoveCall)
+			r.With(authGuard).Get("/call-folders/{folder_uuid}/accesses", callFolderAPI.ListAccesses)
+			r.With(authGuard).Put("/call-folders/{folder_uuid}/accesses/{user_uuid}", callFolderAPI.GrantAccess)
+			r.With(authGuard).Delete("/call-folders/{folder_uuid}/accesses/{user_uuid}", callFolderAPI.RevokeAccess)
 
 			//ANALYTICS
 			r.With(authGuard).Get("/analytics/overview", analyticsAPI.GetOverview)

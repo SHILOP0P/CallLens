@@ -91,6 +91,7 @@ const (
 	CodeFailedToDeleteCallFolder         = "failed_to_delete_call_folder"
 	CodeFailedToAssignCallFolder         = "failed_to_assign_call_folder"
 	CodeFailedToRemoveCallFolder         = "failed_to_remove_call_folder"
+	CodeFailedToManageCallFolderAccess   = "failed_to_manage_call_folder_access"
 	CodeFailedToGetProcessingMonitoring  = "failed_to_get_processing_monitoring"
 	CodeInvalidSearchInput               = "invalid_search_input"
 	CodeFailedToSearch                   = "failed_to_search"

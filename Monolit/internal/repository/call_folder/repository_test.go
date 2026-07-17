@@ -59,3 +59,26 @@ func (s *RepositorySuite) TestCreatePersonalFolderReturnsCreatedFolder() {
 	s.Require().Zero(created.CallsCount)
 	s.Require().Equal(user.ID, created.CreatedByUserUUID)
 }
+
+func (s *RepositorySuite) TestGrantAndRevokeFolderAccess() {
+	owner := s.createUser(uuid.NewString() + "@example.com")
+	target := s.createUser(uuid.NewString() + "@example.com")
+	folder, err := s.repository.Create(s.ctx, models.CallFolder{
+		ID: uuid.New(), Scope: models.CallFolderScopePersonal,
+		UserUUID: uuid.NullUUID{UUID: owner.ID, Valid: true}, Name: "Private",
+		CreatedByUserUUID: owner.ID,
+	})
+	s.Require().NoError(err)
+
+	access, err := s.repository.GrantAccess(s.ctx, models.GrantCallFolderAccessInput{UserID: owner.ID, FolderUUID: folder.ID, TargetUserUUID: target.ID})
+	s.Require().NoError(err)
+	s.Require().Equal(target.ID, access.UserUUID)
+	items, err := s.repository.ListAccesses(s.ctx, folder.ID)
+	s.Require().NoError(err)
+	s.Require().Len(items, 1)
+
+	s.Require().NoError(s.repository.RevokeAccess(s.ctx, folder.ID, target.ID))
+	items, err = s.repository.ListAccesses(s.ctx, folder.ID)
+	s.Require().NoError(err)
+	s.Require().Empty(items)
+}
