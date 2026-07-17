@@ -29,7 +29,7 @@ type Transcriber struct {
 }
 
 func New(apiKey, model, diarizerURL string) (*Transcriber, error) {
-	asr, err := openrouter.New(apiKey, model)
+	asr, err := openrouter.NewWithTimestamps(apiKey, model)
 	if err != nil {
 		return nil, err
 	}

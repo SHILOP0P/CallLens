@@ -33,7 +33,7 @@ func TestNewRequiresModel(t *testing.T) {
 	}
 }
 
-func TestTranscribeSendsOpenRouterRequest(t *testing.T) {
+func TestTranscribeSendsTimestampedOpenRouterRequest(t *testing.T) {
 	ctx := context.Background()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -81,7 +81,7 @@ func TestTranscribeSendsOpenRouterRequest(t *testing.T) {
 	}))
 	defer server.Close()
 
-	transcriber, err := New("sk-or-v1-test", "openai/whisper-large-v3-turbo")
+	transcriber, err := NewWithTimestamps("sk-or-v1-test", "openai/whisper-large-v3-turbo")
 	if err != nil {
 		t.Fatalf("new transcriber: %v", err)
 	}
@@ -113,6 +113,42 @@ func TestTranscribeSendsOpenRouterRequest(t *testing.T) {
 	}
 	if got.Language == nil || *got.Language != defaultLanguage {
 		t.Fatalf("language = %v", got.Language)
+	}
+}
+
+func TestTranscribeDoesNotRequestTimestampsByDefault(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req transcriptionRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		if req.ResponseFormat != "" {
+			t.Fatalf("response format = %q, want empty", req.ResponseFormat)
+		}
+		if len(req.TimestampGranularities) != 0 {
+			t.Fatalf("timestamp granularities = %#v, want none", req.TimestampGranularities)
+		}
+		_, _ = w.Write([]byte(`{"text":"обычная расшифровка"}`))
+	}))
+	defer server.Close()
+
+	transcriber, err := New("sk-or-v1-test", "openai/whisper-large-v3-turbo")
+	if err != nil {
+		t.Fatalf("new transcriber: %v", err)
+	}
+	transcriber.baseURL = server.URL
+	transcriber.client = server.Client()
+
+	result, err := transcriber.Transcribe(context.Background(), models.File{
+		Content:          io.NopCloser(strings.NewReader("audio bytes")),
+		OriginalFilename: "call.mp3",
+		MimeType:         "audio/mpeg",
+	})
+	if err != nil {
+		t.Fatalf("transcribe: %v", err)
+	}
+	if result.Text != "обычная расшифровка" || len(result.Segments) != 0 {
+		t.Fatalf("result = %#v", result)
 	}
 }
 

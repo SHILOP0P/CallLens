@@ -124,6 +124,11 @@ func (s *Service) processTranscribeCallWithMode(ctx context.Context, call models
 	if err != nil {
 		return fmt.Errorf("transcribe audio: %w", err)
 	}
+	if mode != models.TranscriptionModeDiarized {
+		// Start includes only a continuous transcript. Keep this guard even if a
+		// provider returns timestamps unexpectedly, so the API never exposes them.
+		result.Segments = nil
+	}
 
 	if _, err = s.transcriptionRepository.MarkTranscribed(ctx, transcription.ID, result.Text, result.Segments, result.Language); err != nil {
 		return fmt.Errorf("mark transcription transcribed: %w", err)

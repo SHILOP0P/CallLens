@@ -27,11 +27,12 @@ const (
 )
 
 type Transcriber struct {
-	apiKey   string
-	model    string
-	baseURL  string
-	language string
-	client   *http.Client
+	apiKey            string
+	model             string
+	baseURL           string
+	language          string
+	requestTimestamps bool
+	client            *http.Client
 }
 
 type transcriptionRequest struct {
@@ -70,6 +71,17 @@ type errorResponse struct {
 }
 
 func New(apiKey string, model string) (*Transcriber, error) {
+	return newTranscriber(apiKey, model, false)
+}
+
+// NewWithTimestamps creates a transcriber that asks the provider for segment
+// timestamps. This is needed only when the result will be aligned with speaker
+// diarization.
+func NewWithTimestamps(apiKey string, model string) (*Transcriber, error) {
+	return newTranscriber(apiKey, model, true)
+}
+
+func newTranscriber(apiKey string, model string, requestTimestamps bool) (*Transcriber, error) {
 	apiKey = strings.TrimSpace(apiKey)
 	if apiKey == "" {
 		return nil, errors.New("openrouter transcriber api key is required")
@@ -81,10 +93,11 @@ func New(apiKey string, model string) (*Transcriber, error) {
 	}
 
 	return &Transcriber{
-		apiKey:   apiKey,
-		model:    model,
-		baseURL:  defaultBaseURL,
-		language: defaultLanguage,
+		apiKey:            apiKey,
+		model:             model,
+		baseURL:           defaultBaseURL,
+		language:          defaultLanguage,
+		requestTimestamps: requestTimestamps,
 		client: &http.Client{
 			Timeout: 90 * time.Second,
 		},
@@ -115,10 +128,12 @@ func (t *Transcriber) Transcribe(ctx context.Context, file models.File) (models.
 			Data:   base64.StdEncoding.EncodeToString(audio),
 			Format: format,
 		},
-		Language:               t.language,
-		Temperature:            &temperature,
-		ResponseFormat:         "verbose_json",
-		TimestampGranularities: []string{"segment"},
+		Language:    t.language,
+		Temperature: &temperature,
+	}
+	if t.requestTimestamps {
+		payload.ResponseFormat = "verbose_json"
+		payload.TimestampGranularities = []string{"segment"}
 	}
 
 	requestBody, err := json.Marshal(payload)

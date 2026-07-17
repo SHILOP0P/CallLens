@@ -42,8 +42,10 @@ func TestProcessTranscribeCallHappyPath(t *testing.T) {
 	})).Return(models.Transcription{ID: transcriptionID, CallUUID: callID}, nil).Once()
 	audioStorage.EXPECT().Open(mock.Anything, "call.wav").Return(io.NopCloser(strings.NewReader("audio")), nil).Once()
 	transcriber.EXPECT().Transcribe(mock.Anything, mock.Anything).
-		Return(models.TranscriptionResult{Text: "transcribed"}, nil).Once()
-	transcriptionRepo.EXPECT().MarkTranscribed(mock.Anything, transcriptionID, "transcribed", mock.Anything, mock.Anything).
+		Return(models.TranscriptionResult{Text: "transcribed", Segments: []models.TranscriptionSegment{{Speaker: "speaker_0", Text: "transcribed"}}}, nil).Once()
+	transcriptionRepo.EXPECT().MarkTranscribed(mock.Anything, transcriptionID, "transcribed", mock.MatchedBy(func(segments []models.TranscriptionSegment) bool {
+		return len(segments) == 0
+	}), mock.Anything).
 		Return(models.Transcription{ID: transcriptionID}, nil).Once()
 	callRepo.EXPECT().UpdateCallStatus(mock.Anything, callID, models.CallStatusTranscribed).
 		Return(models.Call{ID: callID, Status: models.CallStatusTranscribed}, nil).Once()
