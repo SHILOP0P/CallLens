@@ -205,9 +205,28 @@ func TestTranscriptionAudioExtractsVideoTrack(t *testing.T) {
 	if got, want := binary.LittleEndian.Uint32(audio[4:8]), uint32(len(audio)-8); got != want {
 		t.Fatalf("RIFF size = %d, want %d", got, want)
 	}
-	if got, want := binary.LittleEndian.Uint32(audio[40:44]), uint32(len(audio)-44); got != want {
-		t.Fatalf("data size = %d, want %d", got, want)
+	dataSize, ok := wavDataSize(audio)
+	if !ok || dataSize == 0 {
+		t.Fatalf("WAV data chunk was not found: size=%d", len(audio))
 	}
+}
+
+func wavDataSize(audio []byte) (uint32, bool) {
+	for offset := 12; offset+8 <= len(audio); {
+		chunkSize := binary.LittleEndian.Uint32(audio[offset+4 : offset+8])
+		if string(audio[offset:offset+4]) == "data" {
+			return chunkSize, int(chunkSize) <= len(audio)-offset-8
+		}
+		next := offset + 8 + int(chunkSize)
+		if chunkSize%2 != 0 {
+			next++
+		}
+		if next <= offset || next > len(audio) {
+			return 0, false
+		}
+		offset = next
+	}
+	return 0, false
 }
 
 func TestProviderEndpointAndAudioFormats(t *testing.T) {

@@ -26,7 +26,6 @@ func (r *Repository) GetRefreshSessionByHash(ctx context.Context, refreshTokenHa
 	       revoked_reason
 	FROM refresh_sessions
 	WHERE refresh_token_hash = $1
-	   OR previous_refresh_token_hash = $1
 	`
 
 	row := r.db.QueryRowContext(ctx, query, refreshTokenHash)
