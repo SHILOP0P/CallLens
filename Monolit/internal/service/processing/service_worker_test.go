@@ -156,6 +156,11 @@ func TestWorkerDefaultsAndErrorHandling(t *testing.T) {
 	if err := worker.handleJobError(context.Background(), job, errors.New("temporary"), time.Second); err != nil {
 		t.Fatal(err)
 	}
+	job.Attempts = 3
+	if delay := worker.retryDelayFor(job); delay != 4*time.Second {
+		t.Fatalf("retry delay = %s, want 4s", delay)
+	}
+	job.Attempts = 0
 	repo.EXPECT().MarkFailed(mock.Anything, job.ID, models.ErrInvalidProcessingJobType.Error()).
 		Return(models.ProcessingJob{Status: models.ProcessingJobStatusFailed}, nil).Once()
 	if err := worker.handlePermanentJobError(context.Background(), job, models.ErrInvalidProcessingJobType, time.Second); err != nil {

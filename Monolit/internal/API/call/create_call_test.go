@@ -205,16 +205,19 @@ func (s *APISuite) TestCreateCallRejectsInvalidMultipartForm() {
 	s.requireErrorCode(rec, response.CodeInvalidMultipartForm)
 }
 
-func (s *APISuite) TestCreateCallRequiresTitle() {
+func (s *APISuite) TestCreateCallUsesFilenameAsTitleWhenTitleIsMissing() {
 	body, contentType := multipartBody(s.T(), nil, "audio", "call.wav", []byte("RIFF----WAVEfmt "))
+	userID := uuid.New()
+	s.service.On("CreateCall", mock.Anything, mock.MatchedBy(func(input models.CreateCallInput) bool {
+		return input.Title == "call" && input.OriginalFilename == "call.wav"
+	})).Return(models.Call{ID: uuid.New(), Title: "call", Status: models.CallStatusNew, OriginalFilename: "call.wav", UploadedByUserUUID: uuid.NullUUID{UUID: userID, Valid: true}, CreatedAt: time.Now().UTC()}, nil).Once()
 
-	rec, req := s.request(http.MethodPost, "/api/v1/calls", body.String(), uuid.New(), nil)
+	rec, req := s.request(http.MethodPost, "/api/v1/calls", body.String(), userID, nil)
 	req.Header.Set("Content-Type", contentType)
 
 	s.api.Create(rec, req)
 
-	s.Require().Equal(http.StatusBadRequest, rec.Code)
-	s.requireErrorCode(rec, response.CodeCallTitleRequired)
+	s.Require().Equal(http.StatusCreated, rec.Code)
 }
 
 func (s *APISuite) TestCreateCallRequiresAudio() {

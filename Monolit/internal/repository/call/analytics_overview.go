@@ -26,9 +26,11 @@ func (r *Repository) GetAnalyticsOverview(ctx context.Context, input model.Analy
 
 	query := fmt.Sprintf(`
 	SELECT COUNT(*)::int,
+	       COUNT(*) FILTER (WHERE c.created_at >= date_trunc('day', NOW() AT TIME ZONE 'UTC'))::int,
 	       COUNT(*) FILTER (WHERE c.status = 'new')::int,
 	       COUNT(*) FILTER (WHERE c.status = 'processing')::int,
 	       COUNT(*) FILTER (WHERE c.status = 'transcribed')::int,
+	       COUNT(*) FILTER (WHERE c.status IN ('transcribed', 'analyzed'))::int,
 	       COUNT(*) FILTER (WHERE c.status = 'analyzed')::int,
 	       COUNT(*) FILTER (WHERE c.status = 'failed')::int,
 	       AVG(c.duration_seconds)::float8
@@ -40,9 +42,11 @@ func (r *Repository) GetAnalyticsOverview(ctx context.Context, input model.Analy
 	var averageDuration sql.NullFloat64
 	err := r.db.QueryRowContext(ctx, query, args...).Scan(
 		&overview.CallsTotal,
+		&overview.CallsCreatedToday,
 		&overview.CallsNew,
 		&overview.CallsProcessing,
 		&overview.CallsTranscribed,
+		&overview.CallsWithTranscription,
 		&overview.CallsAnalyzed,
 		&overview.CallsFailed,
 		&averageDuration,

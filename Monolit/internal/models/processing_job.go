@@ -37,7 +37,7 @@ const (
 	ProcessingJobTypeAnalyzeCall    ProcessingJobType = "analyze_call"
 )
 
-const DefaultProcessingJobMaxAttempts = 3
+const DefaultProcessingJobMaxAttempts = 5
 
 const (
 	ProcessingJobStatusPending ProcessingJobStatus = "pending"

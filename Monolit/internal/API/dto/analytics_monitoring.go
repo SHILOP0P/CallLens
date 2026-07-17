@@ -2,9 +2,11 @@ package dto
 
 type AnalyticsOverviewResponse struct {
 	CallsTotal             int                         `json:"calls_total"`
+	CallsCreatedToday      int                         `json:"calls_created_today"`
 	CallsNew               int                         `json:"calls_new"`
 	CallsProcessing        int                         `json:"calls_processing"`
 	CallsTranscribed       int                         `json:"calls_transcribed"`
+	CallsWithTranscription int                         `json:"calls_with_transcription"`
 	CallsAnalyzed          int                         `json:"calls_analyzed"`
 	CallsFailed            int                         `json:"calls_failed"`
 	AverageDurationSeconds *int                        `json:"average_duration_seconds"`

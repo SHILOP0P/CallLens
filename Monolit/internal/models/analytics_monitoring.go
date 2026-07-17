@@ -23,9 +23,11 @@ type AnalyticsTopicCount struct {
 
 type AnalyticsOverview struct {
 	CallsTotal             int
+	CallsCreatedToday      int
 	CallsNew               int
 	CallsProcessing        int
 	CallsTranscribed       int
+	CallsWithTranscription int
 	CallsAnalyzed          int
 	CallsFailed            int
 	AverageDurationSeconds *int

@@ -32,11 +32,6 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	title := r.FormValue("title")
-	if title == "" {
-		response.WriteError(w, http.StatusBadRequest, response.CodeCallTitleRequired, "title is required")
-		return
-	}
 	file, fileHeader, err := r.FormFile("media")
 	if err != nil {
 		file, fileHeader, err = r.FormFile("audio")
@@ -46,6 +41,10 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer func() { _ = file.Close() }()
+	title := strings.TrimSpace(r.FormValue("title"))
+	if title == "" {
+		title = titleFromFilename(fileHeader.Filename)
+	}
 
 	buffer := make([]byte, 512)
 	n, err := file.Read(buffer)
@@ -141,6 +140,15 @@ func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := response.WriteJSON(w, http.StatusCreated, resp); err != nil {
 		return
 	}
+}
+
+func titleFromFilename(filename string) string {
+	base := strings.TrimSpace(filepath.Base(filename))
+	name := strings.TrimSpace(strings.TrimSuffix(base, filepath.Ext(base)))
+	if name == "" || name == "." {
+		return "Звонок"
+	}
+	return name
 }
 
 func normalizeDetectedMediaMimeType(filename string, detected string) string {

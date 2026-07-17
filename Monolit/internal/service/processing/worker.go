@@ -15,9 +15,11 @@ import (
 
 const (
 	defaultPollInterval = 2 * time.Second
-	defaultWorkerLimit  = 10
-	defaultRetryDelay   = 1 * time.Minute
-	defaultStaleAfter   = 10 * time.Minute
+	// Analyze requests are sent to an external LLM provider. A conservative
+	// default prevents a batch upload from creating a rate-limit burst.
+	defaultWorkerLimit = 1
+	defaultRetryDelay  = 1 * time.Minute
+	defaultStaleAfter  = 10 * time.Minute
 )
 
 type Worker struct {
@@ -167,7 +169,8 @@ func (w *Worker) handleJobError(ctx context.Context, job models.ProcessingJob, c
 		return w.handlePermanentJobError(ctx, job, cause, duration)
 	}
 
-	updatedJob, err := w.service.processingJobRepository.MarkRetry(ctx, job.ID, cause.Error(), w.retryDelay)
+	retryDelay := w.retryDelayFor(job)
+	updatedJob, err := w.service.processingJobRepository.MarkRetry(ctx, job.ID, cause.Error(), retryDelay)
 	if err != nil {
 		w.log.Error(
 			ctx,
@@ -192,7 +195,7 @@ func (w *Worker) handleJobError(ctx context.Context, job models.ProcessingJob, c
 		w.service.MarkJobFailed(ctx, job, cause)
 		message = "processing job exhausted retries"
 	} else {
-		fields = append(fields, zap.Duration("retry_delay", w.retryDelay))
+		fields = append(fields, zap.Duration("retry_delay", retryDelay))
 	}
 
 	w.log.Warn(
@@ -202,6 +205,20 @@ func (w *Worker) handleJobError(ctx context.Context, job models.ProcessingJob, c
 	)
 
 	return nil
+}
+
+// retryDelayFor exponentially spaces retryable failures. In particular, 429
+// responses must not be retried as another simultaneous burst a minute later.
+func (w *Worker) retryDelayFor(job models.ProcessingJob) time.Duration {
+	exponent := job.Attempts - 1
+	if exponent < 0 {
+		exponent = 0
+	}
+	if exponent > 4 {
+		exponent = 4
+	}
+
+	return w.retryDelay * time.Duration(1<<exponent)
 }
 
 func (w *Worker) handlePermanentJobError(ctx context.Context, job models.ProcessingJob, cause error, duration time.Duration) error {

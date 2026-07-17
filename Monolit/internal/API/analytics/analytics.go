@@ -243,9 +243,11 @@ func overviewToAPI(overview models.AnalyticsOverview) dto.AnalyticsOverviewRespo
 
 	return dto.AnalyticsOverviewResponse{
 		CallsTotal:             overview.CallsTotal,
+		CallsCreatedToday:      overview.CallsCreatedToday,
 		CallsNew:               overview.CallsNew,
 		CallsProcessing:        overview.CallsProcessing,
 		CallsTranscribed:       overview.CallsTranscribed,
+		CallsWithTranscription: overview.CallsWithTranscription,
 		CallsAnalyzed:          overview.CallsAnalyzed,
 		CallsFailed:            overview.CallsFailed,
 		AverageDurationSeconds: overview.AverageDurationSeconds,

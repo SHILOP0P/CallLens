@@ -63,6 +63,8 @@ func (s *RepositorySuite) TestGetAnalyticsOverviewAggregatesVisibleFilteredCalls
 	})
 	s.Require().NoError(err)
 	s.Require().Equal(2, overview.CallsTotal)
+	s.Require().Zero(overview.CallsCreatedToday)
+	s.Require().Equal(1, overview.CallsWithTranscription)
 	s.Require().Equal(1, overview.CallsAnalyzed)
 	s.Require().Equal(1, overview.CallsFailed)
 	s.Require().NotNil(overview.AverageDurationSeconds)

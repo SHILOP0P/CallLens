@@ -9,10 +9,10 @@ import (
 type workerEnvConfig struct {
 	Enabled      bool          `env:"WORKER_ENABLED" envDefault:"true"`
 	PollInterval time.Duration `env:"WORKER_POLL_INTERVAL" envDefault:"2s"`
-	Limit        int           `env:"WORKER_LIMIT" envDefault:"10"`
+	Limit        int           `env:"WORKER_LIMIT" envDefault:"1"`
 	RetryDelay   time.Duration `env:"WORKER_RETRY_DELAY" envDefault:"1m"`
 	StaleAfter   time.Duration `env:"WORKER_STALE_AFTER" envDefault:"10m"`
-	MaxAttempts  int           `env:"WORKER_MAX_ATTEMPTS" envDefault:"3"`
+	MaxAttempts  int           `env:"WORKER_MAX_ATTEMPTS" envDefault:"5"`
 }
 
 type workerConfig struct {

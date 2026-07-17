@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const defaultProcessingJobMaxAttempts = 3
+const defaultProcessingJobMaxAttempts = models.DefaultProcessingJobMaxAttempts
 
 type DurationDetector interface {
 	DetectDuration(ctx context.Context, path string) (int, error)
