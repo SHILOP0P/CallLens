@@ -8,6 +8,7 @@ func ScanProcessingJob(row rowScanner) (repoModel.ProcessingJob, error) {
 	err := row.Scan(
 		&job.ID,
 		&job.Type,
+		&job.TranscriptionMode,
 		&job.EntityUUID,
 		&job.Status,
 		&job.Attempts,

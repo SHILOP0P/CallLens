@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"calllens/monolit/internal/logger"
+	"calllens/monolit/internal/models"
 	repo "calllens/monolit/internal/repository"
 	"calllens/monolit/internal/storage"
 
@@ -23,18 +24,23 @@ type BillingLimiter interface {
 	AddBusinessUsageMinutes(ctx context.Context, companyID uuid.UUID, durationSeconds int) error
 }
 
+type TranscriptionModeResolver interface {
+	ResolveTranscriptionMode(ctx context.Context, userID uuid.UUID, companyID uuid.NullUUID) (models.TranscriptionMode, error)
+}
+
 type Service struct {
-	repository               repo.CallRepository
-	transcriptionRepository  repo.TranscriptionRepository
-	processingJobRepository  repo.ProcessingJobRepository
-	callFolderRepository     repo.CallFolderRepository
-	companyRepository        repo.CompanyRepository
-	departmentRepository     repo.DepartmentRepository
-	audioStorage             storage.AudioStorage
-	durationDetector         DurationDetector
-	billingLimiter           BillingLimiter
-	processingJobMaxAttempts int
-	log                      logger.Logger
+	repository                repo.CallRepository
+	transcriptionRepository   repo.TranscriptionRepository
+	processingJobRepository   repo.ProcessingJobRepository
+	callFolderRepository      repo.CallFolderRepository
+	companyRepository         repo.CompanyRepository
+	departmentRepository      repo.DepartmentRepository
+	audioStorage              storage.AudioStorage
+	durationDetector          DurationDetector
+	billingLimiter            BillingLimiter
+	transcriptionModeResolver TranscriptionModeResolver
+	processingJobMaxAttempts  int
+	log                       logger.Logger
 }
 
 func NewService(
@@ -84,4 +90,8 @@ func (s *Service) SetDurationDetector(detector DurationDetector) {
 
 func (s *Service) SetBillingLimiter(limiter BillingLimiter) {
 	s.billingLimiter = limiter
+}
+
+func (s *Service) SetTranscriptionModeResolver(resolver TranscriptionModeResolver) {
+	s.transcriptionModeResolver = resolver
 }

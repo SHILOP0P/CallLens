@@ -13,6 +13,7 @@ func NewRepository(db *sql.DB) *Repository {
 const processingJobReturningColumns = `
 	job_uuid,
 	job_type,
+	transcription_mode,
 	entity_uuid,
 	status,
 	attempts,

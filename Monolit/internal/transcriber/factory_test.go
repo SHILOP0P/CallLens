@@ -44,7 +44,7 @@ func TestNewFromConfigAndMockTranscriber(t *testing.T) {
 		t.Fatal("expected canceled context error")
 	}
 	hybrid, err := NewFromConfig(testConfig{provider: "hybrid", apiKey: "key", model: "openai/whisper-large-v3", url: "http://localhost:8090"})
-	if err != nil || hybrid.Provider() != "openrouter-pyannote" {
+	if err != nil || hybrid.Provider() != "openrouter" {
 		t.Fatalf("hybrid provider = %T, %v", hybrid, err)
 	}
 }

@@ -158,6 +158,7 @@ func (r *Repository) CreateCallWithProcessingJob(ctx context.Context, call model
 	INSERT INTO processing_jobs (
 		job_uuid,
 		job_type,
+		transcription_mode,
 		entity_uuid,
 		status,
 		attempts,
@@ -169,12 +170,13 @@ func (r *Repository) CreateCallWithProcessingJob(ctx context.Context, call model
 		created_at,
 		updated_at
 	)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 	`
 
 	_, err = tx.ExecContext(ctx, createJob,
 		repoJob.ID,
 		repoJob.Type,
+		repoJob.TranscriptionMode,
 		repoJob.EntityUUID,
 		repoJob.Status,
 		repoJob.Attempts,

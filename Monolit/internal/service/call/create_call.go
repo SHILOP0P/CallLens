@@ -63,7 +63,13 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 		return models.Call{}, err
 	}
 
-	createdCall, err := s.createCallRecord(ctx, call, now)
+	transcriptionMode, err := s.resolveTranscriptionMode(ctx, input)
+	if err != nil {
+		_ = s.audioStorage.Delete(context.Background(), savedFile.Path)
+		return models.Call{}, err
+	}
+
+	createdCall, err := s.createCallRecord(ctx, call, now, transcriptionMode)
 	if err != nil {
 		_ = s.audioStorage.Delete(context.Background(), savedFile.Path)
 		s.log.Error(ctx, "failed to create call record", zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("call_id", callUUID.String()), zap.Error(err))
@@ -124,7 +130,14 @@ func (s *Service) detectAudioDuration(ctx context.Context, path string) (int, er
 	return durationSeconds, nil
 }
 
-func (s *Service) createCallRecord(ctx context.Context, call models.Call, now time.Time) (models.Call, error) {
+func (s *Service) resolveTranscriptionMode(ctx context.Context, input models.CreateCallInput) (models.TranscriptionMode, error) {
+	if s.transcriptionModeResolver == nil {
+		return models.TranscriptionModeStandard, nil
+	}
+	return s.transcriptionModeResolver.ResolveTranscriptionMode(ctx, input.UploadedByUserUUID, input.CompanyUUID)
+}
+
+func (s *Service) createCallRecord(ctx context.Context, call models.Call, now time.Time, mode models.TranscriptionMode) (models.Call, error) {
 	if s.processingJobRepository == nil {
 		return s.repository.CreateCall(ctx, call)
 	}
@@ -135,15 +148,16 @@ func (s *Service) createCallRecord(ctx context.Context, call models.Call, now ti
 	}
 
 	job := models.ProcessingJob{
-		ID:          jobID,
-		Type:        models.ProcessingJobTypeTranscribeCall,
-		EntityUUID:  call.ID,
-		Status:      models.ProcessingJobStatusPending,
-		Attempts:    0,
-		MaxAttempts: s.processingJobMaxAttempts,
-		AvailableAt: now,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		ID:                jobID,
+		Type:              models.ProcessingJobTypeTranscribeCall,
+		TranscriptionMode: mode,
+		EntityUUID:        call.ID,
+		Status:            models.ProcessingJobStatusPending,
+		Attempts:          0,
+		MaxAttempts:       s.processingJobMaxAttempts,
+		AvailableAt:       now,
+		CreatedAt:         now,
+		UpdatedAt:         now,
 	}
 
 	return s.repository.CreateCallWithProcessingJob(ctx, call, job)

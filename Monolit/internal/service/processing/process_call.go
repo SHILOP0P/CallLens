@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"calllens/monolit/internal/models"
+	"calllens/monolit/internal/transcriber"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -34,12 +35,26 @@ func (s *Service) ProcessClaimedCall(ctx context.Context, call models.Call) {
 func (s *Service) ProcessJob(ctx context.Context, job models.ProcessingJob) error {
 	switch job.Type {
 	case models.ProcessingJobTypeTranscribeCall:
-		return s.ProcessTranscribeCall(ctx, job.EntityUUID)
+		return s.processTranscribeJob(ctx, job)
 	case models.ProcessingJobTypeAnalyzeCall:
 		return s.ProcessAnalyzeCall(ctx, job.EntityUUID)
 	default:
 		return models.ErrInvalidProcessingJobType
 	}
+}
+
+func (s *Service) processTranscribeJob(ctx context.Context, job models.ProcessingJob) error {
+	if job.EntityUUID == uuid.Nil {
+		return models.ErrCallNotFound
+	}
+	if s.transcriber == nil {
+		return models.ErrTranscriberNotConfigured
+	}
+	call, err := s.callRepository.GetByUUIDForProcessing(ctx, job.EntityUUID)
+	if err != nil {
+		return fmt.Errorf("get call for processing: %w", err)
+	}
+	return s.processTranscribeCallWithMode(ctx, call, job.TranscriptionMode)
 }
 
 func (s *Service) ProcessTranscribeCall(ctx context.Context, callID uuid.UUID) error {
@@ -56,10 +71,14 @@ func (s *Service) ProcessTranscribeCall(ctx context.Context, callID uuid.UUID) e
 		return fmt.Errorf("get call for processing: %w", err)
 	}
 
-	return s.processTranscribeCall(ctx, call)
+	return s.processTranscribeCallWithMode(ctx, call, models.TranscriptionModeStandard)
 }
 
 func (s *Service) processTranscribeCall(ctx context.Context, call models.Call) error {
+	return s.processTranscribeCallWithMode(ctx, call, models.TranscriptionModeStandard)
+}
+
+func (s *Service) processTranscribeCallWithMode(ctx context.Context, call models.Call, mode models.TranscriptionMode) error {
 	if s.transcriber == nil {
 		return models.ErrTranscriberNotConfigured
 	}
@@ -90,7 +109,7 @@ func (s *Service) processTranscribeCall(ctx context.Context, call models.Call) e
 		return fmt.Errorf("%w: %s", models.ErrInvalidCallStatusTransition, call.Status)
 	}
 
-	transcription, err := s.createProcessingTranscription(ctx, call.ID)
+	transcription, err := s.createProcessingTranscription(ctx, call.ID, mode)
 	if err != nil {
 		return fmt.Errorf("create transcription record: %w", err)
 	}
@@ -101,7 +120,7 @@ func (s *Service) processTranscribeCall(ctx context.Context, call models.Call) e
 	}
 	defer func() { _ = audioFile.Content.Close() }()
 
-	result, err := s.transcriber.Transcribe(ctx, audioFile)
+	result, err := s.transcribe(ctx, audioFile, mode)
 	if err != nil {
 		return fmt.Errorf("transcribe audio: %w", err)
 	}
@@ -118,7 +137,7 @@ func (s *Service) processTranscribeCall(ctx context.Context, call models.Call) e
 		return fmt.Errorf("enqueue analysis job: %w", err)
 	}
 
-	s.log.Info(ctx, "call transcribed", zap.String("call_id", call.ID.String()), zap.String("provider", s.transcriber.Provider()))
+	s.log.Info(ctx, "call transcribed", zap.String("call_id", call.ID.String()), zap.String("provider", s.providerForMode(mode)), zap.String("transcription_mode", string(mode)))
 
 	return nil
 }
@@ -165,7 +184,7 @@ func (s *Service) enqueueAnalyzeJob(ctx context.Context, callID uuid.UUID) error
 	return nil
 }
 
-func (s *Service) createProcessingTranscription(ctx context.Context, callID uuid.UUID) (models.Transcription, error) {
+func (s *Service) createProcessingTranscription(ctx context.Context, callID uuid.UUID, mode models.TranscriptionMode) (models.Transcription, error) {
 	transcriptionID, err := uuid.NewV7()
 	if err != nil {
 		return models.Transcription{}, err
@@ -177,10 +196,24 @@ func (s *Service) createProcessingTranscription(ctx context.Context, callID uuid
 		ID:        transcriptionID,
 		CallUUID:  callID,
 		Status:    models.TranscriptionStatusProcessing,
-		Provider:  s.transcriber.Provider(),
+		Provider:  s.providerForMode(mode),
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
+}
+
+func (s *Service) transcribe(ctx context.Context, file models.File, mode models.TranscriptionMode) (models.TranscriptionResult, error) {
+	if provider, ok := s.transcriber.(transcriber.ModeAware); ok {
+		return provider.TranscribeForMode(ctx, file, mode)
+	}
+	return s.transcriber.Transcribe(ctx, file)
+}
+
+func (s *Service) providerForMode(mode models.TranscriptionMode) string {
+	if provider, ok := s.transcriber.(transcriber.ModeAware); ok {
+		return provider.ProviderForMode(mode)
+	}
+	return s.transcriber.Provider()
 }
 
 func (s *Service) openAudio(ctx context.Context, call models.Call) (models.File, error) {

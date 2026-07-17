@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"calllens/monolit/internal/transcriber/hybrid"
 	mockTranscriber "calllens/monolit/internal/transcriber/mock"
 	openrouterTranscriber "calllens/monolit/internal/transcriber/openrouter"
 )
@@ -25,7 +24,7 @@ func NewFromConfig(cfg Config) (Transcriber, error) {
 	case "openrouter":
 		return openrouterTranscriber.New(cfg.APIKey(), cfg.Model())
 	case "hybrid", "openrouter-pyannote":
-		return hybrid.New(cfg.APIKey(), cfg.Model(), cfg.URL())
+		return newTieredTranscriber(cfg.APIKey(), cfg.Model(), cfg.URL())
 	case "openai":
 		return nil, fmt.Errorf("openai transcriber is not implemented yet")
 	default:

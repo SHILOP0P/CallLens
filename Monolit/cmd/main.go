@@ -261,6 +261,7 @@ func main() {
 	notificationSvc := notificationService.NewService(notificationRepository)
 	billingSvc.SetCompanyRepository(companyRepository)
 	callSvc.SetBillingLimiter(billingSvc)
+	callSvc.SetTranscriptionModeResolver(billingSvc)
 	companySvc.SetBillingLimiter(billingSvc)
 	departmentSvc.SetBillingLimiter(billingSvc)
 	invitationSvc.SetBillingLimiter(billingSvc)

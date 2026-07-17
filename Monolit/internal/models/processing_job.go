@@ -7,19 +7,27 @@ import (
 )
 
 type ProcessingJob struct {
-	ID          uuid.UUID
-	Type        ProcessingJobType
-	EntityUUID  uuid.UUID
-	Status      ProcessingJobStatus
-	Attempts    int
-	MaxAttempts int
-	AvailableAt time.Time
-	LockedAt    *time.Time
-	LockedBy    *string
-	LastError   *string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID                uuid.UUID
+	Type              ProcessingJobType
+	TranscriptionMode TranscriptionMode
+	EntityUUID        uuid.UUID
+	Status            ProcessingJobStatus
+	Attempts          int
+	MaxAttempts       int
+	AvailableAt       time.Time
+	LockedAt          *time.Time
+	LockedBy          *string
+	LastError         *string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
+
+type TranscriptionMode string
+
+const (
+	TranscriptionModeStandard TranscriptionMode = "standard"
+	TranscriptionModeDiarized TranscriptionMode = "diarized"
+)
 
 type ProcessingJobType string
 type ProcessingJobStatus string
