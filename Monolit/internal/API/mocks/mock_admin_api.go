@@ -94,10 +94,6 @@ func (_m *AdminAPI) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
 }
 
-func (_m *AdminAPI) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
-	_m.Called(w, r)
-}
-
 // AdminAPI_ChangeUserRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ChangeUserRole'
 type AdminAPI_ChangeUserRole_Call struct {
 	*mock.Call
@@ -336,10 +332,6 @@ func (_m *AdminAPI) GetUser(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
 }
 
-func (_m *AdminAPI) ListUserCalls(w http.ResponseWriter, r *http.Request) {
-	_m.Called(w, r)
-}
-
 // AdminAPI_GetUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUser'
 type AdminAPI_GetUser_Call struct {
 	*mock.Call
@@ -471,6 +463,40 @@ func (_c *AdminAPI_ListCompanies_Call) RunAndReturn(run func(http.ResponseWriter
 	return _c
 }
 
+// ListUserCalls provides a mock function with given fields: w, r
+func (_m *AdminAPI) ListUserCalls(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_ListUserCalls_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListUserCalls'
+type AdminAPI_ListUserCalls_Call struct {
+	*mock.Call
+}
+
+// ListUserCalls is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) ListUserCalls(w interface{}, r interface{}) *AdminAPI_ListUserCalls_Call {
+	return &AdminAPI_ListUserCalls_Call{Call: _e.mock.On("ListUserCalls", w, r)}
+}
+
+func (_c *AdminAPI_ListUserCalls_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_ListUserCalls_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_ListUserCalls_Call) Return() *AdminAPI_ListUserCalls_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_ListUserCalls_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_ListUserCalls_Call {
+	_c.Run(run)
+	return _c
+}
+
 // ListUserSessions provides a mock function with given fields: w, r
 func (_m *AdminAPI) ListUserSessions(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -539,6 +565,74 @@ func (_c *AdminAPI_ListUsers_Call) RunAndReturn(run func(http.ResponseWriter, *h
 	return _c
 }
 
+// ResetCompanyUsage provides a mock function with given fields: w, r
+func (_m *AdminAPI) ResetCompanyUsage(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_ResetCompanyUsage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetCompanyUsage'
+type AdminAPI_ResetCompanyUsage_Call struct {
+	*mock.Call
+}
+
+// ResetCompanyUsage is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) ResetCompanyUsage(w interface{}, r interface{}) *AdminAPI_ResetCompanyUsage_Call {
+	return &AdminAPI_ResetCompanyUsage_Call{Call: _e.mock.On("ResetCompanyUsage", w, r)}
+}
+
+func (_c *AdminAPI_ResetCompanyUsage_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_ResetCompanyUsage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_ResetCompanyUsage_Call) Return() *AdminAPI_ResetCompanyUsage_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_ResetCompanyUsage_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_ResetCompanyUsage_Call {
+	_c.Run(run)
+	return _c
+}
+
+// ResetPersonalUsage provides a mock function with given fields: w, r
+func (_m *AdminAPI) ResetPersonalUsage(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_ResetPersonalUsage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetPersonalUsage'
+type AdminAPI_ResetPersonalUsage_Call struct {
+	*mock.Call
+}
+
+// ResetPersonalUsage is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) ResetPersonalUsage(w interface{}, r interface{}) *AdminAPI_ResetPersonalUsage_Call {
+	return &AdminAPI_ResetPersonalUsage_Call{Call: _e.mock.On("ResetPersonalUsage", w, r)}
+}
+
+func (_c *AdminAPI_ResetPersonalUsage_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_ResetPersonalUsage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_ResetPersonalUsage_Call) Return() *AdminAPI_ResetPersonalUsage_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_ResetPersonalUsage_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_ResetPersonalUsage_Call {
+	_c.Run(run)
+	return _c
+}
+
 // RevokeAllUserSessions provides a mock function with given fields: w, r
 func (_m *AdminAPI) RevokeAllUserSessions(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
@@ -603,6 +697,40 @@ func (_c *AdminAPI_RevokeUserSession_Call) Return() *AdminAPI_RevokeUserSession_
 }
 
 func (_c *AdminAPI_RevokeUserSession_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_RevokeUserSession_Call {
+	_c.Run(run)
+	return _c
+}
+
+// UpdateUserProfile provides a mock function with given fields: w, r
+func (_m *AdminAPI) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AdminAPI_UpdateUserProfile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUserProfile'
+type AdminAPI_UpdateUserProfile_Call struct {
+	*mock.Call
+}
+
+// UpdateUserProfile is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AdminAPI_Expecter) UpdateUserProfile(w interface{}, r interface{}) *AdminAPI_UpdateUserProfile_Call {
+	return &AdminAPI_UpdateUserProfile_Call{Call: _e.mock.On("UpdateUserProfile", w, r)}
+}
+
+func (_c *AdminAPI_UpdateUserProfile_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AdminAPI_UpdateUserProfile_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AdminAPI_UpdateUserProfile_Call) Return() *AdminAPI_UpdateUserProfile_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AdminAPI_UpdateUserProfile_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AdminAPI_UpdateUserProfile_Call {
 	_c.Run(run)
 	return _c
 }

@@ -28,24 +28,41 @@ func (s *Service) UpdateCompany(ctx context.Context, input models.UpdateCompanyI
 }
 
 func (s *Service) UpdateCompanyTag(ctx context.Context, input models.UpdateCompanyTagInput) (models.Company, error) {
-	input.Tag = strings.TrimSpace(input.Tag)
-	if input.CompanyUUID == uuid.Nil || input.RequestUser == uuid.Nil || input.Tag == "" {
+	if input.CompanyUUID == uuid.Nil || input.RequestUser == uuid.Nil {
 		return models.Company{}, models.ErrInvalidCompanyInput
 	}
-	defaultTag := "@" + input.CompanyUUID.String()
-	if !strings.EqualFold(input.Tag, defaultTag) {
-		normalized, ok := username.Normalize(input.Tag)
-		if !ok {
-			return models.Company{}, models.ErrInvalidCompanyInput
-		}
-		input.Tag = normalized
-	} else {
-		input.Tag = defaultTag
+	tag, err := normalizeCompanyTag(input.CompanyUUID, input.Tag)
+	if err != nil {
+		return models.Company{}, err
 	}
 	if err := s.requireCompanyManager(ctx, input.CompanyUUID, input.RequestUser); err != nil {
 		return models.Company{}, err
 	}
-	return s.companyRepository.UpdateCompanyTag(ctx, input.CompanyUUID, input.Tag)
+	return s.companyRepository.UpdateCompanyTag(ctx, input.CompanyUUID, tag)
+}
+
+func (s *Service) UpdateCompanyTagAsAdmin(ctx context.Context, companyID uuid.UUID, tag string) (models.Company, error) {
+	normalized, err := normalizeCompanyTag(companyID, tag)
+	if err != nil {
+		return models.Company{}, err
+	}
+	return s.companyRepository.UpdateCompanyTag(ctx, companyID, normalized)
+}
+
+func normalizeCompanyTag(companyID uuid.UUID, tag string) (string, error) {
+	tag = strings.TrimSpace(tag)
+	if companyID == uuid.Nil || tag == "" {
+		return "", models.ErrInvalidCompanyInput
+	}
+	defaultTag := "@" + companyID.String()
+	if strings.EqualFold(tag, defaultTag) {
+		return defaultTag, nil
+	}
+	normalized, ok := username.Normalize(tag)
+	if !ok {
+		return "", models.ErrInvalidCompanyInput
+	}
+	return normalized, nil
 }
 
 func (s *Service) DeleteCompany(ctx context.Context, input models.DeleteCompanyInput) error {

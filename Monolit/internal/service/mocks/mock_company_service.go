@@ -301,6 +301,64 @@ func (_c *CompanyService_GetCompanyMembersOverview_Call) RunAndReturn(run func(c
 	return _c
 }
 
+// LeaveCompany provides a mock function with given fields: ctx, companyID, userID
+func (_m *CompanyService) LeaveCompany(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.CompanyMember, error) {
+	ret := _m.Called(ctx, companyID, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LeaveCompany")
+	}
+
+	var r0 models.CompanyMember
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) (models.CompanyMember, error)); ok {
+		return rf(ctx, companyID, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) models.CompanyMember); ok {
+		r0 = rf(ctx, companyID, userID)
+	} else {
+		r0 = ret.Get(0).(models.CompanyMember)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r1 = rf(ctx, companyID, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CompanyService_LeaveCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'LeaveCompany'
+type CompanyService_LeaveCompany_Call struct {
+	*mock.Call
+}
+
+// LeaveCompany is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+//   - userID uuid.UUID
+func (_e *CompanyService_Expecter) LeaveCompany(ctx interface{}, companyID interface{}, userID interface{}) *CompanyService_LeaveCompany_Call {
+	return &CompanyService_LeaveCompany_Call{Call: _e.mock.On("LeaveCompany", ctx, companyID, userID)}
+}
+
+func (_c *CompanyService_LeaveCompany_Call) Run(run func(ctx context.Context, companyID uuid.UUID, userID uuid.UUID)) *CompanyService_LeaveCompany_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *CompanyService_LeaveCompany_Call) Return(_a0 models.CompanyMember, _a1 error) *CompanyService_LeaveCompany_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CompanyService_LeaveCompany_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) (models.CompanyMember, error)) *CompanyService_LeaveCompany_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListCompanyMembers provides a mock function with given fields: ctx, input
 func (_m *CompanyService) ListCompanyMembers(ctx context.Context, input models.ListCompanyMembersInput) (models.CompanyMembersResult, error) {
 	ret := _m.Called(ctx, input)
@@ -445,23 +503,6 @@ func (_m *CompanyService) UpdateCompany(ctx context.Context, input models.Update
 	return r0, r1
 }
 
-func (_m *CompanyService) UpdateCompanyTag(ctx context.Context, input models.UpdateCompanyTagInput) (models.Company, error) {
-	ret := _m.Called(ctx, input)
-	var r0 models.Company
-	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateCompanyTagInput) models.Company); ok {
-		r0 = rf(ctx, input)
-	} else if ret.Get(0) != nil {
-		r0 = ret.Get(0).(models.Company)
-	}
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateCompanyTagInput) error); ok {
-		r1 = rf(ctx, input)
-	} else if ret.Get(1) != nil {
-		r1 = ret.Get(1).(error)
-	}
-	return r0, r1
-}
-
 // CompanyService_UpdateCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCompany'
 type CompanyService_UpdateCompany_Call struct {
 	*mock.Call
@@ -601,6 +642,121 @@ func (_c *CompanyService_UpdateCompanyMemberStatus_Call) Return(_a0 models.Compa
 }
 
 func (_c *CompanyService_UpdateCompanyMemberStatus_Call) RunAndReturn(run func(context.Context, models.UpdateCompanyMemberStatusInput) (models.CompanyMember, error)) *CompanyService_UpdateCompanyMemberStatus_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateCompanyTag provides a mock function with given fields: ctx, input
+func (_m *CompanyService) UpdateCompanyTag(ctx context.Context, input models.UpdateCompanyTagInput) (models.Company, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCompanyTag")
+	}
+
+	var r0 models.Company
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateCompanyTagInput) (models.Company, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateCompanyTagInput) models.Company); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.Company)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateCompanyTagInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CompanyService_UpdateCompanyTag_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCompanyTag'
+type CompanyService_UpdateCompanyTag_Call struct {
+	*mock.Call
+}
+
+// UpdateCompanyTag is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UpdateCompanyTagInput
+func (_e *CompanyService_Expecter) UpdateCompanyTag(ctx interface{}, input interface{}) *CompanyService_UpdateCompanyTag_Call {
+	return &CompanyService_UpdateCompanyTag_Call{Call: _e.mock.On("UpdateCompanyTag", ctx, input)}
+}
+
+func (_c *CompanyService_UpdateCompanyTag_Call) Run(run func(ctx context.Context, input models.UpdateCompanyTagInput)) *CompanyService_UpdateCompanyTag_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UpdateCompanyTagInput))
+	})
+	return _c
+}
+
+func (_c *CompanyService_UpdateCompanyTag_Call) Return(_a0 models.Company, _a1 error) *CompanyService_UpdateCompanyTag_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CompanyService_UpdateCompanyTag_Call) RunAndReturn(run func(context.Context, models.UpdateCompanyTagInput) (models.Company, error)) *CompanyService_UpdateCompanyTag_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateCompanyTagAsAdmin provides a mock function with given fields: ctx, companyID, tag
+func (_m *CompanyService) UpdateCompanyTagAsAdmin(ctx context.Context, companyID uuid.UUID, tag string) (models.Company, error) {
+	ret := _m.Called(ctx, companyID, tag)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCompanyTagAsAdmin")
+	}
+
+	var r0 models.Company
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (models.Company, error)); ok {
+		return rf(ctx, companyID, tag)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) models.Company); ok {
+		r0 = rf(ctx, companyID, tag)
+	} else {
+		r0 = ret.Get(0).(models.Company)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, companyID, tag)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CompanyService_UpdateCompanyTagAsAdmin_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCompanyTagAsAdmin'
+type CompanyService_UpdateCompanyTagAsAdmin_Call struct {
+	*mock.Call
+}
+
+// UpdateCompanyTagAsAdmin is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+//   - tag string
+func (_e *CompanyService_Expecter) UpdateCompanyTagAsAdmin(ctx interface{}, companyID interface{}, tag interface{}) *CompanyService_UpdateCompanyTagAsAdmin_Call {
+	return &CompanyService_UpdateCompanyTagAsAdmin_Call{Call: _e.mock.On("UpdateCompanyTagAsAdmin", ctx, companyID, tag)}
+}
+
+func (_c *CompanyService_UpdateCompanyTagAsAdmin_Call) Run(run func(ctx context.Context, companyID uuid.UUID, tag string)) *CompanyService_UpdateCompanyTagAsAdmin_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *CompanyService_UpdateCompanyTagAsAdmin_Call) Return(_a0 models.Company, _a1 error) *CompanyService_UpdateCompanyTagAsAdmin_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CompanyService_UpdateCompanyTagAsAdmin_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (models.Company, error)) *CompanyService_UpdateCompanyTagAsAdmin_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -33,8 +33,6 @@ type UpdateAdminUserProfileRequest struct {
 	FullSurname *string `json:"full_surname"`
 	Username    *string `json:"username"`
 	Post        *string `json:"post"`
-	Phone       *string `json:"phone"`
-	Timezone    *string `json:"timezone"`
 	Reason      string  `json:"reason"`
 }
 type AdminSessionResponse struct {
@@ -55,6 +53,7 @@ type AdminReasonRequest struct {
 type AdminCompanyResponse struct {
 	ID              string `json:"id"`
 	Name            string `json:"name"`
+	Tag             string `json:"tag"`
 	ManagerUserUUID string `json:"manager_user_uuid"`
 	CreatedAt       string `json:"created_at"`
 }

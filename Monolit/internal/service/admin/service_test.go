@@ -24,8 +24,8 @@ func TestGetCapabilities(t *testing.T) {
 	}{
 		{name: "user denied", role: models.UserRoleUser, wantErr: models.ErrForbidden},
 		{name: "helper", role: models.UserRoleHelper, permissions: 4},
-		{name: "admin", role: models.UserRoleAdmin, permissions: 13},
-		{name: "superadmin", role: models.UserRoleSuperAdmin, permissions: 14},
+		{name: "admin", role: models.UserRoleAdmin, permissions: 14},
+		{name: "superadmin", role: models.UserRoleSuperAdmin, permissions: 15},
 	}
 
 	for _, tt := range tests {
@@ -124,6 +124,10 @@ func TestRecordAuditRequiresRepository(t *testing.T) {
 type auditRepositoryStub struct {
 	created models.AdminAuditLog
 	err     error
+}
+
+func (r *auditRepositoryStub) ResetAdminUsage(context.Context, models.ResetAdminUsageInput) error {
+	return nil
 }
 
 func (r *auditRepositoryStub) ListAdminUsers(context.Context, models.ListAdminUsersInput) (models.ListAdminUsersResult, error) {

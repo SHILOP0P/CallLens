@@ -618,23 +618,6 @@ func (_m *CompanyRepository) UpdateCompany(ctx context.Context, companyID uuid.U
 	return r0, r1
 }
 
-func (_m *CompanyRepository) UpdateCompanyTag(ctx context.Context, companyID uuid.UUID, tag string) (models.Company, error) {
-	ret := _m.Called(ctx, companyID, tag)
-	var r0 models.Company
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) models.Company); ok {
-		r0 = rf(ctx, companyID, tag)
-	} else if ret.Get(0) != nil {
-		r0 = ret.Get(0).(models.Company)
-	}
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
-		r1 = rf(ctx, companyID, tag)
-	} else if ret.Get(1) != nil {
-		r1 = ret.Get(1).(error)
-	}
-	return r0, r1
-}
-
 // CompanyRepository_UpdateCompany_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCompany'
 type CompanyRepository_UpdateCompany_Call struct {
 	*mock.Call
@@ -779,6 +762,64 @@ func (_c *CompanyRepository_UpdateCompanyMemberStatus_Call) Return(_a0 models.Co
 }
 
 func (_c *CompanyRepository_UpdateCompanyMemberStatus_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID, models.MembershipStatus) (models.CompanyMember, error)) *CompanyRepository_UpdateCompanyMemberStatus_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateCompanyTag provides a mock function with given fields: ctx, companyID, tag
+func (_m *CompanyRepository) UpdateCompanyTag(ctx context.Context, companyID uuid.UUID, tag string) (models.Company, error) {
+	ret := _m.Called(ctx, companyID, tag)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCompanyTag")
+	}
+
+	var r0 models.Company
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) (models.Company, error)); ok {
+		return rf(ctx, companyID, tag)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, string) models.Company); ok {
+		r0 = rf(ctx, companyID, tag)
+	} else {
+		r0 = ret.Get(0).(models.Company)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, string) error); ok {
+		r1 = rf(ctx, companyID, tag)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CompanyRepository_UpdateCompanyTag_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCompanyTag'
+type CompanyRepository_UpdateCompanyTag_Call struct {
+	*mock.Call
+}
+
+// UpdateCompanyTag is a helper method to define mock.On call
+//   - ctx context.Context
+//   - companyID uuid.UUID
+//   - tag string
+func (_e *CompanyRepository_Expecter) UpdateCompanyTag(ctx interface{}, companyID interface{}, tag interface{}) *CompanyRepository_UpdateCompanyTag_Call {
+	return &CompanyRepository_UpdateCompanyTag_Call{Call: _e.mock.On("UpdateCompanyTag", ctx, companyID, tag)}
+}
+
+func (_c *CompanyRepository_UpdateCompanyTag_Call) Run(run func(ctx context.Context, companyID uuid.UUID, tag string)) *CompanyRepository_UpdateCompanyTag_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *CompanyRepository_UpdateCompanyTag_Call) Return(_a0 models.Company, _a1 error) *CompanyRepository_UpdateCompanyTag_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *CompanyRepository_UpdateCompanyTag_Call) RunAndReturn(run func(context.Context, uuid.UUID, string) (models.Company, error)) *CompanyRepository_UpdateCompanyTag_Call {
 	_c.Call.Return(run)
 	return _c
 }

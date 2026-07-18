@@ -81,6 +81,63 @@ func (_c *AuthService_DeleteAvatar_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
+// GetAvatar provides a mock function with given fields: ctx, userID
+func (_m *AuthService) GetAvatar(ctx context.Context, userID uuid.UUID) (models.File, error) {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAvatar")
+	}
+
+	var r0 models.File
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (models.File, error)); ok {
+		return rf(ctx, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) models.File); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		r0 = ret.Get(0).(models.File)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AuthService_GetAvatar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAvatar'
+type AuthService_GetAvatar_Call struct {
+	*mock.Call
+}
+
+// GetAvatar is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *AuthService_Expecter) GetAvatar(ctx interface{}, userID interface{}) *AuthService_GetAvatar_Call {
+	return &AuthService_GetAvatar_Call{Call: _e.mock.On("GetAvatar", ctx, userID)}
+}
+
+func (_c *AuthService_GetAvatar_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *AuthService_GetAvatar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AuthService_GetAvatar_Call) Return(_a0 models.File, _a1 error) *AuthService_GetAvatar_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AuthService_GetAvatar_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.File, error)) *AuthService_GetAvatar_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetPreferences provides a mock function with given fields: ctx, userID
 func (_m *AuthService) GetPreferences(ctx context.Context, userID uuid.UUID) (models.UserPreferences, error) {
 	ret := _m.Called(ctx, userID)

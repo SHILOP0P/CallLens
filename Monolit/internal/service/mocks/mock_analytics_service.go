@@ -24,6 +24,63 @@ func (_m *AnalyticsService) EXPECT() *AnalyticsService_Expecter {
 	return &AnalyticsService_Expecter{mock: &_m.Mock}
 }
 
+// CreateAggregateReport provides a mock function with given fields: ctx, input
+func (_m *AnalyticsService) CreateAggregateReport(ctx context.Context, input models.CreateAggregateReportInput) (models.AggregateReportExport, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateAggregateReport")
+	}
+
+	var r0 models.AggregateReportExport
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.CreateAggregateReportInput) (models.AggregateReportExport, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.CreateAggregateReportInput) models.AggregateReportExport); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.AggregateReportExport)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.CreateAggregateReportInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AnalyticsService_CreateAggregateReport_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateAggregateReport'
+type AnalyticsService_CreateAggregateReport_Call struct {
+	*mock.Call
+}
+
+// CreateAggregateReport is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.CreateAggregateReportInput
+func (_e *AnalyticsService_Expecter) CreateAggregateReport(ctx interface{}, input interface{}) *AnalyticsService_CreateAggregateReport_Call {
+	return &AnalyticsService_CreateAggregateReport_Call{Call: _e.mock.On("CreateAggregateReport", ctx, input)}
+}
+
+func (_c *AnalyticsService_CreateAggregateReport_Call) Run(run func(ctx context.Context, input models.CreateAggregateReportInput)) *AnalyticsService_CreateAggregateReport_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.CreateAggregateReportInput))
+	})
+	return _c
+}
+
+func (_c *AnalyticsService_CreateAggregateReport_Call) Return(_a0 models.AggregateReportExport, _a1 error) *AnalyticsService_CreateAggregateReport_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AnalyticsService_CreateAggregateReport_Call) RunAndReturn(run func(context.Context, models.CreateAggregateReportInput) (models.AggregateReportExport, error)) *AnalyticsService_CreateAggregateReport_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateDeepAnalysis provides a mock function with given fields: ctx, input
 func (_m *AnalyticsService) CreateDeepAnalysis(ctx context.Context, input models.CreateDeepAnalysisInput) (models.AggregateAnalysis, error) {
 	ret := _m.Called(ctx, input)
@@ -77,6 +134,112 @@ func (_c *AnalyticsService_CreateDeepAnalysis_Call) Return(_a0 models.AggregateA
 }
 
 func (_c *AnalyticsService_CreateDeepAnalysis_Call) RunAndReturn(run func(context.Context, models.CreateDeepAnalysisInput) (models.AggregateAnalysis, error)) *AnalyticsService_CreateDeepAnalysis_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteAggregateReport provides a mock function with given fields: ctx, reportID, userID
+func (_m *AnalyticsService) DeleteAggregateReport(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) error {
+	ret := _m.Called(ctx, reportID, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteAggregateReport")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r0 = rf(ctx, reportID, userID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// AnalyticsService_DeleteAggregateReport_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteAggregateReport'
+type AnalyticsService_DeleteAggregateReport_Call struct {
+	*mock.Call
+}
+
+// DeleteAggregateReport is a helper method to define mock.On call
+//   - ctx context.Context
+//   - reportID uuid.UUID
+//   - userID uuid.UUID
+func (_e *AnalyticsService_Expecter) DeleteAggregateReport(ctx interface{}, reportID interface{}, userID interface{}) *AnalyticsService_DeleteAggregateReport_Call {
+	return &AnalyticsService_DeleteAggregateReport_Call{Call: _e.mock.On("DeleteAggregateReport", ctx, reportID, userID)}
+}
+
+func (_c *AnalyticsService_DeleteAggregateReport_Call) Run(run func(ctx context.Context, reportID uuid.UUID, userID uuid.UUID)) *AnalyticsService_DeleteAggregateReport_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AnalyticsService_DeleteAggregateReport_Call) Return(_a0 error) *AnalyticsService_DeleteAggregateReport_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *AnalyticsService_DeleteAggregateReport_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) error) *AnalyticsService_DeleteAggregateReport_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetAggregateReportFile provides a mock function with given fields: ctx, reportID, userID
+func (_m *AnalyticsService) GetAggregateReportFile(ctx context.Context, reportID uuid.UUID, userID uuid.UUID) (models.AggregateReportFile, error) {
+	ret := _m.Called(ctx, reportID, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAggregateReportFile")
+	}
+
+	var r0 models.AggregateReportFile
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) (models.AggregateReportFile, error)); ok {
+		return rf(ctx, reportID, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) models.AggregateReportFile); ok {
+		r0 = rf(ctx, reportID, userID)
+	} else {
+		r0 = ret.Get(0).(models.AggregateReportFile)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r1 = rf(ctx, reportID, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AnalyticsService_GetAggregateReportFile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAggregateReportFile'
+type AnalyticsService_GetAggregateReportFile_Call struct {
+	*mock.Call
+}
+
+// GetAggregateReportFile is a helper method to define mock.On call
+//   - ctx context.Context
+//   - reportID uuid.UUID
+//   - userID uuid.UUID
+func (_e *AnalyticsService_Expecter) GetAggregateReportFile(ctx interface{}, reportID interface{}, userID interface{}) *AnalyticsService_GetAggregateReportFile_Call {
+	return &AnalyticsService_GetAggregateReportFile_Call{Call: _e.mock.On("GetAggregateReportFile", ctx, reportID, userID)}
+}
+
+func (_c *AnalyticsService_GetAggregateReportFile_Call) Run(run func(ctx context.Context, reportID uuid.UUID, userID uuid.UUID)) *AnalyticsService_GetAggregateReportFile_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AnalyticsService_GetAggregateReportFile_Call) Return(_a0 models.AggregateReportFile, _a1 error) *AnalyticsService_GetAggregateReportFile_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AnalyticsService_GetAggregateReportFile_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) (models.AggregateReportFile, error)) *AnalyticsService_GetAggregateReportFile_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -192,6 +355,66 @@ func (_c *AnalyticsService_GetOverview_Call) Return(_a0 models.AnalyticsOverview
 }
 
 func (_c *AnalyticsService_GetOverview_Call) RunAndReturn(run func(context.Context, models.AnalyticsOverviewInput) (models.AnalyticsOverview, error)) *AnalyticsService_GetOverview_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListAggregateReports provides a mock function with given fields: ctx, analysisID, userID
+func (_m *AnalyticsService) ListAggregateReports(ctx context.Context, analysisID uuid.UUID, userID uuid.UUID) ([]models.AggregateReportExport, error) {
+	ret := _m.Called(ctx, analysisID, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListAggregateReports")
+	}
+
+	var r0 []models.AggregateReportExport
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) ([]models.AggregateReportExport, error)); ok {
+		return rf(ctx, analysisID, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, uuid.UUID) []models.AggregateReportExport); ok {
+		r0 = rf(ctx, analysisID, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.AggregateReportExport)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, uuid.UUID) error); ok {
+		r1 = rf(ctx, analysisID, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AnalyticsService_ListAggregateReports_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListAggregateReports'
+type AnalyticsService_ListAggregateReports_Call struct {
+	*mock.Call
+}
+
+// ListAggregateReports is a helper method to define mock.On call
+//   - ctx context.Context
+//   - analysisID uuid.UUID
+//   - userID uuid.UUID
+func (_e *AnalyticsService_Expecter) ListAggregateReports(ctx interface{}, analysisID interface{}, userID interface{}) *AnalyticsService_ListAggregateReports_Call {
+	return &AnalyticsService_ListAggregateReports_Call{Call: _e.mock.On("ListAggregateReports", ctx, analysisID, userID)}
+}
+
+func (_c *AnalyticsService_ListAggregateReports_Call) Run(run func(ctx context.Context, analysisID uuid.UUID, userID uuid.UUID)) *AnalyticsService_ListAggregateReports_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AnalyticsService_ListAggregateReports_Call) Return(_a0 []models.AggregateReportExport, _a1 error) *AnalyticsService_ListAggregateReports_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AnalyticsService_ListAggregateReports_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) ([]models.AggregateReportExport, error)) *AnalyticsService_ListAggregateReports_Call {
 	_c.Call.Return(run)
 	return _c
 }

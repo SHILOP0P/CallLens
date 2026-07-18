@@ -60,11 +60,6 @@ func (_m *AnalysisInstructionAPI) Delete(w http.ResponseWriter, r *http.Request)
 	_m.Called(w, r)
 }
 
-// Get provides a mock function with given fields: w, r
-func (_m *AnalysisInstructionAPI) Get(w http.ResponseWriter, r *http.Request) {
-	_m.Called(w, r)
-}
-
 // AnalysisInstructionAPI_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
 type AnalysisInstructionAPI_Delete_Call struct {
 	*mock.Call
@@ -94,23 +89,42 @@ func (_c *AnalysisInstructionAPI_Delete_Call) RunAndReturn(run func(http.Respons
 	return _c
 }
 
+// Get provides a mock function with given fields: w, r
+func (_m *AnalysisInstructionAPI) Get(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AnalysisInstructionAPI_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
+type AnalysisInstructionAPI_Get_Call struct {
+	*mock.Call
+}
+
+// Get is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AnalysisInstructionAPI_Expecter) Get(w interface{}, r interface{}) *AnalysisInstructionAPI_Get_Call {
+	return &AnalysisInstructionAPI_Get_Call{Call: _e.mock.On("Get", w, r)}
+}
+
+func (_c *AnalysisInstructionAPI_Get_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AnalysisInstructionAPI_Get_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionAPI_Get_Call) Return() *AnalysisInstructionAPI_Get_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AnalysisInstructionAPI_Get_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AnalysisInstructionAPI_Get_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetFile provides a mock function with given fields: w, r
 func (_m *AnalysisInstructionAPI) GetFile(w http.ResponseWriter, r *http.Request) {
-	_m.Called(w, r)
-}
-
-// Reorder provides a mock function with given fields: w, r
-func (_m *AnalysisInstructionAPI) Reorder(w http.ResponseWriter, r *http.Request) {
-	_m.Called(w, r)
-}
-
-// ReplaceFile provides a mock function with given fields: w, r
-func (_m *AnalysisInstructionAPI) ReplaceFile(w http.ResponseWriter, r *http.Request) {
-	_m.Called(w, r)
-}
-
-// Update provides a mock function with given fields: w, r
-func (_m *AnalysisInstructionAPI) Update(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)
 }
 
@@ -173,6 +187,108 @@ func (_c *AnalysisInstructionAPI_List_Call) Return() *AnalysisInstructionAPI_Lis
 }
 
 func (_c *AnalysisInstructionAPI_List_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AnalysisInstructionAPI_List_Call {
+	_c.Run(run)
+	return _c
+}
+
+// Reorder provides a mock function with given fields: w, r
+func (_m *AnalysisInstructionAPI) Reorder(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AnalysisInstructionAPI_Reorder_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Reorder'
+type AnalysisInstructionAPI_Reorder_Call struct {
+	*mock.Call
+}
+
+// Reorder is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AnalysisInstructionAPI_Expecter) Reorder(w interface{}, r interface{}) *AnalysisInstructionAPI_Reorder_Call {
+	return &AnalysisInstructionAPI_Reorder_Call{Call: _e.mock.On("Reorder", w, r)}
+}
+
+func (_c *AnalysisInstructionAPI_Reorder_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AnalysisInstructionAPI_Reorder_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionAPI_Reorder_Call) Return() *AnalysisInstructionAPI_Reorder_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AnalysisInstructionAPI_Reorder_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AnalysisInstructionAPI_Reorder_Call {
+	_c.Run(run)
+	return _c
+}
+
+// ReplaceFile provides a mock function with given fields: w, r
+func (_m *AnalysisInstructionAPI) ReplaceFile(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AnalysisInstructionAPI_ReplaceFile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReplaceFile'
+type AnalysisInstructionAPI_ReplaceFile_Call struct {
+	*mock.Call
+}
+
+// ReplaceFile is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AnalysisInstructionAPI_Expecter) ReplaceFile(w interface{}, r interface{}) *AnalysisInstructionAPI_ReplaceFile_Call {
+	return &AnalysisInstructionAPI_ReplaceFile_Call{Call: _e.mock.On("ReplaceFile", w, r)}
+}
+
+func (_c *AnalysisInstructionAPI_ReplaceFile_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AnalysisInstructionAPI_ReplaceFile_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionAPI_ReplaceFile_Call) Return() *AnalysisInstructionAPI_ReplaceFile_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AnalysisInstructionAPI_ReplaceFile_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AnalysisInstructionAPI_ReplaceFile_Call {
+	_c.Run(run)
+	return _c
+}
+
+// Update provides a mock function with given fields: w, r
+func (_m *AnalysisInstructionAPI) Update(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AnalysisInstructionAPI_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type AnalysisInstructionAPI_Update_Call struct {
+	*mock.Call
+}
+
+// Update is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AnalysisInstructionAPI_Expecter) Update(w interface{}, r interface{}) *AnalysisInstructionAPI_Update_Call {
+	return &AnalysisInstructionAPI_Update_Call{Call: _e.mock.On("Update", w, r)}
+}
+
+func (_c *AnalysisInstructionAPI_Update_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AnalysisInstructionAPI_Update_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionAPI_Update_Call) Return() *AnalysisInstructionAPI_Update_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AnalysisInstructionAPI_Update_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AnalysisInstructionAPI_Update_Call {
 	_c.Run(run)
 	return _c
 }

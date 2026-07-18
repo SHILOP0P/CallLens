@@ -55,6 +55,17 @@ func (s *ServiceSuite) TestUpdateCompanyTagRequiresManagerAndNormalizesTag() {
 	s.Require().Equal("@calllens_team", updated.Tag)
 }
 
+func (s *ServiceSuite) TestUpdateCompanyTagAsAdminNormalizesWithoutMembershipCheck() {
+	companyID := uuid.New()
+	s.repository.On("UpdateCompanyTag", mock.Anything, companyID, "@calllens_team").
+		Return(models.Company{ID: companyID, Tag: "@calllens_team"}, nil).Once()
+
+	updated, err := s.service.UpdateCompanyTagAsAdmin(s.ctx, companyID, " CallLens Team ")
+
+	s.Require().NoError(err)
+	s.Require().Equal("@calllens_team", updated.Tag)
+}
+
 func (s *ServiceSuite) TestDeleteCompanySuccess() {
 	companyID := uuid.New()
 	managerID := uuid.New()

@@ -8,10 +8,14 @@ import (
 )
 
 func CompanyModelToAPI(company models.Company) (dto.CompanyResponse, error) {
+	tag := company.Tag
+	if tag == "" {
+		tag = "@" + company.ID.String()
+	}
 	return dto.CompanyResponse{
 		ID:              company.ID.String(),
 		Name:            company.Name,
-		Tag:             company.Tag,
+		Tag:             tag,
 		ManagerUserUUID: company.ManagerUserUUID.String(),
 		MemberLimit:     company.MemberLimit,
 		CreatedAt:       company.CreatedAt.Format(time.RFC3339),

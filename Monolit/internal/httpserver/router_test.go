@@ -82,6 +82,9 @@ func (stubNotificationAPI) MarkAllRead(w http.ResponseWriter, r *http.Request) {
 
 type stubAdminAPI struct{}
 
+func (stubAdminAPI) ResetPersonalUsage(http.ResponseWriter, *http.Request) {}
+func (stubAdminAPI) ResetCompanyUsage(http.ResponseWriter, *http.Request) {}
+
 func (stubAdminAPI) GetCapabilities(w http.ResponseWriter, r *http.Request)            {}
 func (stubAdminAPI) ListUsers(w http.ResponseWriter, r *http.Request)                  {}
 func (stubAdminAPI) GetUser(w http.ResponseWriter, r *http.Request)                    {}

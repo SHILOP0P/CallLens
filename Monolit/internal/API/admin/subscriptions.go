@@ -145,6 +145,41 @@ func (h *Handler) CancelCompanySubscription(w http.ResponseWriter, r *http.Reque
 	}
 	h.cancelSubscription(w, r, models.CancelAdminSubscriptionInput{CompanyUUID: id})
 }
+
+func (h *Handler) ResetPersonalUsage(w http.ResponseWriter, r *http.Request) {
+	h.resetUsage(w, r, true)
+}
+func (h *Handler) ResetCompanyUsage(w http.ResponseWriter, r *http.Request) {
+	h.resetUsage(w, r, false)
+}
+func (h *Handler) resetUsage(w http.ResponseWriter, r *http.Request, personal bool) {
+	actor, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+	var req dto.AdminReasonRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidRequestBody, "invalid request body")
+		return
+	}
+	input := models.ResetAdminUsageInput{ActorUserUUID: actor, Metadata: adminMetadata(r, req.Reason)}
+	var err error
+	if personal {
+		input.UserUUID, err = uuid.Parse(chi.URLParam(r, "user_uuid"))
+	} else {
+		input.CompanyUUID, err = uuid.Parse(chi.URLParam(r, "company_uuid"))
+	}
+	if err != nil {
+		response.WriteError(w, http.StatusBadRequest, response.CodeInvalidAdminInput, "invalid target uuid")
+		return
+	}
+	if err = h.service.ResetUsage(r.Context(), input); err != nil {
+		writeAdminError(w, err, response.CodeFailedToCancelAdminSubscription, "failed to reset usage")
+		return
+	}
+	response.WriteNoContent(w)
+}
 func (h *Handler) cancelSubscription(w http.ResponseWriter, r *http.Request, in models.CancelAdminSubscriptionInput) {
 	actor, ok := middleware.UserIDFromContext(r.Context())
 	if !ok {
@@ -174,7 +209,11 @@ func adminCompanyID(w http.ResponseWriter, r *http.Request) (uuid.UUID, bool) {
 	return id, true
 }
 func adminCompanyResponse(c models.AdminCompany) dto.AdminCompanyResponse {
-	return dto.AdminCompanyResponse{ID: c.ID.String(), Name: c.Name, ManagerUserUUID: c.ManagerUserUUID.String(), CreatedAt: c.CreatedAt.Format(time.RFC3339)}
+	tag := c.Tag
+	if tag == "" {
+		tag = "@" + c.ID.String()
+	}
+	return dto.AdminCompanyResponse{ID: c.ID.String(), Name: c.Name, Tag: tag, ManagerUserUUID: c.ManagerUserUUID.String(), CreatedAt: c.CreatedAt.Format(time.RFC3339)}
 }
 func adminSubscriptionResponse(s models.AdminSubscription) dto.AdminSubscriptionResponse {
 	var user, company, ends *string

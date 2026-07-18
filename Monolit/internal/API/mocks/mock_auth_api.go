@@ -89,6 +89,40 @@ func (_c *AuthAPI_DeleteSession_Call) RunAndReturn(run func(http.ResponseWriter,
 	return _c
 }
 
+// GetAvatar provides a mock function with given fields: w, r
+func (_m *AuthAPI) GetAvatar(w http.ResponseWriter, r *http.Request) {
+	_m.Called(w, r)
+}
+
+// AuthAPI_GetAvatar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetAvatar'
+type AuthAPI_GetAvatar_Call struct {
+	*mock.Call
+}
+
+// GetAvatar is a helper method to define mock.On call
+//   - w http.ResponseWriter
+//   - r *http.Request
+func (_e *AuthAPI_Expecter) GetAvatar(w interface{}, r interface{}) *AuthAPI_GetAvatar_Call {
+	return &AuthAPI_GetAvatar_Call{Call: _e.mock.On("GetAvatar", w, r)}
+}
+
+func (_c *AuthAPI_GetAvatar_Call) Run(run func(w http.ResponseWriter, r *http.Request)) *AuthAPI_GetAvatar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(http.ResponseWriter), args[1].(*http.Request))
+	})
+	return _c
+}
+
+func (_c *AuthAPI_GetAvatar_Call) Return() *AuthAPI_GetAvatar_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *AuthAPI_GetAvatar_Call) RunAndReturn(run func(http.ResponseWriter, *http.Request)) *AuthAPI_GetAvatar_Call {
+	_c.Run(run)
+	return _c
+}
+
 // GetPreferences provides a mock function with given fields: w, r
 func (_m *AuthAPI) GetPreferences(w http.ResponseWriter, r *http.Request) {
 	_m.Called(w, r)

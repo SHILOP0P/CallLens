@@ -22,7 +22,7 @@ func (r *Repository) ListAdminCompanies(ctx context.Context, input models.ListAd
 		where += fmt.Sprintf(" AND LOWER(name) LIKE $%d", len(args))
 	}
 	args = append(args, input.Limit, input.Offset)
-	rows, err := r.db.QueryContext(ctx, fmt.Sprintf("SELECT company_uuid,name,manager_user_uuid,created_at,COUNT(*) OVER() FROM companies WHERE %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d", where, len(args)-1, len(args)), args...)
+	rows, err := r.db.QueryContext(ctx, fmt.Sprintf("SELECT company_uuid,name,tag,manager_user_uuid,created_at,COUNT(*) OVER() FROM companies WHERE %s ORDER BY created_at DESC LIMIT $%d OFFSET $%d", where, len(args)-1, len(args)), args...)
 	if err != nil {
 		return models.ListAdminCompaniesResult{}, err
 	}
@@ -31,7 +31,7 @@ func (r *Repository) ListAdminCompanies(ctx context.Context, input models.ListAd
 	for rows.Next() {
 		var c models.AdminCompany
 		var total int
-		if err := rows.Scan(&c.ID, &c.Name, &c.ManagerUserUUID, &c.CreatedAt, &total); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.Tag, &c.ManagerUserUUID, &c.CreatedAt, &total); err != nil {
 			return res, err
 		}
 		res.Companies = append(res.Companies, c)
@@ -41,7 +41,7 @@ func (r *Repository) ListAdminCompanies(ctx context.Context, input models.ListAd
 }
 func (r *Repository) GetAdminCompanyByUUID(ctx context.Context, id uuid.UUID) (models.AdminCompany, error) {
 	var c models.AdminCompany
-	err := r.db.QueryRowContext(ctx, "SELECT company_uuid,name,manager_user_uuid,created_at FROM companies WHERE company_uuid=$1 AND deleted_at IS NULL", id).Scan(&c.ID, &c.Name, &c.ManagerUserUUID, &c.CreatedAt)
+	err := r.db.QueryRowContext(ctx, "SELECT company_uuid,name,tag,manager_user_uuid,created_at FROM companies WHERE company_uuid=$1 AND deleted_at IS NULL", id).Scan(&c.ID, &c.Name, &c.Tag, &c.ManagerUserUUID, &c.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return c, models.ErrCompanyNotFound
 	}
@@ -49,7 +49,7 @@ func (r *Repository) GetAdminCompanyByUUID(ctx context.Context, id uuid.UUID) (m
 }
 func getAdminCompany(ctx context.Context, q queryRower, id uuid.UUID) (models.AdminCompany, error) {
 	var c models.AdminCompany
-	err := q.QueryRowContext(ctx, "SELECT company_uuid,name,manager_user_uuid,created_at FROM companies WHERE company_uuid=$1 AND deleted_at IS NULL", id).Scan(&c.ID, &c.Name, &c.ManagerUserUUID, &c.CreatedAt)
+	err := q.QueryRowContext(ctx, "SELECT company_uuid,name,tag,manager_user_uuid,created_at FROM companies WHERE company_uuid=$1 AND deleted_at IS NULL", id).Scan(&c.ID, &c.Name, &c.Tag, &c.ManagerUserUUID, &c.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return c, models.ErrCompanyNotFound
 	}

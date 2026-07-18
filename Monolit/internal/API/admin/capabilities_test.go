@@ -84,6 +84,8 @@ type adminServiceStub struct {
 	err          error
 }
 
+func (s *adminServiceStub) ResetUsage(context.Context, models.ResetAdminUsageInput) error { return nil }
+
 func (s *adminServiceStub) GetCapabilities(_ context.Context, role models.UserRole) (models.AdminCapabilities, error) {
 	s.role = role
 	return s.capabilities, s.err

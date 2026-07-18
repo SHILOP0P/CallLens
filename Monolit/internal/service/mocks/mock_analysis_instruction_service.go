@@ -99,6 +99,36 @@ func (_m *AnalysisInstructionService) Delete(ctx context.Context, id uuid.UUID, 
 	return r0
 }
 
+// AnalysisInstructionService_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type AnalysisInstructionService_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+//   - userID uuid.UUID
+func (_e *AnalysisInstructionService_Expecter) Delete(ctx interface{}, id interface{}, userID interface{}) *AnalysisInstructionService_Delete_Call {
+	return &AnalysisInstructionService_Delete_Call{Call: _e.mock.On("Delete", ctx, id, userID)}
+}
+
+func (_c *AnalysisInstructionService_Delete_Call) Run(run func(ctx context.Context, id uuid.UUID, userID uuid.UUID)) *AnalysisInstructionService_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionService_Delete_Call) Return(_a0 error) *AnalysisInstructionService_Delete_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *AnalysisInstructionService_Delete_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) error) *AnalysisInstructionService_Delete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Get provides a mock function with given fields: ctx, id, userID
 func (_m *AnalysisInstructionService) Get(ctx context.Context, id uuid.UUID, userID uuid.UUID) (models.AnalysisInstruction, error) {
 	ret := _m.Called(ctx, id, userID)
@@ -127,32 +157,32 @@ func (_m *AnalysisInstructionService) Get(ctx context.Context, id uuid.UUID, use
 	return r0, r1
 }
 
-// AnalysisInstructionService_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
-type AnalysisInstructionService_Delete_Call struct {
+// AnalysisInstructionService_Get_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Get'
+type AnalysisInstructionService_Get_Call struct {
 	*mock.Call
 }
 
-// Delete is a helper method to define mock.On call
+// Get is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
 //   - userID uuid.UUID
-func (_e *AnalysisInstructionService_Expecter) Delete(ctx interface{}, id interface{}, userID interface{}) *AnalysisInstructionService_Delete_Call {
-	return &AnalysisInstructionService_Delete_Call{Call: _e.mock.On("Delete", ctx, id, userID)}
+func (_e *AnalysisInstructionService_Expecter) Get(ctx interface{}, id interface{}, userID interface{}) *AnalysisInstructionService_Get_Call {
+	return &AnalysisInstructionService_Get_Call{Call: _e.mock.On("Get", ctx, id, userID)}
 }
 
-func (_c *AnalysisInstructionService_Delete_Call) Run(run func(ctx context.Context, id uuid.UUID, userID uuid.UUID)) *AnalysisInstructionService_Delete_Call {
+func (_c *AnalysisInstructionService_Get_Call) Run(run func(ctx context.Context, id uuid.UUID, userID uuid.UUID)) *AnalysisInstructionService_Get_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(uuid.UUID))
 	})
 	return _c
 }
 
-func (_c *AnalysisInstructionService_Delete_Call) Return(_a0 error) *AnalysisInstructionService_Delete_Call {
-	_c.Call.Return(_a0)
+func (_c *AnalysisInstructionService_Get_Call) Return(_a0 models.AnalysisInstruction, _a1 error) *AnalysisInstructionService_Get_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *AnalysisInstructionService_Delete_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) error) *AnalysisInstructionService_Delete_Call {
+func (_c *AnalysisInstructionService_Get_Call) RunAndReturn(run func(context.Context, uuid.UUID, uuid.UUID) (models.AnalysisInstruction, error)) *AnalysisInstructionService_Get_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -245,6 +275,35 @@ func (_m *AnalysisInstructionService) List(ctx context.Context, input models.Lis
 	return r0, r1
 }
 
+// AnalysisInstructionService_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type AnalysisInstructionService_List_Call struct {
+	*mock.Call
+}
+
+// List is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ListAnalysisInstructionsInput
+func (_e *AnalysisInstructionService_Expecter) List(ctx interface{}, input interface{}) *AnalysisInstructionService_List_Call {
+	return &AnalysisInstructionService_List_Call{Call: _e.mock.On("List", ctx, input)}
+}
+
+func (_c *AnalysisInstructionService_List_Call) Run(run func(ctx context.Context, input models.ListAnalysisInstructionsInput)) *AnalysisInstructionService_List_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ListAnalysisInstructionsInput))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionService_List_Call) Return(_a0 []models.AnalysisInstruction, _a1 error) *AnalysisInstructionService_List_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AnalysisInstructionService_List_Call) RunAndReturn(run func(context.Context, models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error)) *AnalysisInstructionService_List_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Reorder provides a mock function with given fields: ctx, input
 func (_m *AnalysisInstructionService) Reorder(ctx context.Context, input models.ReorderAnalysisInstructionsInput) error {
 	ret := _m.Called(ctx, input)
@@ -261,6 +320,35 @@ func (_m *AnalysisInstructionService) Reorder(ctx context.Context, input models.
 	}
 
 	return r0
+}
+
+// AnalysisInstructionService_Reorder_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Reorder'
+type AnalysisInstructionService_Reorder_Call struct {
+	*mock.Call
+}
+
+// Reorder is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ReorderAnalysisInstructionsInput
+func (_e *AnalysisInstructionService_Expecter) Reorder(ctx interface{}, input interface{}) *AnalysisInstructionService_Reorder_Call {
+	return &AnalysisInstructionService_Reorder_Call{Call: _e.mock.On("Reorder", ctx, input)}
+}
+
+func (_c *AnalysisInstructionService_Reorder_Call) Run(run func(ctx context.Context, input models.ReorderAnalysisInstructionsInput)) *AnalysisInstructionService_Reorder_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ReorderAnalysisInstructionsInput))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionService_Reorder_Call) Return(_a0 error) *AnalysisInstructionService_Reorder_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *AnalysisInstructionService_Reorder_Call) RunAndReturn(run func(context.Context, models.ReorderAnalysisInstructionsInput) error) *AnalysisInstructionService_Reorder_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // ReplaceFile provides a mock function with given fields: ctx, input
@@ -291,6 +379,35 @@ func (_m *AnalysisInstructionService) ReplaceFile(ctx context.Context, input mod
 	return r0, r1
 }
 
+// AnalysisInstructionService_ReplaceFile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReplaceFile'
+type AnalysisInstructionService_ReplaceFile_Call struct {
+	*mock.Call
+}
+
+// ReplaceFile is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ReplaceAnalysisInstructionFileInput
+func (_e *AnalysisInstructionService_Expecter) ReplaceFile(ctx interface{}, input interface{}) *AnalysisInstructionService_ReplaceFile_Call {
+	return &AnalysisInstructionService_ReplaceFile_Call{Call: _e.mock.On("ReplaceFile", ctx, input)}
+}
+
+func (_c *AnalysisInstructionService_ReplaceFile_Call) Run(run func(ctx context.Context, input models.ReplaceAnalysisInstructionFileInput)) *AnalysisInstructionService_ReplaceFile_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ReplaceAnalysisInstructionFileInput))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionService_ReplaceFile_Call) Return(_a0 models.AnalysisInstruction, _a1 error) *AnalysisInstructionService_ReplaceFile_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AnalysisInstructionService_ReplaceFile_Call) RunAndReturn(run func(context.Context, models.ReplaceAnalysisInstructionFileInput) (models.AnalysisInstruction, error)) *AnalysisInstructionService_ReplaceFile_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Update provides a mock function with given fields: ctx, input
 func (_m *AnalysisInstructionService) Update(ctx context.Context, input models.UpdateAnalysisInstructionInput) (models.AnalysisInstruction, error) {
 	ret := _m.Called(ctx, input)
@@ -319,31 +436,31 @@ func (_m *AnalysisInstructionService) Update(ctx context.Context, input models.U
 	return r0, r1
 }
 
-// AnalysisInstructionService_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
-type AnalysisInstructionService_List_Call struct {
+// AnalysisInstructionService_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type AnalysisInstructionService_Update_Call struct {
 	*mock.Call
 }
 
-// List is a helper method to define mock.On call
+// Update is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input models.ListAnalysisInstructionsInput
-func (_e *AnalysisInstructionService_Expecter) List(ctx interface{}, input interface{}) *AnalysisInstructionService_List_Call {
-	return &AnalysisInstructionService_List_Call{Call: _e.mock.On("List", ctx, input)}
+//   - input models.UpdateAnalysisInstructionInput
+func (_e *AnalysisInstructionService_Expecter) Update(ctx interface{}, input interface{}) *AnalysisInstructionService_Update_Call {
+	return &AnalysisInstructionService_Update_Call{Call: _e.mock.On("Update", ctx, input)}
 }
 
-func (_c *AnalysisInstructionService_List_Call) Run(run func(ctx context.Context, input models.ListAnalysisInstructionsInput)) *AnalysisInstructionService_List_Call {
+func (_c *AnalysisInstructionService_Update_Call) Run(run func(ctx context.Context, input models.UpdateAnalysisInstructionInput)) *AnalysisInstructionService_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(models.ListAnalysisInstructionsInput))
+		run(args[0].(context.Context), args[1].(models.UpdateAnalysisInstructionInput))
 	})
 	return _c
 }
 
-func (_c *AnalysisInstructionService_List_Call) Return(_a0 []models.AnalysisInstruction, _a1 error) *AnalysisInstructionService_List_Call {
+func (_c *AnalysisInstructionService_Update_Call) Return(_a0 models.AnalysisInstruction, _a1 error) *AnalysisInstructionService_Update_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *AnalysisInstructionService_List_Call) RunAndReturn(run func(context.Context, models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error)) *AnalysisInstructionService_List_Call {
+func (_c *AnalysisInstructionService_Update_Call) RunAndReturn(run func(context.Context, models.UpdateAnalysisInstructionInput) (models.AnalysisInstruction, error)) *AnalysisInstructionService_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

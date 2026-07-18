@@ -36,6 +36,17 @@ func (s *APISuite) TestUpdateCompanyTagSuccess() {
 	s.Require().Equal(http.StatusOK, rec.Code)
 }
 
+func (s *APISuite) TestUpdateCompanyTagAsAdminSuccess() {
+	companyID := uuid.New()
+	s.service.On("UpdateCompanyTagAsAdmin", mock.Anything, companyID, "@calllens_team").
+		Return(models.Company{ID: companyID, Tag: "@calllens_team"}, nil).Once()
+
+	rec, req := s.request(http.MethodPatch, "/", `{"tag":"@calllens_team"}`, uuid.Nil, map[string]string{"uuid": companyID.String()})
+	s.api.UpdateTagAsAdmin(rec, req)
+
+	s.Require().Equal(http.StatusOK, rec.Code)
+}
+
 func (s *APISuite) TestDeleteCompanySuccess() {
 	companyID := uuid.New()
 	userID := uuid.New()

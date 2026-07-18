@@ -213,6 +213,35 @@ func (_m *AnalysisInstructionRepository) GetByUUID(ctx context.Context, id uuid.
 	return r0, r1
 }
 
+// AnalysisInstructionRepository_GetByUUID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByUUID'
+type AnalysisInstructionRepository_GetByUUID_Call struct {
+	*mock.Call
+}
+
+// GetByUUID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *AnalysisInstructionRepository_Expecter) GetByUUID(ctx interface{}, id interface{}) *AnalysisInstructionRepository_GetByUUID_Call {
+	return &AnalysisInstructionRepository_GetByUUID_Call{Call: _e.mock.On("GetByUUID", ctx, id)}
+}
+
+func (_c *AnalysisInstructionRepository_GetByUUID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *AnalysisInstructionRepository_GetByUUID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionRepository_GetByUUID_Call) Return(_a0 models.AnalysisInstruction, _a1 error) *AnalysisInstructionRepository_GetByUUID_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AnalysisInstructionRepository_GetByUUID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AnalysisInstruction, error)) *AnalysisInstructionRepository_GetByUUID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetByUUIDIncludingInactive provides a mock function with given fields: ctx, id
 func (_m *AnalysisInstructionRepository) GetByUUIDIncludingInactive(ctx context.Context, id uuid.UUID) (models.AnalysisInstruction, error) {
 	ret := _m.Called(ctx, id)
@@ -241,31 +270,31 @@ func (_m *AnalysisInstructionRepository) GetByUUIDIncludingInactive(ctx context.
 	return r0, r1
 }
 
-// AnalysisInstructionRepository_GetByUUID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByUUID'
-type AnalysisInstructionRepository_GetByUUID_Call struct {
+// AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByUUIDIncludingInactive'
+type AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call struct {
 	*mock.Call
 }
 
-// GetByUUID is a helper method to define mock.On call
+// GetByUUIDIncludingInactive is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
-func (_e *AnalysisInstructionRepository_Expecter) GetByUUID(ctx interface{}, id interface{}) *AnalysisInstructionRepository_GetByUUID_Call {
-	return &AnalysisInstructionRepository_GetByUUID_Call{Call: _e.mock.On("GetByUUID", ctx, id)}
+func (_e *AnalysisInstructionRepository_Expecter) GetByUUIDIncludingInactive(ctx interface{}, id interface{}) *AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call {
+	return &AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call{Call: _e.mock.On("GetByUUIDIncludingInactive", ctx, id)}
 }
 
-func (_c *AnalysisInstructionRepository_GetByUUID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *AnalysisInstructionRepository_GetByUUID_Call {
+func (_c *AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call) Run(run func(ctx context.Context, id uuid.UUID)) *AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(uuid.UUID))
 	})
 	return _c
 }
 
-func (_c *AnalysisInstructionRepository_GetByUUID_Call) Return(_a0 models.AnalysisInstruction, _a1 error) *AnalysisInstructionRepository_GetByUUID_Call {
+func (_c *AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call) Return(_a0 models.AnalysisInstruction, _a1 error) *AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *AnalysisInstructionRepository_GetByUUID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AnalysisInstruction, error)) *AnalysisInstructionRepository_GetByUUID_Call {
+func (_c *AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call) RunAndReturn(run func(context.Context, uuid.UUID) (models.AnalysisInstruction, error)) *AnalysisInstructionRepository_GetByUUIDIncludingInactive_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -300,6 +329,35 @@ func (_m *AnalysisInstructionRepository) List(ctx context.Context, input models.
 	return r0, r1
 }
 
+// AnalysisInstructionRepository_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
+type AnalysisInstructionRepository_List_Call struct {
+	*mock.Call
+}
+
+// List is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ListAnalysisInstructionsInput
+func (_e *AnalysisInstructionRepository_Expecter) List(ctx interface{}, input interface{}) *AnalysisInstructionRepository_List_Call {
+	return &AnalysisInstructionRepository_List_Call{Call: _e.mock.On("List", ctx, input)}
+}
+
+func (_c *AnalysisInstructionRepository_List_Call) Run(run func(ctx context.Context, input models.ListAnalysisInstructionsInput)) *AnalysisInstructionRepository_List_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ListAnalysisInstructionsInput))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionRepository_List_Call) Return(_a0 []models.AnalysisInstruction, _a1 error) *AnalysisInstructionRepository_List_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AnalysisInstructionRepository_List_Call) RunAndReturn(run func(context.Context, models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error)) *AnalysisInstructionRepository_List_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Reorder provides a mock function with given fields: ctx, items
 func (_m *AnalysisInstructionRepository) Reorder(ctx context.Context, items []models.ReorderAnalysisInstructionItem) error {
 	ret := _m.Called(ctx, items)
@@ -316,6 +374,35 @@ func (_m *AnalysisInstructionRepository) Reorder(ctx context.Context, items []mo
 	}
 
 	return r0
+}
+
+// AnalysisInstructionRepository_Reorder_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Reorder'
+type AnalysisInstructionRepository_Reorder_Call struct {
+	*mock.Call
+}
+
+// Reorder is a helper method to define mock.On call
+//   - ctx context.Context
+//   - items []models.ReorderAnalysisInstructionItem
+func (_e *AnalysisInstructionRepository_Expecter) Reorder(ctx interface{}, items interface{}) *AnalysisInstructionRepository_Reorder_Call {
+	return &AnalysisInstructionRepository_Reorder_Call{Call: _e.mock.On("Reorder", ctx, items)}
+}
+
+func (_c *AnalysisInstructionRepository_Reorder_Call) Run(run func(ctx context.Context, items []models.ReorderAnalysisInstructionItem)) *AnalysisInstructionRepository_Reorder_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]models.ReorderAnalysisInstructionItem))
+	})
+	return _c
+}
+
+func (_c *AnalysisInstructionRepository_Reorder_Call) Return(_a0 error) *AnalysisInstructionRepository_Reorder_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *AnalysisInstructionRepository_Reorder_Call) RunAndReturn(run func(context.Context, []models.ReorderAnalysisInstructionItem) error) *AnalysisInstructionRepository_Reorder_Call {
+	_c.Call.Return(run)
+	return _c
 }
 
 // Update provides a mock function with given fields: ctx, input
@@ -346,31 +433,31 @@ func (_m *AnalysisInstructionRepository) Update(ctx context.Context, input model
 	return r0, r1
 }
 
-// AnalysisInstructionRepository_List_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'List'
-type AnalysisInstructionRepository_List_Call struct {
+// AnalysisInstructionRepository_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type AnalysisInstructionRepository_Update_Call struct {
 	*mock.Call
 }
 
-// List is a helper method to define mock.On call
+// Update is a helper method to define mock.On call
 //   - ctx context.Context
-//   - input models.ListAnalysisInstructionsInput
-func (_e *AnalysisInstructionRepository_Expecter) List(ctx interface{}, input interface{}) *AnalysisInstructionRepository_List_Call {
-	return &AnalysisInstructionRepository_List_Call{Call: _e.mock.On("List", ctx, input)}
+//   - input models.UpdateAnalysisInstructionRepositoryInput
+func (_e *AnalysisInstructionRepository_Expecter) Update(ctx interface{}, input interface{}) *AnalysisInstructionRepository_Update_Call {
+	return &AnalysisInstructionRepository_Update_Call{Call: _e.mock.On("Update", ctx, input)}
 }
 
-func (_c *AnalysisInstructionRepository_List_Call) Run(run func(ctx context.Context, input models.ListAnalysisInstructionsInput)) *AnalysisInstructionRepository_List_Call {
+func (_c *AnalysisInstructionRepository_Update_Call) Run(run func(ctx context.Context, input models.UpdateAnalysisInstructionRepositoryInput)) *AnalysisInstructionRepository_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(models.ListAnalysisInstructionsInput))
+		run(args[0].(context.Context), args[1].(models.UpdateAnalysisInstructionRepositoryInput))
 	})
 	return _c
 }
 
-func (_c *AnalysisInstructionRepository_List_Call) Return(_a0 []models.AnalysisInstruction, _a1 error) *AnalysisInstructionRepository_List_Call {
+func (_c *AnalysisInstructionRepository_Update_Call) Return(_a0 models.AnalysisInstruction, _a1 error) *AnalysisInstructionRepository_Update_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *AnalysisInstructionRepository_List_Call) RunAndReturn(run func(context.Context, models.ListAnalysisInstructionsInput) ([]models.AnalysisInstruction, error)) *AnalysisInstructionRepository_List_Call {
+func (_c *AnalysisInstructionRepository_Update_Call) RunAndReturn(run func(context.Context, models.UpdateAnalysisInstructionRepositoryInput) (models.AnalysisInstruction, error)) *AnalysisInstructionRepository_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -82,6 +82,7 @@ type AuthService interface {
 	UpdateProfile(ctx context.Context, input models.UpdateUserProfileInput) (models.User, error)
 	UploadAvatar(ctx context.Context, input models.SaveUserAvatarInput) (models.UserAvatarResponse, error)
 	DeleteAvatar(ctx context.Context, userID uuid.UUID) (models.UserAvatarResponse, error)
+	GetAvatar(ctx context.Context, userID uuid.UUID) (models.File, error)
 	GetPreferences(ctx context.Context, userID uuid.UUID) (models.UserPreferences, error)
 	UpdatePreferences(ctx context.Context, input models.UpdateUserPreferencesInput) (models.UserPreferences, error)
 }
@@ -102,6 +103,7 @@ type AdminService interface {
 	GetCompanySubscription(ctx context.Context, companyID uuid.UUID) (models.AdminSubscription, error)
 	GrantSubscription(ctx context.Context, input models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)
 	CancelSubscription(ctx context.Context, input models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)
+	ResetUsage(ctx context.Context, input models.ResetAdminUsageInput) error
 	GetCall(ctx context.Context, id uuid.UUID) (models.Call, error)
 	ListUserCalls(ctx context.Context, userID uuid.UUID, limit int, offset int) (models.ListCallsResult, error)
 	GetCallAudio(ctx context.Context, id uuid.UUID) (models.File, error)
@@ -111,10 +113,12 @@ type CompanyService interface {
 	CreateCompany(ctx context.Context, input models.CreateCompanyInput) (models.Company, error)
 	UpdateCompany(ctx context.Context, input models.UpdateCompanyInput) (models.Company, error)
 	UpdateCompanyTag(ctx context.Context, input models.UpdateCompanyTagInput) (models.Company, error)
+	UpdateCompanyTagAsAdmin(ctx context.Context, companyID uuid.UUID, tag string) (models.Company, error)
 	DeleteCompany(ctx context.Context, input models.DeleteCompanyInput) error
 	AddCompanyMember(ctx context.Context, input models.AddCompanyMemberInput) (models.CompanyMember, error)
 	UpdateCompanyMemberRole(ctx context.Context, input models.UpdateCompanyMemberRoleInput) (models.CompanyMember, error)
 	UpdateCompanyMemberStatus(ctx context.Context, input models.UpdateCompanyMemberStatusInput) (models.CompanyMember, error)
+	LeaveCompany(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.CompanyMember, error)
 	ListUserCompanies(ctx context.Context, userID uuid.UUID) ([]models.Company, error)
 	GetCompanyByUUID(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.Company, error)
 	GetCompanyMembersOverview(ctx context.Context, companyID uuid.UUID, userID uuid.UUID) (models.CompanyMembersOverview, error)

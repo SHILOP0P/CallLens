@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"time"
 
@@ -98,6 +99,23 @@ func (h *AuthHandler) DeleteAvatar(w http.ResponseWriter, r *http.Request) {
 		AvatarURL: result.AvatarURL,
 		UpdatedAt: result.UpdatedAt.Format(time.RFC3339),
 	})
+}
+
+func (h *AuthHandler) GetAvatar(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.UserIDFromContext(r.Context())
+	if !ok {
+		response.WriteError(w, http.StatusUnauthorized, response.CodeUnauthorized, "unauthorized")
+		return
+	}
+	file, err := h.service.GetAvatar(r.Context(), userID)
+	if err != nil {
+		response.WriteError(w, http.StatusNotFound, response.CodeUserNotFound, "avatar not found")
+		return
+	}
+	defer func() { _ = file.Content.Close() }()
+	w.Header().Set("Content-Type", file.MimeType)
+	w.Header().Set("Cache-Control", "private, max-age=300")
+	_, _ = io.Copy(w, file.Content)
 }
 
 func writeProfileError(w http.ResponseWriter, err error, fallbackCode string, fallbackMessage string) {

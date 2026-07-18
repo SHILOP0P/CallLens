@@ -82,6 +82,26 @@ func (l *LocalStorage) Delete(ctx context.Context, path string) error {
 	return nil
 }
 
+func (l *LocalStorage) Open(ctx context.Context, path string) (io.ReadCloser, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+	fullPath, err := safeLocalPath(l.baseDir, path)
+	if err != nil {
+		return nil, err
+	}
+	file, err := os.Open(fullPath)
+	if os.IsNotExist(err) {
+		return nil, models.ErrUserNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("open avatar file failed: %w", err)
+	}
+	return file, nil
+}
+
 func safeLocalPath(baseDir string, path string) (string, error) {
 	cleanPath := filepath.Clean(path)
 	if cleanPath == "." || cleanPath == ".." || filepath.IsAbs(cleanPath) {

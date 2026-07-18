@@ -24,11 +24,13 @@ func (s *RepositorySuite) TestListAndGetAdminCompanies() {
 	s.Require().Equal(1, listed.Total)
 	s.Require().Len(listed.Companies, 1)
 	s.Require().Equal(companyID, listed.Companies[0].ID)
+	s.Require().Equal("@"+companyID.String(), listed.Companies[0].Tag)
 	s.Require().Equal(manager.ID, listed.Companies[0].ManagerUserUUID)
 
 	company, err := s.repository.GetAdminCompanyByUUID(s.ctx, companyID)
 	s.Require().NoError(err)
 	s.Require().Equal(companyID, company.ID)
+	s.Require().Equal("@"+companyID.String(), company.Tag)
 	s.Require().Equal(manager.ID, company.ManagerUserUUID)
 }
 

@@ -14,6 +14,7 @@ const (
 	AdminPermissionUsersRead           AdminPermission = "admin.users.read"
 	AdminPermissionUsersManage         AdminPermission = "admin.users.manage"
 	AdminPermissionCompaniesRead       AdminPermission = "admin.companies.read"
+	AdminPermissionCompaniesManage     AdminPermission = "admin.companies.manage"
 	AdminPermissionRolesManageHelpers  AdminPermission = "admin.roles.manage_helpers"
 	AdminPermissionRolesManageAdmins   AdminPermission = "admin.roles.manage_admins"
 	AdminPermissionSessionsRead        AdminPermission = "admin.sessions.read"
@@ -38,6 +39,7 @@ var adminPermissionsByRole = map[UserRole][]AdminPermission{
 		AdminPermissionUsersRead,
 		AdminPermissionUsersManage,
 		AdminPermissionCompaniesRead,
+		AdminPermissionCompaniesManage,
 		AdminPermissionRolesManageHelpers,
 		AdminPermissionSessionsRead,
 		AdminPermissionSessionsManage,
@@ -53,6 +55,7 @@ var adminPermissionsByRole = map[UserRole][]AdminPermission{
 		AdminPermissionUsersRead,
 		AdminPermissionUsersManage,
 		AdminPermissionCompaniesRead,
+		AdminPermissionCompaniesManage,
 		AdminPermissionRolesManageHelpers,
 		AdminPermissionRolesManageAdmins,
 		AdminPermissionSessionsRead,
@@ -200,6 +203,7 @@ type AdminUserSessions struct {
 type AdminCompany struct {
 	ID              uuid.UUID
 	Name            string
+	Tag             string
 	ManagerUserUUID uuid.UUID
 	CreatedAt       time.Time
 }
@@ -236,6 +240,13 @@ type GrantAdminSubscriptionInput struct {
 	Metadata      AdminMutationMetadata
 }
 type CancelAdminSubscriptionInput struct {
+	ActorUserUUID uuid.UUID
+	UserUUID      uuid.UUID
+	CompanyUUID   uuid.UUID
+	Metadata      AdminMutationMetadata
+}
+
+type ResetAdminUsageInput struct {
 	ActorUserUUID uuid.UUID
 	UserUUID      uuid.UUID
 	CompanyUUID   uuid.UUID

@@ -65,6 +65,10 @@ func writeReportError(w http.ResponseWriter, err error, fallbackCode string) {
 		response.WriteError(w, http.StatusNotFound, response.CodeReportNotFound, "report not found")
 		return
 	}
+	if errors.Is(err, models.ErrReportAlreadyExists) {
+		response.WriteError(w, http.StatusConflict, response.CodeReportAlreadyExists, "report already exists")
+		return
+	}
 	if errors.Is(err, models.ErrUnsupportedReportFormat) {
 		response.WriteError(w, http.StatusBadRequest, response.CodeUnsupportedReportFormat, "unsupported report format")
 		return

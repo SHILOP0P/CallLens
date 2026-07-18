@@ -653,6 +653,53 @@ func (_c *AdminRepository_ListAdminUsers_Call) RunAndReturn(run func(context.Con
 	return _c
 }
 
+// ResetAdminUsage provides a mock function with given fields: ctx, input
+func (_m *AdminRepository) ResetAdminUsage(ctx context.Context, input models.ResetAdminUsageInput) error {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ResetAdminUsage")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ResetAdminUsageInput) error); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// AdminRepository_ResetAdminUsage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetAdminUsage'
+type AdminRepository_ResetAdminUsage_Call struct {
+	*mock.Call
+}
+
+// ResetAdminUsage is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ResetAdminUsageInput
+func (_e *AdminRepository_Expecter) ResetAdminUsage(ctx interface{}, input interface{}) *AdminRepository_ResetAdminUsage_Call {
+	return &AdminRepository_ResetAdminUsage_Call{Call: _e.mock.On("ResetAdminUsage", ctx, input)}
+}
+
+func (_c *AdminRepository_ResetAdminUsage_Call) Run(run func(ctx context.Context, input models.ResetAdminUsageInput)) *AdminRepository_ResetAdminUsage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ResetAdminUsageInput))
+	})
+	return _c
+}
+
+func (_c *AdminRepository_ResetAdminUsage_Call) Return(_a0 error) *AdminRepository_ResetAdminUsage_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *AdminRepository_ResetAdminUsage_Call) RunAndReturn(run func(context.Context, models.ResetAdminUsageInput) error) *AdminRepository_ResetAdminUsage_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RevokeAdminUserSession provides a mock function with given fields: ctx, input
 func (_m *AdminRepository) RevokeAdminUserSession(ctx context.Context, input models.AdminSessionMutationInput) error {
 	ret := _m.Called(ctx, input)

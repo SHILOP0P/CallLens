@@ -117,6 +117,7 @@ const (
 	CodeAnalyzerNotConfigured            = "analyzer_not_configured"
 	CodeInvalidAnalysisStatus            = "invalid_analysis_status"
 	CodeReportNotFound                   = "report_not_found"
+	CodeReportAlreadyExists              = "report_already_exists"
 	CodeInvalidReportInput               = "invalid_report_input"
 	CodeUnsupportedReportFormat          = "unsupported_report_format"
 	CodeUnsupportedReportScope           = "unsupported_report_scope"

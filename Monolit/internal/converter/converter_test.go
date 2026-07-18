@@ -112,8 +112,12 @@ func TestBillingCompanyInvitationAndReportConverters(t *testing.T) {
 	department := models.Department{ID: otherID, CompanyUUID: id, CreatedAt: now}
 	member := models.CompanyMember{CompanyUUID: id, UserUUID: otherID, Role: models.CompanyMemberRoleEmployee, CreatedAt: now}
 	departmentMember := models.DepartmentMember{DepartmentUUID: otherID, UserUUID: id, Role: models.DepartmentMemberRoleEmployee, CreatedAt: now}
-	if _, err := CompanyModelToAPI(company); err != nil {
+	companyResponse, err := CompanyModelToAPI(company)
+	if err != nil {
 		t.Fatal(err)
+	}
+	if companyResponse.Tag != "@"+id.String() {
+		t.Fatalf("default company tag = %q", companyResponse.Tag)
 	}
 	if _, err := DepartmentModelToAPI(department); err != nil {
 		t.Fatal(err)

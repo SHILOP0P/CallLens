@@ -28,5 +28,6 @@ type ReportStorage interface {
 
 type AvatarStorage interface {
 	Save(ctx context.Context, input models.SaveUserAvatarInput) (models.SavedUserAvatar, error)
+	Open(ctx context.Context, path string) (io.ReadCloser, error)
 	Delete(ctx context.Context, path string) error
 }

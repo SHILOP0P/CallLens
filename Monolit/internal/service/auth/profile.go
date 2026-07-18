@@ -82,6 +82,21 @@ func (s *Service) DeleteAvatar(ctx context.Context, userID uuid.UUID) (models.Us
 	return models.UserAvatarResponse{AvatarURL: avatarURL, UpdatedAt: time.Now().UTC()}, nil
 }
 
+func (s *Service) GetAvatar(ctx context.Context, userID uuid.UUID) (models.File, error) {
+	user, err := s.userRepository.GetUserByUUID(ctx, userID)
+	if err != nil {
+		return models.File{}, err
+	}
+	if user.AvatarPath == nil || user.AvatarMime == nil || s.avatarStorage == nil {
+		return models.File{}, models.ErrUserNotFound
+	}
+	content, err := s.avatarStorage.Open(ctx, *user.AvatarPath)
+	if err != nil {
+		return models.File{}, err
+	}
+	return models.File{OriginalFilename: *user.AvatarPath, MimeType: *user.AvatarMime, Content: content}, nil
+}
+
 func normalizeRequiredPatchString(value *string) *string {
 	if value == nil {
 		return nil

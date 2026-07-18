@@ -107,6 +107,7 @@ var ErrAPIAccessDenied = errors.New("api access denied")
 
 // REPORT
 var ErrReportNotFound = errors.New("report not found")
+var ErrReportAlreadyExists = errors.New("report already exists")
 var ErrInvalidReportInput = errors.New("invalid report input")
 var ErrUnsupportedReportFormat = errors.New("unsupported report format")
 var ErrUnsupportedReportScope = errors.New("unsupported report scope")

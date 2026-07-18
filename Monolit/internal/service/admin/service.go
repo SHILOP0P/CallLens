@@ -32,6 +32,7 @@ type AuditRepository interface {
 	GetAdminCompanySubscription(ctx context.Context, companyID uuid.UUID) (models.AdminSubscription, error)
 	GrantAdminSubscription(ctx context.Context, input models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)
 	CancelAdminSubscription(ctx context.Context, input models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)
+	ResetAdminUsage(ctx context.Context, input models.ResetAdminUsageInput) error
 }
 
 func (s *Service) ListCompanies(ctx context.Context, input models.ListAdminCompaniesInput) (models.ListAdminCompaniesResult, error) {
@@ -86,21 +87,14 @@ func (s *Service) GetUser(ctx context.Context, userID uuid.UUID) (models.AdminUs
 }
 
 func (s *Service) UpdateUserProfile(ctx context.Context, input models.UpdateAdminUserProfileInput) (models.AdminUser, error) {
-	if s.auditRepository == nil || input.ActorUserUUID == uuid.Nil || input.TargetUserUUID == uuid.Nil || strings.TrimSpace(input.Metadata.Reason) == "" || (input.FullName == nil && input.FullSurname == nil && input.Username == nil && input.Post == nil && input.Phone == nil && input.Timezone == nil) {
+	if s.auditRepository == nil || input.ActorUserUUID == uuid.Nil || input.TargetUserUUID == uuid.Nil || strings.TrimSpace(input.Metadata.Reason) == "" || (input.FullName == nil && input.FullSurname == nil && input.Username == nil && input.Post == nil) {
 		return models.AdminUser{}, models.ErrInvalidAdminInput
 	}
 	input.FullName = normalizeRequiredPatchString(input.FullName)
 	input.FullSurname = normalizeRequiredPatchString(input.FullSurname)
 	input.Post = normalizeOptionalString(input.Post)
-	input.Phone = normalizeOptionalString(input.Phone)
-	input.Timezone = normalizeOptionalString(input.Timezone)
 	if (input.FullName != nil && *input.FullName == "") || (input.FullSurname != nil && *input.FullSurname == "") {
 		return models.AdminUser{}, models.ErrInvalidAdminInput
-	}
-	if input.Timezone != nil {
-		if _, err := time.LoadLocation(*input.Timezone); err != nil {
-			return models.AdminUser{}, models.ErrInvalidAdminInput
-		}
 	}
 	if input.Username != nil {
 		normalized, ok := username.Normalize(*input.Username)
@@ -120,6 +114,13 @@ func (s *Service) ChangeUserRole(ctx context.Context, input models.ChangeAdminUs
 		return models.AdminUser{}, models.ErrCannotChangeOwnRole
 	}
 	return s.auditRepository.ChangeAdminUserRole(ctx, input)
+}
+
+func (s *Service) ResetUsage(ctx context.Context, input models.ResetAdminUsageInput) error {
+	if s.auditRepository == nil || input.ActorUserUUID == uuid.Nil || strings.TrimSpace(input.Metadata.Reason) == "" || (input.UserUUID == uuid.Nil && input.CompanyUUID == uuid.Nil) || (input.UserUUID != uuid.Nil && input.CompanyUUID != uuid.Nil) {
+		return models.ErrInvalidAdminInput
+	}
+	return s.auditRepository.ResetAdminUsage(ctx, input)
 }
 
 func (s *Service) ListUserSessions(ctx context.Context, actorUserID uuid.UUID, targetUserID uuid.UUID) ([]models.AdminUserSession, error) {

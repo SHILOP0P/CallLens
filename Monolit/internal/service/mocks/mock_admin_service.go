@@ -651,6 +651,65 @@ func (_c *AdminService_ListCompanies_Call) RunAndReturn(run func(context.Context
 	return _c
 }
 
+// ListUserCalls provides a mock function with given fields: ctx, userID, limit, offset
+func (_m *AdminService) ListUserCalls(ctx context.Context, userID uuid.UUID, limit int, offset int) (models.ListCallsResult, error) {
+	ret := _m.Called(ctx, userID, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListUserCalls")
+	}
+
+	var r0 models.ListCallsResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, int, int) (models.ListCallsResult, error)); ok {
+		return rf(ctx, userID, limit, offset)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, int, int) models.ListCallsResult); ok {
+		r0 = rf(ctx, userID, limit, offset)
+	} else {
+		r0 = ret.Get(0).(models.ListCallsResult)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, int, int) error); ok {
+		r1 = rf(ctx, userID, limit, offset)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminService_ListUserCalls_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListUserCalls'
+type AdminService_ListUserCalls_Call struct {
+	*mock.Call
+}
+
+// ListUserCalls is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - limit int
+//   - offset int
+func (_e *AdminService_Expecter) ListUserCalls(ctx interface{}, userID interface{}, limit interface{}, offset interface{}) *AdminService_ListUserCalls_Call {
+	return &AdminService_ListUserCalls_Call{Call: _e.mock.On("ListUserCalls", ctx, userID, limit, offset)}
+}
+
+func (_c *AdminService_ListUserCalls_Call) Run(run func(ctx context.Context, userID uuid.UUID, limit int, offset int)) *AdminService_ListUserCalls_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(int), args[3].(int))
+	})
+	return _c
+}
+
+func (_c *AdminService_ListUserCalls_Call) Return(_a0 models.ListCallsResult, _a1 error) *AdminService_ListUserCalls_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminService_ListUserCalls_Call) RunAndReturn(run func(context.Context, uuid.UUID, int, int) (models.ListCallsResult, error)) *AdminService_ListUserCalls_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListUserSessions provides a mock function with given fields: ctx, actorUserID, targetUserID
 func (_m *AdminService) ListUserSessions(ctx context.Context, actorUserID uuid.UUID, targetUserID uuid.UUID) ([]models.AdminUserSession, error) {
 	ret := _m.Called(ctx, actorUserID, targetUserID)
@@ -825,6 +884,53 @@ func (_c *AdminService_RecordAudit_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
+// ResetUsage provides a mock function with given fields: ctx, input
+func (_m *AdminService) ResetUsage(ctx context.Context, input models.ResetAdminUsageInput) error {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ResetUsage")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.ResetAdminUsageInput) error); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// AdminService_ResetUsage_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ResetUsage'
+type AdminService_ResetUsage_Call struct {
+	*mock.Call
+}
+
+// ResetUsage is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.ResetAdminUsageInput
+func (_e *AdminService_Expecter) ResetUsage(ctx interface{}, input interface{}) *AdminService_ResetUsage_Call {
+	return &AdminService_ResetUsage_Call{Call: _e.mock.On("ResetUsage", ctx, input)}
+}
+
+func (_c *AdminService_ResetUsage_Call) Run(run func(ctx context.Context, input models.ResetAdminUsageInput)) *AdminService_ResetUsage_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.ResetAdminUsageInput))
+	})
+	return _c
+}
+
+func (_c *AdminService_ResetUsage_Call) Return(_a0 error) *AdminService_ResetUsage_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *AdminService_ResetUsage_Call) RunAndReturn(run func(context.Context, models.ResetAdminUsageInput) error) *AdminService_ResetUsage_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // RevokeAllUserSessions provides a mock function with given fields: ctx, input
 func (_m *AdminService) RevokeAllUserSessions(ctx context.Context, input models.AdminSessionMutationInput) error {
 	ret := _m.Called(ctx, input)
@@ -915,6 +1021,63 @@ func (_c *AdminService_RevokeUserSession_Call) Return(_a0 error) *AdminService_R
 }
 
 func (_c *AdminService_RevokeUserSession_Call) RunAndReturn(run func(context.Context, models.AdminSessionMutationInput) error) *AdminService_RevokeUserSession_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateUserProfile provides a mock function with given fields: ctx, input
+func (_m *AdminService) UpdateUserProfile(ctx context.Context, input models.UpdateAdminUserProfileInput) (models.AdminUser, error) {
+	ret := _m.Called(ctx, input)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateUserProfile")
+	}
+
+	var r0 models.AdminUser
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateAdminUserProfileInput) (models.AdminUser, error)); ok {
+		return rf(ctx, input)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, models.UpdateAdminUserProfileInput) models.AdminUser); ok {
+		r0 = rf(ctx, input)
+	} else {
+		r0 = ret.Get(0).(models.AdminUser)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, models.UpdateAdminUserProfileInput) error); ok {
+		r1 = rf(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AdminService_UpdateUserProfile_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUserProfile'
+type AdminService_UpdateUserProfile_Call struct {
+	*mock.Call
+}
+
+// UpdateUserProfile is a helper method to define mock.On call
+//   - ctx context.Context
+//   - input models.UpdateAdminUserProfileInput
+func (_e *AdminService_Expecter) UpdateUserProfile(ctx interface{}, input interface{}) *AdminService_UpdateUserProfile_Call {
+	return &AdminService_UpdateUserProfile_Call{Call: _e.mock.On("UpdateUserProfile", ctx, input)}
+}
+
+func (_c *AdminService_UpdateUserProfile_Call) Run(run func(ctx context.Context, input models.UpdateAdminUserProfileInput)) *AdminService_UpdateUserProfile_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(models.UpdateAdminUserProfileInput))
+	})
+	return _c
+}
+
+func (_c *AdminService_UpdateUserProfile_Call) Return(_a0 models.AdminUser, _a1 error) *AdminService_UpdateUserProfile_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AdminService_UpdateUserProfile_Call) RunAndReturn(run func(context.Context, models.UpdateAdminUserProfileInput) (models.AdminUser, error)) *AdminService_UpdateUserProfile_Call {
 	_c.Call.Return(run)
 	return _c
 }

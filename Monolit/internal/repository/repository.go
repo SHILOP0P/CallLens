@@ -89,6 +89,7 @@ type AdminRepository interface {
 	GetAdminCompanySubscription(ctx context.Context, companyID uuid.UUID) (models.AdminSubscription, error)
 	GrantAdminSubscription(ctx context.Context, input models.GrantAdminSubscriptionInput) (models.AdminSubscription, error)
 	CancelAdminSubscription(ctx context.Context, input models.CancelAdminSubscriptionInput) (models.AdminSubscription, error)
+	ResetAdminUsage(ctx context.Context, input models.ResetAdminUsageInput) error
 }
 
 type CompanyRepository interface {
