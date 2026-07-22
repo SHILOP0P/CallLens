@@ -18,7 +18,7 @@ import (
 )
 
 func (h *CallHandler) Create(w http.ResponseWriter, r *http.Request) {
-	const maxUploadSize = 100 << 20
+	const maxUploadSize = 500 << 20 // Temporary local-test limit: 500 MiB.
 
 	userID, ok := userIDFromRequest(r)
 	if !ok {

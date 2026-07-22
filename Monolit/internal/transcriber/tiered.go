@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"calllens/monolit/internal/models"
+	"calllens/monolit/internal/transcriber/diarizer"
 	"calllens/monolit/internal/transcriber/hybrid"
+	localTranscriber "calllens/monolit/internal/transcriber/local"
 	"calllens/monolit/internal/transcriber/openrouter"
 )
 
@@ -14,12 +16,35 @@ type tieredTranscriber struct {
 	diarized Transcriber
 }
 
-func newTieredTranscriber(apiKey, model, diarizerURL string) (Transcriber, error) {
-	standard, err := openrouter.New(apiKey, model)
+func newLocalTieredTranscriber(transcriberURL string, diarizerURL string) (Transcriber, error) {
+	standard, err := localTranscriber.New(transcriberURL)
 	if err != nil {
 		return nil, err
 	}
-	diarized, err := hybrid.New(apiKey, model, diarizerURL)
+	diarization, err := diarizer.New(diarizerURL)
+	if err != nil {
+		return nil, err
+	}
+	return &tieredTranscriber{
+		standard: standard,
+		diarized: hybrid.NewWithDependencies(standard, diarization),
+	}, nil
+}
+
+func newTieredTranscriber(apiKey, model, fallbackModel, diarizerURL string) (Transcriber, error) {
+	standardPrimary, err := openrouter.New(apiKey, model)
+	if err != nil {
+		return nil, err
+	}
+	standard, err := newFallbackTranscriber(standardPrimary, apiKey, fallbackModel)
+	if err != nil {
+		return nil, err
+	}
+	diarizedPrimary, err := hybrid.New(apiKey, model, diarizerURL)
+	if err != nil {
+		return nil, err
+	}
+	diarized, err := newHybridWithFallback(diarizedPrimary, apiKey, fallbackModel, diarizerURL)
 	if err != nil {
 		return nil, err
 	}

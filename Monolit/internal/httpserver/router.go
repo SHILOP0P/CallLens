@@ -15,7 +15,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, analysisAPI API.AnalysisAPI, reportAPI API.ReportAPI, billingAPI API.BillingAPI, invitationAPI API.InvitationAPI, analyticsAPI API.AnalyticsAPI, monitoringAPI API.MonitoringAPI, searchAPI API.SearchAPI, notificationAPI API.NotificationAPI, adminAPI API.AdminAPI, healthHandler *health.Handler, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
+func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API.AuthAPI, companyAPI API.CompanyAPI, departmentAPI API.DepartmentAPI, instructionAPI API.AnalysisInstructionAPI, promptProfileAPI API.PromptProfileAPI, analysisAPI API.AnalysisAPI, reportAPI API.ReportAPI, billingAPI API.BillingAPI, invitationAPI API.InvitationAPI, analyticsAPI API.AnalyticsAPI, monitoringAPI API.MonitoringAPI, searchAPI API.SearchAPI, notificationAPI API.NotificationAPI, adminAPI API.AdminAPI, healthHandler *health.Handler, jwtSecret string, refreshSessionRepository repository.RefreshSessionRepository, log logger.Logger) http.Handler {
 	r := chi.NewRouter()
 
 	authGuard := authMiddleware.Auth(jwtSecret, refreshSessionRepository)
@@ -35,6 +35,8 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 	r.Route("/api/v1", func(r chi.Router) {
 		r.With(authGuard).Get("/calls/{uuid}/events", callAPI.Events)
 		r.With(authGuard).Get("/analytics/deep-analyses/{uuid}/events", analyticsAPI.DeepAnalysisEvents)
+		// Large audio/video uploads must not inherit the normal 10-second API timeout.
+		r.With(authGuard).With(middleware.Timeout(45*time.Minute)).Post("/calls", callAPI.Create)
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Timeout(10 * time.Second))
@@ -70,7 +72,6 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 
 			//CALL
 			//POST
-			r.With(authGuard).Post("/calls", callAPI.Create)
 			//GET
 			r.With(authGuard).Get("/calls", callAPI.List)
 			r.With(authGuard).Get("/calls/filters", callAPI.GetFilterOptions)
@@ -78,6 +79,8 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 			r.With(authGuard).Get("/calls/{uuid}/audio", callAPI.GetAudioByUUID)
 			r.With(authGuard).Get("/calls/{uuid}/media", callAPI.GetAudioByUUID)
 			r.With(authGuard).Get("/calls/{uuid}/transcription", callAPI.GetTranscriptionByCallUUID)
+			r.With(authGuard).Get("/calls/{uuid}/prompt-context", promptProfileAPI.GetCallContext)
+			r.With(authGuard).Put("/calls/{uuid}/prompt-context", promptProfileAPI.PutCallContext)
 			r.With(authGuard).Post("/calls/{uuid}/analysis", analysisAPI.AnalyzeCall)
 			r.With(authGuard).Get("/calls/{uuid}/analysis", analysisAPI.GetByCallUUID)
 			r.With(authGuard).Post("/calls/{uuid}/reports", reportAPI.Create)
@@ -176,6 +179,17 @@ func NewRouter(callAPI API.CallAPI, callFolderAPI API.CallFolderAPI, authAPI API
 			r.With(authGuard).Post("/companies/{uuid}/departments/{department_uuid}/invitations/{invitation_uuid}/cancel", invitationAPI.CancelDepartmentInvitation)
 			r.With(authGuard).Patch("/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/role", departmentAPI.UpdateDepartmentMemberRole)
 			r.With(authGuard).Patch("/companies/{uuid}/departments/{department_uuid}/members/{user_uuid}/status", departmentAPI.UpdateDepartmentMemberStatus)
+
+			// PROMPT CATALOG AND PROFILES
+			r.With(authGuard).Get("/prompt-catalog/industries", promptProfileAPI.Industries)
+			r.With(authGuard).Get("/prompt-settings", promptProfileAPI.GetSettings)
+			r.With(authGuard).Put("/prompt-settings", promptProfileAPI.SaveSettings)
+			r.With(authGuard).Get("/prompt-catalog/topics", promptProfileAPI.Topics)
+			r.With(authGuard).Post("/prompt-catalog/recommendations", promptProfileAPI.Recommend)
+			r.With(authGuard).Get("/prompt-profiles", promptProfileAPI.ListProfiles)
+			r.With(authGuard).Post("/prompt-profiles", promptProfileAPI.SaveProfile)
+			r.With(authGuard).Patch("/prompt-profiles/{uuid}", promptProfileAPI.SaveProfile)
+			r.With(authGuard).Delete("/prompt-profiles/{uuid}", promptProfileAPI.DeleteProfile)
 
 			//ANALYSIS INSTRUCTIONS
 			r.With(authGuard).Post("/instructions", instructionAPI.Create)

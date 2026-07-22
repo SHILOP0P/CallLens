@@ -60,7 +60,10 @@ type UserSessionResponse struct {
 }
 
 type UserSessionsResponse struct {
-	Sessions []UserSessionResponse `json:"sessions"`
+	Sessions               []UserSessionResponse `json:"sessions"`
+	CanManageOtherSessions bool                  `json:"can_manage_other_sessions"`
+	AvailableAt            *string               `json:"available_at,omitempty"`
+	RetryAfterSeconds      int                   `json:"retry_after_seconds,omitempty"`
 }
 
 type UpdateProfileRequest struct {

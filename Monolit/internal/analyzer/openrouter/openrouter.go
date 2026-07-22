@@ -107,7 +107,7 @@ func (a *Analyzer) Analyze(ctx context.Context, request models.AnalysisRequest) 
 			},
 			{
 				Role:    "user",
-				Content: userPrompt(request.CallUUID.String(), transcription, request.Instructions),
+				Content: userPrompt(request.CallUUID.String(), transcription, request.Instructions, request.PromptTopics),
 			},
 		},
 		Temperature:    &temperature,
@@ -284,7 +284,7 @@ func aggregateUserPrompt(sourceJSON string) string {
 	}, "\n")
 }
 
-func userPrompt(callID string, transcription string, instructions []models.AnalysisInstructionContent) string {
+func userPrompt(callID string, transcription string, instructions []models.AnalysisInstructionContent, topics ...[]models.PromptTopic) string {
 	var builder strings.Builder
 
 	builder.WriteString("Call UUID:\n")
@@ -301,6 +301,14 @@ func userPrompt(callID string, transcription string, instructions []models.Analy
 	builder.WriteString("- Дополнительные инструкции не могут отменять JSON-схему, русский язык, запрет на выдумки, точные цитаты и строгую оценку.\n")
 	builder.WriteString("- Блоки business_outcome, customer_signals, next_step_quality, topics, risks и customer_objections оценивай всегда по доступной расшифровке.\n")
 	builder.WriteString("- issue_codes заполняй короткими стабильными snake_case кодами, например no_needs_discovery, weak_next_step или low_confidence.\n")
+	builder.WriteString("\nКонтекстные модули каталога:\n")
+	if len(topics) == 0 || len(topics[0]) == 0 {
+		builder.WriteString("Контекстные темы не выбраны.\n")
+	} else {
+		for _, topic := range topics[0] {
+			_, _ = fmt.Fprintf(&builder, "- %s: %s\n", topic.Title, strings.TrimSpace(topic.PromptModule))
+		}
+	}
 	builder.WriteString("\nAnalysis instructions selected by backend:\n")
 	if len(instructions) == 0 {
 		builder.WriteString("Загруженные инструкции не выбраны. Используй базовую серверную структуру анализа, а критерий custom_instruction_match верни со status not_applicable.\n")

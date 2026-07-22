@@ -14,6 +14,13 @@ import (
 func RequestLogger(log logger.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Docker probes are expected and frequent; do not let them obscure
+			// worker and request diagnostics in the application log.
+			if isHealthCheckPath(r.URL.Path) {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			start := time.Now()
 			requestID := chimiddleware.GetReqID(r.Context())
 			ctx := logger.ContextWithTraceID(r.Context(), requestID)
@@ -54,5 +61,14 @@ func RequestLogger(log logger.Logger) func(http.Handler) http.Handler {
 
 			next.ServeHTTP(ww, r.WithContext(ctx))
 		})
+	}
+}
+
+func isHealthCheckPath(path string) bool {
+	switch path {
+	case "/health", "/health/live", "/health/ready", "/health/startup":
+		return true
+	default:
+		return false
 	}
 }

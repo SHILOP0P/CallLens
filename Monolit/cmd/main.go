@@ -23,9 +23,11 @@ import (
 	invitationAPI "calllens/monolit/internal/API/invitation"
 	monitoringAPI "calllens/monolit/internal/API/monitoring"
 	notificationAPI "calllens/monolit/internal/API/notification"
+	promptProfileAPI "calllens/monolit/internal/API/prompt_profile"
 	reportAPI "calllens/monolit/internal/API/report"
 	searchAPI "calllens/monolit/internal/API/search"
 	"calllens/monolit/internal/analyzer"
+	"calllens/monolit/internal/catalog"
 	"calllens/monolit/internal/config"
 	"calllens/monolit/internal/httpserver"
 	"calllens/monolit/internal/logger"
@@ -41,6 +43,7 @@ import (
 	invitationRepo "calllens/monolit/internal/repository/invitation"
 	notificationRepo "calllens/monolit/internal/repository/notification"
 	processingJobRepo "calllens/monolit/internal/repository/processing_job"
+	promptProfileRepo "calllens/monolit/internal/repository/prompt_profile"
 	refreshSessionRepo "calllens/monolit/internal/repository/refresh_session"
 	reportRepo "calllens/monolit/internal/repository/report"
 	searchRepo "calllens/monolit/internal/repository/search"
@@ -132,6 +135,11 @@ func main() {
 	err = migratorRunner.Up()
 	if err != nil {
 		appLogger.Error(ctx, "failed to run migrator", zap.Error(err))
+		return
+	}
+	if err = catalog.Seed(sqlDB); err != nil {
+		appLogger.Error(ctx, "failed to seed prompt catalog", zap.Error(err))
+		return
 	}
 
 	uploadPath := config.AppConfig().Upload.Path()
@@ -164,6 +172,7 @@ func main() {
 
 	adminRepository := adminRepo.NewRepository(sqlDB)
 	analysisInstructionRepository := analysisInstructionRepo.NewRepository(sqlDB)
+	promptProfileRepository := promptProfileRepo.NewRepository(sqlDB)
 	analysisRepository := analysisRepo.NewRepository(sqlDB)
 	callRepository := callRepo.NewRepository(sqlDB)
 	callFolderRepository := callFolderRepo.NewRepository(sqlDB)
@@ -195,6 +204,7 @@ func main() {
 	analysisSvc := analysisService.NewService(callRepository, transcriptionRepository, analysisInstructionRepository, analysisRepository, instructionStorage, analyzerProvider, appLogger)
 	analysisSvc.SetProcessingJobRepository(processingJobRepository)
 	analysisSvc.SetProcessingJobMaxAttempts(config.AppConfig().Worker.MaxAttempts())
+	analysisSvc.SetPromptTopicReader(promptProfileRepository)
 	processingSvc := processingService.NewService(callRepository, transcriptionRepository, processingJobRepository, audioStorage, transcriberProvider, appLogger)
 	processingSvc.SetProcessingJobMaxAttempts(config.AppConfig().Worker.MaxAttempts())
 	processingSvc.SetAnalysisProcessor(analysisSvc)
@@ -277,6 +287,7 @@ func main() {
 	departmentHandler := departmentAPI.NewDepartmentHandler(departmentSvc)
 	invitationHandler := invitationAPI.NewHandler(invitationSvc)
 	instructionHandler := instructionAPI.NewHandler(instructionSvc)
+	promptProfileHandler := promptProfileAPI.NewHandler(promptProfileRepository, callRepository)
 	analysisHandler := analysisAPI.NewHandler(analysisSvc)
 	reportHandler := reportAPI.NewHandler(reportSvc)
 	billingHandler := billingAPI.NewHandler(billingSvc)
@@ -285,7 +296,7 @@ func main() {
 	searchHandler := searchAPI.NewHandler(searchSvc)
 	notificationHandler := notificationAPI.NewHandler(notificationSvc)
 
-	r := httpserver.NewRouter(callHandler, callFolderHandler, authHandler, companyHandler, departmentHandler, instructionHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, analyticsHandler, monitoringHandler, searchHandler, notificationHandler, adminHandler, healthHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
+	r := httpserver.NewRouter(callHandler, callFolderHandler, authHandler, companyHandler, departmentHandler, instructionHandler, promptProfileHandler, analysisHandler, reportHandler, billingHandler, invitationHandler, analyticsHandler, monitoringHandler, searchHandler, notificationHandler, adminHandler, healthHandler, config.AppConfig().Auth.JWTSecret(), refreshRepository, appLogger)
 
 	server := &http.Server{
 		Addr:              config.AppConfig().HTTPConfig.Address(),

@@ -34,6 +34,11 @@ func (s *Service) AnalyzeCall(ctx context.Context, input models.AnalyzeCallInput
 	if transcription.Status != models.TranscriptionStatusTranscribed || transcription.Text == nil {
 		return models.CallAnalysis{}, models.ErrInvalidAnalysisStatus
 	}
+	if s.promptTopicReader != nil {
+		if err = s.promptTopicReader.Snapshot(ctx, call.ID, input.UserUUID); err != nil {
+			return models.CallAnalysis{}, fmt.Errorf("snapshot prompt context: %w", err)
+		}
+	}
 
 	analysis, err := s.createPendingAnalysis(ctx, call.ID)
 	if err != nil {
@@ -135,6 +140,14 @@ func (s *Service) analyzeCall(ctx context.Context, call models.Call, userID uuid
 		return models.CallAnalysis{}, fmt.Errorf("load instructions: %w", err)
 	}
 
+	var promptTopics []models.PromptTopic
+	if s.promptTopicReader != nil {
+		promptTopics, err = s.promptTopicReader.Modules(ctx, call.ID, userID)
+		if err != nil {
+			return models.CallAnalysis{}, fmt.Errorf("load prompt topics: %w", err)
+		}
+	}
+
 	analysis, err := s.createPendingAnalysis(ctx, call.ID)
 	if err != nil {
 		return models.CallAnalysis{}, fmt.Errorf("create analysis: %w", err)
@@ -149,6 +162,7 @@ func (s *Service) analyzeCall(ctx context.Context, call models.Call, userID uuid
 		CallUUID:      call.ID,
 		Transcription: *transcription.Text,
 		Instructions:  instructions,
+		PromptTopics:  promptTopics,
 	})
 	if err != nil {
 		if opts.markAttemptFailed {

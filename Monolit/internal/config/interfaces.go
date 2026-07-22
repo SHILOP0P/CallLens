@@ -46,7 +46,9 @@ type TranscriberConfig interface {
 	Provider() string
 	APIKey() string
 	Model() string
+	FallbackModel() string
 	URL() string
+	DiarizerURL() string
 }
 
 type AnalyzerConfig interface {

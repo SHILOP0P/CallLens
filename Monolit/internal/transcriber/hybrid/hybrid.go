@@ -1,11 +1,12 @@
 package hybrid
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"calllens/monolit/internal/models"
@@ -40,30 +41,60 @@ func New(apiKey, model, diarizerURL string) (*Transcriber, error) {
 	return &Transcriber{asr: asr, diarizer: diarization}, nil
 }
 
+// NewWithDependencies composes a timestamp-capable ASR with a diarizer.
+func NewWithDependencies(asr speechToText, diarization speakerDiarizer) *Transcriber {
+	return &Transcriber{asr: asr, diarizer: diarization}
+}
+
 func (t *Transcriber) Provider() string { return providerName }
 
 func (t *Transcriber) Transcribe(ctx context.Context, file models.File) (models.TranscriptionResult, error) {
 	if file.Content == nil {
 		return models.TranscriptionResult{}, errors.New("empty media content")
 	}
-	content, err := io.ReadAll(file.Content)
+	temp, err := os.CreateTemp("", "calllens-hybrid-*")
 	if err != nil {
-		return models.TranscriptionResult{}, fmt.Errorf("read media for hybrid transcription: %w", err)
+		return models.TranscriptionResult{}, fmt.Errorf("create temporary media for hybrid transcription: %w", err)
 	}
-	if len(content) == 0 {
+	tempPath := temp.Name()
+	defer os.Remove(tempPath)
+	written, copyErr := io.Copy(temp, file.Content)
+	closeErr := temp.Close()
+	if copyErr != nil {
+		return models.TranscriptionResult{}, fmt.Errorf("copy media for hybrid transcription: %w", copyErr)
+	}
+	if closeErr != nil {
+		return models.TranscriptionResult{}, fmt.Errorf("close temporary media for hybrid transcription: %w", closeErr)
+	}
+	if written == 0 {
 		return models.TranscriptionResult{}, errors.New("empty media content")
 	}
 
-	clone := func() models.File {
+	clone := func() (models.File, error) {
+		content, openErr := os.Open(tempPath)
+		if openErr != nil {
+			return models.File{}, openErr
+		}
 		copy := file
-		copy.Content = io.NopCloser(bytes.NewReader(content))
-		return copy
+		copy.Content = content
+		copy.Path = filepath.Base(tempPath)
+		return copy, nil
 	}
-	transcript, err := t.asr.Transcribe(ctx, clone())
+	asrFile, err := clone()
+	if err != nil {
+		return models.TranscriptionResult{}, fmt.Errorf("open media for transcription: %w", err)
+	}
+	transcript, err := t.asr.Transcribe(ctx, asrFile)
+	_ = asrFile.Content.Close()
 	if err != nil {
 		return models.TranscriptionResult{}, fmt.Errorf("transcribe with OpenRouter: %w", err)
 	}
-	turns, err := t.diarizer.Diarize(ctx, clone())
+	diarizerFile, err := clone()
+	if err != nil {
+		return models.TranscriptionResult{}, fmt.Errorf("open media for diarization: %w", err)
+	}
+	turns, err := t.diarizer.Diarize(ctx, diarizerFile)
+	_ = diarizerFile.Content.Close()
 	if err != nil {
 		return models.TranscriptionResult{}, fmt.Errorf("diarize with pyannote: %w", err)
 	}

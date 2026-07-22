@@ -84,19 +84,29 @@ func (s *Service) RevokeSession(ctx context.Context, userID uuid.UUID, currentSe
 	}
 
 	if sessionID != currentSessionID {
-		currentSession, err := s.refreshSessionRepository.GetRefreshSessionByUUID(ctx, currentSessionID)
+		availableAt, err := s.OtherSessionManagementAvailableAt(ctx, userID, currentSessionID)
 		if err != nil {
 			return err
 		}
-		if currentSession.UserID != userID || currentSession.RevokedAt != nil || !currentSession.ExpiresAt.After(s.now()) {
-			return models.ErrRefreshSessionNotFound
-		}
-
-		availableAt := currentSession.CreatedAt.Add(s.sessionTrustAge)
 		if s.now().Before(availableAt) {
 			return models.SessionTrustError{AvailableAt: availableAt}
 		}
 	}
 
 	return s.refreshSessionRepository.RevokeUserRefreshSession(ctx, userID, sessionID, logoutReason)
+}
+
+// OtherSessionManagementAvailableAt returns the first time the current session may revoke other sessions.
+func (s *Service) OtherSessionManagementAvailableAt(ctx context.Context, userID uuid.UUID, currentSessionID uuid.UUID) (time.Time, error) {
+	if userID == uuid.Nil || currentSessionID == uuid.Nil {
+		return time.Time{}, models.ErrInvalidUserInput
+	}
+	currentSession, err := s.refreshSessionRepository.GetRefreshSessionByUUID(ctx, currentSessionID)
+	if err != nil {
+		return time.Time{}, err
+	}
+	if currentSession.UserID != userID || currentSession.RevokedAt != nil || !currentSession.ExpiresAt.After(s.now()) {
+		return time.Time{}, models.ErrRefreshSessionNotFound
+	}
+	return currentSession.CreatedAt.Add(s.sessionTrustAge), nil
 }

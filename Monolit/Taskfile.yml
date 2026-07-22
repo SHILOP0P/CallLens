@@ -80,7 +80,7 @@ tasks:
     desc: Stop local Docker Compose stack.
     cmds:
       - echo "==> Stopping local Docker Compose stack"
-      - docker compose -f deploy/docker-compose.yaml --project-directory . down
+      - powershell -NoProfile -ExecutionPolicy Bypass -File scripts/compose-down.ps1
 
   # Просмотр состояния контейнеров.
   ps:

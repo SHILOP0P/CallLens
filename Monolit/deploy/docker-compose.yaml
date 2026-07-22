@@ -30,7 +30,9 @@ services:
       TRANSCRIBER_PROVIDER: ${TRANSCRIBER_PROVIDER:-mock}
       TRANSCRIBER_API_KEY: ${TRANSCRIBER_API_KEY:-}
       TRANSCRIBER_MODEL: ${TRANSCRIBER_MODEL:-}
-      TRANSCRIBER_URL: ${TRANSCRIBER_URL:-http://diarizer:8090}
+      TRANSCRIBER_FALLBACK_MODEL: ${TRANSCRIBER_FALLBACK_MODEL:-}
+      TRANSCRIBER_URL: ${TRANSCRIBER_URL:-http://transcriber:8091}
+      DIARIZER_URL: ${DIARIZER_URL:-http://diarizer:8090}
       ANALYZER_PROVIDER: ${ANALYZER_PROVIDER:-mock}
       ANALYZER_API_KEY: ${ANALYZER_API_KEY:-}
       ANALYZER_MODEL: ${ANALYZER_MODEL:-mistralai/mistral-nemo}
@@ -76,6 +78,30 @@ services:
       retries: 10
       start_period: 5m
 
+  transcriber:
+    profiles: ["local-transcription"]
+    build:
+      context: .
+      dockerfile: services/transcriber/Dockerfile
+    container_name: call-transcriber
+    restart: unless-stopped
+    environment:
+      HF_TOKEN: ${HF_TOKEN:-}
+      WHISPER_MODEL: ${WHISPER_MODEL:-large-v3}
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
+      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8}
+      MODEL_CACHE: /models
+    volumes:
+      - asr_models:/models
+    ports:
+      - "${TRANSCRIBER_PORT:-8091}:8091"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8091/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 10m
+
   db:
     image: postgres:16-alpine
     container_name: call-db
@@ -98,3 +124,4 @@ volumes:
   postgres_call_data:
   call_uploads:
   transcription_models:
+  asr_models:

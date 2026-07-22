@@ -6,7 +6,15 @@ import (
 	"calllens/monolit/internal/models"
 	repo "calllens/monolit/internal/repository"
 	"calllens/monolit/internal/storage"
+	"context"
+
+	"github.com/google/uuid"
 )
+
+type PromptTopicReader interface {
+	Modules(ctx context.Context, callID uuid.UUID, userID uuid.UUID) ([]models.PromptTopic, error)
+	Snapshot(ctx context.Context, callID uuid.UUID, userID uuid.UUID) error
+}
 
 type Service struct {
 	callRepository           repo.CallRepository
@@ -18,7 +26,10 @@ type Service struct {
 	analyzer                 analyzer.Analyzer
 	processingJobMaxAttempts int
 	log                      logger.Logger
+	promptTopicReader        PromptTopicReader
 }
+
+func (s *Service) SetPromptTopicReader(reader PromptTopicReader) { s.promptTopicReader = reader }
 
 func NewService(
 	callRepository repo.CallRepository,

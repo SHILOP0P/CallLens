@@ -1,7 +1,6 @@
 package diarizer
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -39,24 +38,25 @@ func (c *Client) Diarize(ctx context.Context, file models.File) ([]Turn, error) 
 	if file.Content == nil {
 		return nil, errors.New("empty media content")
 	}
-	var body bytes.Buffer
-	writer := multipart.NewWriter(&body)
+	reader, pipeWriter := io.Pipe()
+	writer := multipart.NewWriter(pipeWriter)
 	filename := filepath.Base(strings.ReplaceAll(strings.TrimSpace(file.OriginalFilename), "\\", "/"))
 	if filename == "" || filename == "." {
 		filename = "call-media"
 	}
-	part, err := writer.CreateFormFile("file", filename)
-	if err != nil {
-		return nil, fmt.Errorf("create diarization upload: %w", err)
-	}
-	if _, err = io.Copy(part, file.Content); err != nil {
-		return nil, fmt.Errorf("copy diarization media: %w", err)
-	}
-	if err = writer.Close(); err != nil {
-		return nil, fmt.Errorf("close diarization upload: %w", err)
-	}
+	errCh := make(chan error, 1)
+	go func() {
+		defer close(errCh)
+		defer pipeWriter.Close()
+		defer writer.Close()
+		part, err := writer.CreateFormFile("file", filename)
+		if err == nil {
+			_, err = io.Copy(part, file.Content)
+		}
+		errCh <- err
+	}()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint, &body)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.endpoint, reader)
 	if err != nil {
 		return nil, fmt.Errorf("build diarization request: %w", err)
 	}
@@ -66,6 +66,9 @@ func (c *Client) Diarize(ctx context.Context, file models.File) ([]Turn, error) 
 		return nil, fmt.Errorf("send diarization request: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
+	if copyErr := <-errCh; copyErr != nil {
+		return nil, fmt.Errorf("copy diarization media: %w", copyErr)
+	}
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		message, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 		return nil, fmt.Errorf("diarization failed with status %d: %s", resp.StatusCode, strings.TrimSpace(string(message)))

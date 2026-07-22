@@ -20,4 +20,4 @@ RUN useradd --system --create-home --uid 10001 diarizer \
 USER diarizer
 
 EXPOSE 8090
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8090"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8090", "--no-access-log"]

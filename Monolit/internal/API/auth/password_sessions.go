@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"math"
@@ -70,6 +71,19 @@ func (h *AuthHandler) ListSessions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := dto.UserSessionsResponse{Sessions: make([]dto.UserSessionResponse, 0, len(sessions))}
+	availabilityService, ok := h.service.(interface {
+		OtherSessionManagementAvailableAt(context.Context, uuid.UUID, uuid.UUID) (time.Time, error)
+	})
+	if ok {
+		if availableAt, availabilityErr := availabilityService.OtherSessionManagementAvailableAt(r.Context(), userID, sessionID); availabilityErr == nil {
+			resp.CanManageOtherSessions = !time.Now().UTC().Before(availableAt)
+			if !resp.CanManageOtherSessions {
+				formatted := availableAt.Format(time.RFC3339)
+				resp.AvailableAt = &formatted
+				resp.RetryAfterSeconds = max(0, int(math.Ceil(time.Until(availableAt).Seconds())))
+			}
+		}
+	}
 	for _, session := range sessions {
 		var lastSeenAt *string
 		if session.LastSeenAt != nil {

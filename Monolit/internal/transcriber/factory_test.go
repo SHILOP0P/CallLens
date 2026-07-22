@@ -8,12 +8,14 @@ import (
 	"calllens/monolit/internal/models"
 )
 
-type testConfig struct{ provider, apiKey, model, url string }
+type testConfig struct{ provider, apiKey, model, fallbackModel, url, diarizerURL string }
 
-func (c testConfig) Provider() string { return c.provider }
-func (c testConfig) APIKey() string   { return c.apiKey }
-func (c testConfig) Model() string    { return c.model }
-func (c testConfig) URL() string      { return c.url }
+func (c testConfig) Provider() string      { return c.provider }
+func (c testConfig) APIKey() string        { return c.apiKey }
+func (c testConfig) Model() string         { return c.model }
+func (c testConfig) FallbackModel() string { return c.fallbackModel }
+func (c testConfig) URL() string           { return c.url }
+func (c testConfig) DiarizerURL() string   { return c.diarizerURL }
 
 func TestNewFromConfigAndMockTranscriber(t *testing.T) {
 	for _, provider := range []string{"", "mock", " MOCK "} {
@@ -43,7 +45,7 @@ func TestNewFromConfigAndMockTranscriber(t *testing.T) {
 	if _, err := got.Transcribe(ctx, models.File{}); err == nil {
 		t.Fatal("expected canceled context error")
 	}
-	hybrid, err := NewFromConfig(testConfig{provider: "hybrid", apiKey: "key", model: "openai/whisper-large-v3", url: "http://localhost:8090"})
+	hybrid, err := NewFromConfig(testConfig{provider: "hybrid", apiKey: "key", model: "openai/whisper-large-v3", diarizerURL: "http://localhost:8090"})
 	if err != nil || hybrid.Provider() != "openrouter" {
 		t.Fatalf("hybrid provider = %T, %v", hybrid, err)
 	}

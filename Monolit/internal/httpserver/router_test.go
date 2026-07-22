@@ -20,6 +20,7 @@ func TestNewRouterRegistersPublicAndProtectedRoutes(t *testing.T) {
 		apiMocks.NewCompanyAPI(t),
 		apiMocks.NewDepartmentAPI(t),
 		apiMocks.NewAnalysisInstructionAPI(t),
+		stubPromptProfileAPI{},
 		apiMocks.NewAnalysisAPI(t),
 		apiMocks.NewReportAPI(t),
 		apiMocks.NewBillingAPI(t),
@@ -60,6 +61,20 @@ type stubSearchAPI struct{}
 
 func (stubSearchAPI) Search(w http.ResponseWriter, r *http.Request) {}
 
+type stubPromptProfileAPI struct{}
+
+func (stubPromptProfileAPI) GetSettings(w http.ResponseWriter, r *http.Request)  {}
+func (stubPromptProfileAPI) SaveSettings(w http.ResponseWriter, r *http.Request) {}
+
+func (stubPromptProfileAPI) Industries(w http.ResponseWriter, r *http.Request)     {}
+func (stubPromptProfileAPI) Topics(w http.ResponseWriter, r *http.Request)         {}
+func (stubPromptProfileAPI) Recommend(w http.ResponseWriter, r *http.Request)      {}
+func (stubPromptProfileAPI) ListProfiles(w http.ResponseWriter, r *http.Request)   {}
+func (stubPromptProfileAPI) SaveProfile(w http.ResponseWriter, r *http.Request)    {}
+func (stubPromptProfileAPI) DeleteProfile(w http.ResponseWriter, r *http.Request)  {}
+func (stubPromptProfileAPI) GetCallContext(w http.ResponseWriter, r *http.Request) {}
+func (stubPromptProfileAPI) PutCallContext(w http.ResponseWriter, r *http.Request) {}
+
 type stubCallFolderAPI struct{}
 
 func (stubCallFolderAPI) Create(w http.ResponseWriter, r *http.Request)       {}
@@ -83,7 +98,7 @@ func (stubNotificationAPI) MarkAllRead(w http.ResponseWriter, r *http.Request) {
 type stubAdminAPI struct{}
 
 func (stubAdminAPI) ResetPersonalUsage(http.ResponseWriter, *http.Request) {}
-func (stubAdminAPI) ResetCompanyUsage(http.ResponseWriter, *http.Request) {}
+func (stubAdminAPI) ResetCompanyUsage(http.ResponseWriter, *http.Request)  {}
 
 func (stubAdminAPI) GetCapabilities(w http.ResponseWriter, r *http.Request)            {}
 func (stubAdminAPI) ListUsers(w http.ResponseWriter, r *http.Request)                  {}

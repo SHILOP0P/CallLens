@@ -16,15 +16,10 @@ func (s *Service) LogoutAll(ctx context.Context, userID uuid.UUID, currentSessio
 		return models.ErrInvalidUserInput
 	}
 
-	currentSession, err := s.refreshSessionRepository.GetRefreshSessionByUUID(ctx, currentSessionID)
+	availableAt, err := s.OtherSessionManagementAvailableAt(ctx, userID, currentSessionID)
 	if err != nil {
 		return err
 	}
-	if currentSession.UserID != userID || currentSession.RevokedAt != nil || !currentSession.ExpiresAt.After(s.now()) {
-		return models.ErrRefreshSessionNotFound
-	}
-
-	availableAt := currentSession.CreatedAt.Add(s.sessionTrustAge)
 	if s.now().Before(availableAt) {
 		return models.SessionTrustError{AvailableAt: availableAt}
 	}

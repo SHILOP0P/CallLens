@@ -77,8 +77,12 @@ func (s *Service) CreateCall(ctx context.Context, input models.CreateCallInput) 
 	}
 
 	if err := s.addUsageMinutes(ctx, input, durationSeconds); err != nil {
-		s.log.Error(ctx, "failed to add call usage minutes", zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("call_id", createdCall.ID.String()), zap.Error(err))
-		return models.Call{}, err
+		// The call and its durable processing job have already committed. Returning
+		// an error here made the client see a false 5xx and retry a successfully
+		// accepted large upload. Admission was checked before the record was
+		// created, so retain that invariant and surface a reconciliation signal
+		// instead of lying about the upload outcome.
+		s.log.Error(ctx, "call usage accounting requires reconciliation", zap.String("user_id", input.UploadedByUserUUID.String()), zap.String("call_id", createdCall.ID.String()), zap.Int("duration_seconds", durationSeconds), zap.Error(err))
 	}
 
 	s.log.Info(

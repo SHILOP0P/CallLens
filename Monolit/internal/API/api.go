@@ -146,6 +146,19 @@ type AnalysisAPI interface {
 	GetByCallUUID(w http.ResponseWriter, r *http.Request)
 }
 
+type PromptProfileAPI interface {
+	GetSettings(w http.ResponseWriter, r *http.Request)
+	SaveSettings(w http.ResponseWriter, r *http.Request)
+	Industries(w http.ResponseWriter, r *http.Request)
+	Topics(w http.ResponseWriter, r *http.Request)
+	Recommend(w http.ResponseWriter, r *http.Request)
+	ListProfiles(w http.ResponseWriter, r *http.Request)
+	SaveProfile(w http.ResponseWriter, r *http.Request)
+	DeleteProfile(w http.ResponseWriter, r *http.Request)
+	GetCallContext(w http.ResponseWriter, r *http.Request)
+	PutCallContext(w http.ResponseWriter, r *http.Request)
+}
+
 type ReportAPI interface {
 	Create(w http.ResponseWriter, r *http.Request)
 	CreateGlobal(w http.ResponseWriter, r *http.Request)

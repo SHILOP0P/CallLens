@@ -70,6 +70,22 @@ type errorResponse struct {
 	} `json:"error"`
 }
 
+// HTTPStatusError identifies upstream failures that may be retried through a
+// different model. It is deliberately limited to temporary HTTP statuses.
+type HTTPStatusError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *HTTPStatusError) Error() string {
+	return fmt.Sprintf("openrouter transcription failed with status %d: %s", e.StatusCode, e.Message)
+}
+
+func IsTemporaryError(err error) bool {
+	var statusError *HTTPStatusError
+	return errors.As(err, &statusError) && statusError.StatusCode >= http.StatusInternalServerError
+}
+
 func New(apiKey string, model string) (*Transcriber, error) {
 	return newTranscriber(apiKey, model, false)
 }
@@ -391,5 +407,5 @@ func decodeError(resp *http.Response) error {
 		message = http.StatusText(resp.StatusCode)
 	}
 
-	return fmt.Errorf("openrouter transcription failed with status %d: %s", resp.StatusCode, message)
+	return &HTTPStatusError{StatusCode: resp.StatusCode, Message: message}
 }
